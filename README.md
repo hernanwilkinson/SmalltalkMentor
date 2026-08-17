@@ -30,6 +30,9 @@ breaks your rules and proposes a fix, and the student applies the refactoring th
 - Cuis Smalltalk.
 - `curl` on the `PATH` and the `OSProcess` support the mentor uses to reach the APIs
   (the image has no TLS of its own, so requests are made by shelling out to `curl`).
+  **`OSProcess` is not bundled with this project and must be installed manually** —
+  get it from <https://github.com/Cuis-Smalltalk/OSProcess> and load it *before*
+  `SmalltalkMentor` (see *Installation*).
 - An API key for at least one provider (see below).
 
 ## Packages
@@ -46,8 +49,13 @@ Keeping the tests in a separate package means the model has no dependency on the
 
 ## Installation
 
-Load **`SmalltalkMentor.pck.st`** (World ▸ Open ▸ Installed Packages ▸ install, or file it
-in). On load it self-installs its menus and the `cmd+0` shortcut — that's all you need.
+First, install the **`OSProcess`** dependency manually — it is not part of this repo. Get
+it from <https://github.com/Cuis-Smalltalk/OSProcess> and load its package into the image
+(World ▸ Open ▸ Installed Packages ▸ install, or file it in) before continuing.
+
+Then load **`SmalltalkMentor.pck.st`** (World ▸ Open ▸ Installed Packages ▸ install, or
+file it in). On load it self-installs its menus and the `cmd+0` shortcut — that's all you
+need.
 
 To run the tests as well, load **`SmalltalkMentorTests.pck.st`** *after* `SmalltalkMentor`
 (it declares `SmalltalkMentor` as a prerequisite).
