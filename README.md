@@ -32,10 +32,25 @@ breaks your rules and proposes a fix, and the student applies the refactoring th
   (the image has no TLS of its own, so requests are made by shelling out to `curl`).
 - An API key for at least one provider (see below).
 
+## Packages
+
+The project is split into two Cuis packages (both `.pck.st` files live in this repo):
+
+- **`SmalltalkMentor`** — the tool itself: the model, the LLM providers and the UI. This is
+  all you need to *use* the mentor.
+- **`SmalltalkMentorTests`** — the test suite (`SmalltalkMentorRuleTest`, one live test per
+  rule). It **requires** `SmalltalkMentor` (declared as a prerequisite in the package), so
+  `SmalltalkMentor` must be loaded first. It is optional — load it only to run the tests.
+
+Keeping the tests in a separate package means the model has no dependency on the test code.
+
 ## Installation
 
-Load the package `SmalltalkMentor.pck.st` (World ▸ Open ▸ Installed Packages ▸ install,
-or file it in). On load it self-installs its menus and the `cmd+0` shortcut.
+Load **`SmalltalkMentor.pck.st`** (World ▸ Open ▸ Installed Packages ▸ install, or file it
+in). On load it self-installs its menus and the `cmd+0` shortcut — that's all you need.
+
+To run the tests as well, load **`SmalltalkMentorTests.pck.st`** *after* `SmalltalkMentor`
+(it declares `SmalltalkMentor` as a prerequisite).
 
 To (re)install or remove the menus manually:
 
@@ -168,7 +183,8 @@ review the same method with two different providers side by side.
 
 ## Tests
 
-`SmalltalkMentorRuleTest` has one live test per rule. Each asks Claude Opus to review a
+The **`SmalltalkMentorTests`** package (load it after `SmalltalkMentor`) provides
+`SmalltalkMentorRuleTest` — one live test per rule. Each asks Claude Opus to review a
 method that violates the rule and checks the fix is applied (or the rule id is cited),
 best-of-3 to absorb the model's non-determinism. Running the suite makes real API calls,
 so it needs a valid Anthropic key.
