@@ -1,6 +1,6 @@
-'From Cuis7.9 [latest update: #8113] on 17 August 2026 at 1:26:33 pm'!
-'Description Review per class with rules run in Smalltalk and LLM on demand. Added pre req'!
-!provides: 'SmalltalkMentor' 1 21!
+'From Cuis7.9 [latest update: #8113] on 18 August 2026 at 8:01:41 am'!
+'Description Better menu definition'!
+!provides: 'SmalltalkMentor' 1 23!
 !requires: 'JSON' 1 29 nil!
 !requires: 'OSProcess' 1 36 nil!
 SystemOrganization addCategory: #SmalltalkMentor!
@@ -175,10 +175,6 @@ model: aString
 name
 	^name! !
 
-!LLMProvider methodsFor: 'accessing' stamp: 'HAW 7/Aug/2026, 6:47:57 pm (UTC)'!
-name: aString
-	name := aString! !
-
 !LLMProvider methodsFor: 'printing' stamp: 'HAW 7/Aug/2026, 6:48:30 pm (UTC)'!
 printOn: aStream
 	aStream nextPutAll: (name ifNil: [ self class name ]), ' (', (model ifNil: [ '?' ]), ')'! !
@@ -221,11 +217,11 @@ extractTextFrom: jsonString
 	"Parse the provider's JSON response and answer the assistant's text. Subclasses answer."
 	^self subclassResponsibility! !
 
-!LLMProvider methodsFor: 'private' stamp: 'HAW 14/Aug/2026, 2:20:12 pm (UTC)'!
+!LLMProvider methodsFor: 'private' stamp: 'HAW 17/Aug/2026, 9:50:56 pm (UTC)'!
 imageKeyPath
 	"Absolute path of this provider's key file in the image directory (checked before the
 	home-directory key)."
-	^SmalltalkMentor imageDirectoryPath, '/', self keyImageBasename! !
+	^(Smalltalk imagePath ), '/', self keyImageBasename! !
 
 !LLMProvider methodsFor: 'private' stamp: 'HAW 14/Aug/2026, 2:20:18 pm (UTC)'!
 keyImageBasename
@@ -326,21 +322,9 @@ keyImageBasename
 endpoint
 	^endpoint! !
 
-!OpenAICompatibleProvider methodsFor: 'accessing' stamp: 'HAW 7/Aug/2026, 6:49:54 pm (UTC)'!
-endpoint: aString
-	endpoint := aString! !
-
-!OpenAICompatibleProvider methodsFor: 'accessing' stamp: 'HAW 14/Aug/2026, 2:21:03 pm (UTC)'!
-imageKeyBasename: aString
-	imageKeyBasename := aString! !
-
 !OpenAICompatibleProvider methodsFor: 'accessing' stamp: 'HAW 7/Aug/2026, 6:50:00 pm (UTC)'!
 keyFilePath
 	^keyFilePath! !
-
-!OpenAICompatibleProvider methodsFor: 'accessing' stamp: 'HAW 7/Aug/2026, 6:50:09 pm (UTC)'!
-keyFilePath: aString
-	keyFilePath := aString! !
 
 !OpenAICompatibleProvider methodsFor: 'private' stamp: 'HAW 14/Aug/2026, 2:21:14 pm (UTC)'!
 authCurlArgs
@@ -376,16 +360,19 @@ extractTextFrom: jsonString
 keyImageBasename
 	^imageKeyBasename! !
 
-!OpenAICompatibleProvider class methodsFor: 'instance creation' stamp: 'HAW 14/Aug/2026, 2:20:57 pm (UTC)'!
+!OpenAICompatibleProvider methodsFor: 'initialization' stamp: 'HAW 17/Aug/2026, 4:44:45 pm (UTC)'!
+initializeName: aName endpoint: anEndpoint model: aModel keyFilePath: aKeyPath imageKeyBasename: anImageBasename
+	name := aName.
+	endpoint := anEndpoint.
+	model := aModel.
+	keyFilePath := aKeyPath.
+	imageKeyBasename := anImageBasename! !
+
+!OpenAICompatibleProvider class methodsFor: 'instance creation' stamp: 'HAW 17/Aug/2026, 4:44:52 pm (UTC)'!
 name: aName endpoint: anEndpoint model: aModel keyFilePath: aKeyPath imageKeyBasename: anImageBasename
 	"Configure an OpenAI-compatible provider (ChatGPT / Deepseek / Nvidia NIM)."
 	^self new
-		name: aName;
-		model: aModel;
-		endpoint: anEndpoint;
-		keyFilePath: aKeyPath;
-		imageKeyBasename: anImageBasename;
-		yourself! !
+		initializeName: aName endpoint: anEndpoint model: aModel keyFilePath: aKeyPath imageKeyBasename: anImageBasename! !
 
 !SmalltalkMentor methodsFor: 'initialization' stamp: 'HAW 14/Aug/2026, 6:50:48 pm (UTC)'!
 initialize
@@ -399,11 +386,6 @@ postCopy
 	if the shared mentor's provider or model later changes."
 	super postCopy.
 	provider := provider copy! !
-
-!SmalltalkMentor methodsFor: 'accessing' stamp: 'HAW 14/Aug/2026, 6:37:57 pm (UTC)'!
-imageDirectoryPath
-	
-	^self class imageDirectoryPath ! !
 
 !SmalltalkMentor methodsFor: 'accessing' stamp: 'HAW 14/Aug/2026, 6:08:23 pm (UTC)'!
 language
@@ -436,7 +418,7 @@ providers
 	"The known providers (registry lives on the class)."
 	^SmalltalkMentor providers! !
 
-!SmalltalkMentor methodsFor: 'rules' stamp: 'HAW 14/Aug/2026, 6:07:46 pm (UTC)'!
+!SmalltalkMentor methodsFor: 'rules' stamp: 'HAW 17/Aug/2026, 9:50:56 pm (UTC)'!
 currentReviewRules
 	"The rules to enforce, looked up in order:
 	 1. <imageDirectory>/smalltalk-mentor-rules.md  (per-image rules, checked first)
@@ -447,7 +429,7 @@ currentReviewRules
 	| tmp raw |
 	tmp := '/tmp/smalltalk-mentor-rules.txt'.
 	OSProcess waitForCommand:
-		'sh -c ''I="', self imageDirectoryPath, '/smalltalk-mentor-rules.md"; H="$HOME/.smalltalk-mentor/rules.md"; if [ -s "$I" ]; then cat "$I"; elif [ -s "$H" ]; then cat "$H"; fi > ', tmp, ' 2>/dev/null || : > ', tmp, ''''.
+		'sh -c ''I="', (Smalltalk imagePath ), '/smalltalk-mentor-rules.md"; H="$HOME/.smalltalk-mentor/rules.md"; if [ -s "$I" ]; then cat "$I"; elif [ -s "$H" ]; then cat "$H"; fi > ', tmp, ' 2>/dev/null || : > ', tmp, ''''.
 	raw := [ tmp asFileEntry fileContents asString ] on: Error do: [ :e | '' ].
 	raw := raw withBlanksTrimmed.
 	^raw isEmpty ifTrue: [ self defaultReviewRules ] ifFalse: [ raw ]! !
@@ -605,62 +587,6 @@ userMessage: aString
 		at: 'content' put: aString;
 		yourself! !
 
-!SmalltalkMentor methodsFor: 'menu' stamp: 'HAW 15/Aug/2026, 1:13:08 pm (UTC)'!
-classReviewMenuSpec
-	"A 'Smalltalk Mentor' submenu for the class-list pane: review the class, toggle the
-	response language, or choose the provider/model (the last two act on this instance)."
-	^{
-		{ 12000. 'Smalltalk Mentor'. nil. nil. 12000. #helpIcon }.
-		{ 12010. 'Review this class (0)'. $0. self. #reviewClassFromMorph:. #helpIcon }.
-		{ 12020. 'Toggle response language (Spanish/English)'. nil. self. #toggleLanguage. #helpIcon }.
-		{ 12030. 'Choose LLM provider and model...'. nil. self. #chooseProvider. #helpIcon }
-	}! !
-
-!SmalltalkMentor methodsFor: 'menu' stamp: 'HAW 15/Aug/2026, 1:59:22 am (UTC)'!
-classReviewMenuSpecSend
-	^MessageSend receiver: self selector: #classReviewMenuSpec! !
-
-!SmalltalkMentor methodsFor: 'menu' stamp: 'HAW 16/Aug/2026, 9:15:59 pm (UTC)'!
-install
-	"Register cmd+0 'Ask Smalltalk Mentor' on the code editor and the message list of the
-	common code tools, and 'Review this class' on the browser's class list. Idempotent-ish.
-	Evaluate:  SmalltalkMentor current install"
-	#(BrowserWindow MethodSetWindow DebuggerWindow) do: [ :winClassName |
-		(Smalltalk at: winClassName ifAbsent: [ nil ]) ifNotNil: [ :winClass |
-			winClass registerAll: { { #SmalltalkEditor. self smalltalkEditorMenuSpecSend } } ] ].
-	#(BrowserWindow MethodSetWindow) do: [ :winClassName |
-		(Smalltalk at: winClassName ifAbsent: [ nil ]) ifNotNil: [ :winClass |
-			winClass registerAll: { { #messageListMenuSpec. self smalltalkEditorMenuSpecSend } } ] ].
-	BrowserWindow registerAll: { { #classListMenuSpec. self classReviewMenuSpecSend } }.
-	Transcript show: 'Smalltalk Mentor installed (cmd+0 on methods, message list, and classes)'; newLine! !
-
-!SmalltalkMentor methodsFor: 'menu' stamp: 'HAW 14/Aug/2026, 6:08:55 pm (UTC)'!
-smalltalkEditorMenuSpec
-	"A 'Smalltalk Mentor' submenu in the code pane. Actions target this instance (self).
-	Fields: id, label, shortcutChar, target, selector, icon."
-	^{
-		{ 12000. 'Smalltalk Mentor'. nil. nil. 12000. #helpIcon }.
-		{ 12010. 'Ask for a better version (0)'. $0. self. #reviewFromMorph:. #helpIcon }.
-		{ 12020. 'Toggle response language (Spanish/English)'. nil. self. #toggleLanguage. #helpIcon }.
-		{ 12030. 'Choose LLM provider and model...'. nil. self. #chooseProvider. #helpIcon }
-	}! !
-
-!SmalltalkMentor methodsFor: 'menu' stamp: 'HAW 14/Aug/2026, 6:07:46 pm (UTC)'!
-smalltalkEditorMenuSpecSend
-	^MessageSend receiver: self selector: #smalltalkEditorMenuSpec! !
-
-!SmalltalkMentor methodsFor: 'menu' stamp: 'HAW 16/Aug/2026, 9:16:07 pm (UTC)'!
-uninstall
-	"Remove the shortcut/menu registrations.  SmalltalkMentor current uninstall"
-	#(BrowserWindow MethodSetWindow DebuggerWindow) do: [ :winClassName |
-		(Smalltalk at: winClassName ifAbsent: [ nil ]) ifNotNil: [ :winClass |
-			winClass unregisterAll: { { #SmalltalkEditor. self smalltalkEditorMenuSpecSend } } ] ].
-	#(BrowserWindow MethodSetWindow) do: [ :winClassName |
-		(Smalltalk at: winClassName ifAbsent: [ nil ]) ifNotNil: [ :winClass |
-			winClass unregisterAll: { { #messageListMenuSpec. self smalltalkEditorMenuSpecSend } } ] ].
-	BrowserWindow unregisterAll: { { #classListMenuSpec. self classReviewMenuSpecSend } }.
-	Transcript show: 'Smalltalk Mentor uninstalled'; newLine! !
-
 !SmalltalkMentor methodsFor: 'ui' stamp: 'HAW 14/Aug/2026, 6:07:46 pm (UTC)'!
 chooseProvider
 	"Menu action: pick the active provider from a list, then its model id. Runs on the UI
@@ -711,53 +637,167 @@ toggleLanguage
 	language := self language = 'Spanish' ifTrue: [ 'English' ] ifFalse: [ 'Spanish' ].
 	self showTransientToast: 'Smalltalk Mentor response language: ', self language! !
 
-!SmalltalkMentor class methodsFor: 'initialization' stamp: 'HAW 14/Aug/2026, 6:08:01 pm (UTC)'!
+!SmalltalkMentor methodsFor: 'as yet unclassified' stamp: 'HAW 17/Aug/2026, 10:04:20 pm (UTC)'!
+smalltalkEditorMenuSpec ^Array new! !
+
+!SmalltalkMentor class methodsFor: 'initialization' stamp: 'HAW 18/Aug/2026, 10:53:24 am (UTC)'!
 initialize
 	"Install the cmd+0 menu on the current instance when the package loads."
-	self current install! !
+
+	self initializeMenues ! !
+
+!SmalltalkMentor class methodsFor: 'initialization' stamp: 'HAW 17/Aug/2026, 10:12:54 pm (UTC)'!
+unload
+	
+	self unloadMenues ! !
 
 !SmalltalkMentor class methodsFor: 'accessing' stamp: 'HAW 14/Aug/2026, 6:07:56 pm (UTC)'!
 current
 	"The single Smalltalk Mentor instance, holding the selected provider and language."
 	^Current ifNil: [ Current := self new ]! !
 
-!SmalltalkMentor class methodsFor: 'accessing' stamp: 'HAW 14/Aug/2026, 6:35:29 pm (UTC)'!
-imageDirectoryPath
-	"Absolute path of the directory that holds the running image."
-	^Smalltalk imageName asFileEntry parent pathName! !
-
-!SmalltalkMentor class methodsFor: 'providers' stamp: 'HAW 14/Aug/2026, 2:21:28 pm (UTC)'!
+!SmalltalkMentor class methodsFor: 'providers' stamp: 'HAW 17/Aug/2026, 9:57:20 pm (UTC)'!
 buildProviders
 	"The known providers, with sensible default models (change per provider via the menu,
 	or with `aProvider model: '...'`). Each reads its key from <imageDir>/<name>.key first,
 	then its home key file, then (Anthropic) the env var."
+	
 	^OrderedCollection new
-		add: AnthropicProvider new;
-		add: (OpenAICompatibleProvider name: 'ChatGPT'
-			endpoint: 'https://api.openai.com/v1/chat/completions'
-			model: 'gpt-4o'
-			keyFilePath: '$HOME/.openai/key'
-			imageKeyBasename: 'openai.key');
-		add: (OpenAICompatibleProvider name: 'Deepseek'
-			endpoint: 'https://api.deepseek.com/chat/completions'
-			model: 'deepseek-chat'
-			keyFilePath: '$HOME/.deepseek/key'
-			imageKeyBasename: 'deepseek.key');
-		add: (OpenAICompatibleProvider name: 'Nvidia NIM'
-			endpoint: 'https://integrate.api.nvidia.com/v1/chat/completions'
-			model: 'meta/llama-3.1-70b-instruct'
-			keyFilePath: '$HOME/.nvidia/key'
-			imageKeyBasename: 'nvidia.key');
-		add: GeminiProvider new;
+		add: self claude;
+		add: self chatGPT;
+		add: self deepseek;
+		add: self nvidiaNIM;
+		add: self gemini;
 		yourself! !
+
+!SmalltalkMentor class methodsFor: 'providers' stamp: 'HAW 17/Aug/2026, 9:57:39 pm (UTC)'!
+chatGPT
+
+	^ OpenAICompatibleProvider name: 'ChatGPT'
+		endpoint: 'https://api.openai.com/v1/chat/completions'
+		model: 'gpt-4o'
+		keyFilePath: '$HOME/.openai/key'
+		imageKeyBasename: 'openai.key'! !
+
+!SmalltalkMentor class methodsFor: 'providers' stamp: 'HAW 17/Aug/2026, 9:55:53 pm (UTC)'!
+claude
+
+	^ AnthropicProvider new! !
+
+!SmalltalkMentor class methodsFor: 'providers' stamp: 'HAW 17/Aug/2026, 9:57:46 pm (UTC)'!
+deepseek
+
+	^ OpenAICompatibleProvider name: 'Deepseek'
+		endpoint: 'https://api.deepseek.com/chat/completions'
+		model: 'deepseek-chat'
+		keyFilePath: '$HOME/.deepseek/key'
+		imageKeyBasename: 'deepseek.key'! !
+
+!SmalltalkMentor class methodsFor: 'providers' stamp: 'HAW 17/Aug/2026, 9:56:36 pm (UTC)'!
+gemini
+
+	^ GeminiProvider new! !
+
+!SmalltalkMentor class methodsFor: 'providers' stamp: 'HAW 17/Aug/2026, 9:57:51 pm (UTC)'!
+nvidiaNIM
+
+	^ OpenAICompatibleProvider name: 'Nvidia NIM'
+		endpoint: 'https://integrate.api.nvidia.com/v1/chat/completions'
+		model: 'meta/llama-3.1-70b-instruct'
+		keyFilePath: '$HOME/.nvidia/key'
+		imageKeyBasename: 'nvidia.key'! !
 
 !SmalltalkMentor class methodsFor: 'providers' stamp: 'HAW 7/Aug/2026, 6:51:59 pm (UTC)'!
 providers
 	"The known LLM providers (cached so per-provider model changes persist for the session)."
 	^Providers ifNil: [ Providers := self buildProviders ]! !
 
-!SmalltalkMentorClassReview methodsFor: 'initialization' stamp: 'HAW 15/Aug/2026, 1:08:56 pm (UTC)'!
-setClass: aClass mentor: aMentor
+!SmalltalkMentor class methodsFor: 'menu' stamp: 'HAW 18/Aug/2026, 10:51:09 am (UTC)'!
+browserWindowMenuSpecs
+
+	^{ 	
+		{ #classListMenuSpec. self classReviewMenuSpecSend }.
+		{ #messageListMenuSpec. self messageListMenuSpecSend }.
+		{ #SmalltalkEditor. self smalltalkEditorMenuSpecSend }}
+
+	! !
+
+!SmalltalkMentor class methodsFor: 'menu' stamp: 'HAW 17/Aug/2026, 10:01:24 pm (UTC)'!
+classReviewMenuSpec
+	"A 'Smalltalk Mentor' submenu for the class-list pane: review the class, toggle the
+	response language, or choose the provider/model (the last two act on this instance)."
+	^{
+		{ 12000. 'Smalltalk Mentor'. nil. nil. 12000. #helpIcon }.
+		{ 12010. 'Review this class (0)'. $0. self. #reviewClassFromMorph:. #helpIcon }.
+		{ 12020. 'Toggle response language (Spanish/English)'. nil. self. #toggleLanguage. #helpIcon }.
+		{ 12030. 'Choose LLM provider and model...'. nil. self. #chooseProvider. #helpIcon }
+	}! !
+
+!SmalltalkMentor class methodsFor: 'menu' stamp: 'HAW 17/Aug/2026, 10:01:35 pm (UTC)'!
+classReviewMenuSpecSend
+	^MessageSend receiver: self selector: #classReviewMenuSpec! !
+
+!SmalltalkMentor class methodsFor: 'menu' stamp: 'HAW 18/Aug/2026, 10:59:08 am (UTC)'!
+debuggerWindowMenuSpecs
+
+	^{ { #SmalltalkEditor. self smalltalkEditorMenuSpecSend } }.
+
+
+	! !
+
+!SmalltalkMentor class methodsFor: 'menu' stamp: 'HAW 18/Aug/2026, 10:58:44 am (UTC)'!
+initializeMenues
+
+	BrowserWindow registerAll: self browserWindowMenuSpecs.
+	MethodSetWindow registerAll: self methodSetWindowMenuSpecs.
+	DebuggerWindow registerAll: self debuggerWindowMenuSpecs.
+	! !
+
+!SmalltalkMentor class methodsFor: 'menu' stamp: 'HAW 18/Aug/2026, 10:51:52 am (UTC)'!
+messageListMenuSpec
+
+	^self smalltalkEditorMenuSpec
+	! !
+
+!SmalltalkMentor class methodsFor: 'menu' stamp: 'HAW 18/Aug/2026, 10:51:19 am (UTC)'!
+messageListMenuSpecSend
+
+	^ MessageSend receiver: self selector: #messageListMenuSpec! !
+
+!SmalltalkMentor class methodsFor: 'menu' stamp: 'HAW 18/Aug/2026, 10:58:53 am (UTC)'!
+methodSetWindowMenuSpecs
+
+	^ { { #messageListMenuSpec. self messageListMenuSpecSend }.
+		{ #SmalltalkEditor. self smalltalkEditorMenuSpecSend }}
+
+	! !
+
+!SmalltalkMentor class methodsFor: 'menu' stamp: 'HAW 18/Aug/2026, 10:57:31 am (UTC)'!
+smalltalkEditorMenuSpec
+	"A 'Smalltalk Mentor' submenu in the code pane. Actions target this instance (self).
+	Fields: id, label, shortcutChar, target, selector, icon."
+	^{
+		{ 12000. 'Smalltalk Mentor'. nil. nil. 12000. #helpIcon }.
+		{ 12010. 'Ask for a better version (0)'. $0. self current. #reviewFromMorph:. #helpIcon }.
+		{ 12020. 'Toggle response language (Spanish/English)'. nil. self current. #toggleLanguage. #helpIcon }.
+		{ 12030. 'Choose LLM provider and model...'. nil. self current. #chooseProvider. #helpIcon }
+	}! !
+
+!SmalltalkMentor class methodsFor: 'menu' stamp: 'HAW 18/Aug/2026, 10:52:18 am (UTC)'!
+smalltalkEditorMenuSpecSend
+
+	^MessageSend receiver: self selector: #smalltalkEditorMenuSpec! !
+
+!SmalltalkMentor class methodsFor: 'menu' stamp: 'HAW 18/Aug/2026, 10:59:59 am (UTC)'!
+unloadMenues
+
+	BrowserWindow unregisterAll: self browserWindowMenuSpecs.
+	MethodSetWindow unregisterAll: self methodSetWindowMenuSpecs.
+	DebuggerWindow unregisterAll: self debuggerWindowMenuSpecs.
+! !
+
+!SmalltalkMentorClassReview methodsFor: 'initialization' stamp: 'HAW 17/Aug/2026, 4:48:04 pm (UTC)'!
+initializeClass: aClass mentor: aMentor
 	targetClass := aClass theNonMetaClass.
 	mentor := aMentor.
 	methodReviewCache := Dictionary new! !
@@ -1016,7 +1056,7 @@ showText: aString
 	detailHolder removeAllMorphs.
 	detailHolder addMorph: (TextModelMorph withText: aString asText) layoutSpec: LayoutSpec useAll! !
 
-!SmalltalkMentorClassReview methodsFor: 'reviewing' stamp: 'HAW 15/Aug/2026, 1:10:54 pm (UTC)'!
+!SmalltalkMentorClassReview methodsFor: 'reviewing' stamp: 'HAW 17/Aug/2026, 4:48:26 pm (UTC)'!
 buildReviewFor: aClassSelectorAssociation
 	"Do the LLM review for one method with its own frozen mentor (per-method language), and
 	answer a ready SmalltalkMentorReview."
@@ -1030,9 +1070,8 @@ buildReviewFor: aClassSelectorAssociation
 	proposal := methodMentor parseProposalFrom: answer.
 	msgs := OrderedCollection new.
 	msgs add: (methodMentor userMessage: prompt); add: (methodMentor assistantMessage: answer).
-	review := SmalltalkMentorReview new.
-	review
-		setClass: cls
+	review := SmalltalkMentorReview new
+		initializeClass: cls
 		selector: sel
 		category: (self categoryOf: sel in: cls)
 		current: source
@@ -1151,15 +1190,15 @@ firstIndexOf: subString in: aString
 		(aString copyFrom: i to: i + n - 1) = subString ifTrue: [ ^i ] ].
 	^0! !
 
-!SmalltalkMentorClassReview class methodsFor: 'instance creation' stamp: 'HAW 15/Aug/2026, 1:55:29 am (UTC)'!
+!SmalltalkMentorClassReview class methodsFor: 'instance creation' stamp: 'HAW 17/Aug/2026, 4:48:20 pm (UTC)'!
 reviewClass: aClass mentor: aMentor
 	"Open a class-review window for aClass using aMentor (a frozen snapshot). Runs the four
 	static verifications synchronously, opens the window, then reviews every method in the
 	background."
-	^self new setClass: aClass mentor: aMentor; start! !
+	^(self new initializeClass: aClass mentor: aMentor) start! !
 
-!SmalltalkMentorFinding methodsFor: 'initialization' stamp: 'HAW 16/Aug/2026, 6:21:21 pm (UTC)'!
-setTitle: aTitle detail: aDetail editKind: anEditKind editTarget: anEditTarget
+!SmalltalkMentorFinding methodsFor: 'initialization' stamp: 'HAW 17/Aug/2026, 4:48:01 pm (UTC)'!
+initializeTitle: aTitle detail: aDetail editKind: anEditKind editTarget: anEditTarget
 	title := aTitle.
 	detail := aDetail.
 	editKind := anEditKind.
@@ -1181,14 +1220,14 @@ editTarget
 title
 	^title! !
 
-!SmalltalkMentorFinding class methodsFor: 'instance creation' stamp: 'HAW 16/Aug/2026, 6:21:15 pm (UTC)'!
+!SmalltalkMentorFinding class methodsFor: 'instance creation' stamp: 'HAW 17/Aug/2026, 4:48:16 pm (UTC)'!
 title: aTitle detail: aDetail editKind: anEditKind editTarget: anEditTarget
 	"editKind is #method (editTarget = class->selector), #variable (editTarget = var name in
 	targetClass), or #none (text-only detail)."
-	^self new setTitle: aTitle detail: aDetail editKind: anEditKind editTarget: anEditTarget! !
+	^self new initializeTitle: aTitle detail: aDetail editKind: anEditKind editTarget: anEditTarget! !
 
-!SmalltalkMentorReview methodsFor: 'initialization' stamp: 'HAW 14/Aug/2026, 6:52:20 pm (UTC)'!
-setClass: aClass selector: aSelector category: aCategory current: currentSrc suggested: suggestedSrc rationale: aRationale messages: aMessagesCollection mentor: aMentor
+!SmalltalkMentorReview methodsFor: 'initialization' stamp: 'HAW 17/Aug/2026, 4:48:06 pm (UTC)'!
+initializeClass: aClass selector: aSelector category: aCategory current: currentSrc suggested: suggestedSrc rationale: aRationale messages: aMessagesCollection mentor: aMentor
 	targetClass := aClass.
 	selector := aSelector.
 	category := aCategory.
@@ -1281,7 +1320,7 @@ appendTranscript: aString
 	[ transcriptMorph editor selectFrom: end + 1 to: end.
 	  transcriptMorph scrollSelectionIntoView ] on: Error do: [ :e | ]! !
 
-!SmalltalkMentorReview methodsFor: 'conversation' stamp: 'HAW 14/Aug/2026, 6:52:57 pm (UTC)'!
+!SmalltalkMentorReview methodsFor: 'conversation' stamp: 'HAW 17/Aug/2026, 4:48:37 pm (UTC)'!
 postUserContent: contentString transcriptLabel: aLabel
 	"Shared engine: append a user turn, show it, and fork the (non-blocking) call to THIS
 	conversation's mentor's provider, updating the suggestion pane + transcript with the
@@ -1297,7 +1336,7 @@ postUserContent: contentString transcriptLabel: aLabel
 	   proposal := mentor parseProposalFrom: answer.
 	   UISupervisor whenUIinSafeState: [ | suggested |
 		   suggested := proposal at: 'suggestedSource' ifAbsent: [ '' ].
-		   suggested isEmpty ifFalse: [ self setSuggestion: suggested ].
+		   suggested isEmpty ifFalse: [ self showSuggestion: suggested ].
 		   self appendTranscript: 'Smalltalk Mentor: ', (proposal at: 'rationale' ifAbsent: [ '(no rationale)' ]).
 		   busy := false ] ]
 		on: Error
@@ -1321,8 +1360,8 @@ sendFollowUp
 	inputMorph contents: ''.
 	self postUserContent: content transcriptLabel: 'You: ', note! !
 
-!SmalltalkMentorReview methodsFor: 'conversation' stamp: 'HAW 14/Aug/2026, 2:56:49 pm (UTC)'!
-setSuggestion: aString
+!SmalltalkMentorReview methodsFor: 'conversation' stamp: 'HAW 17/Aug/2026, 4:48:09 pm (UTC)'!
+showSuggestion: aString
 	"Replace the right-hand pane with a new suggestion, pretty-printed so it is properly
 	multi-lined (some providers, e.g. Nvidia NIM, return single-line source)."
 	suggestedSource := self formattedSource: aString.
@@ -1351,18 +1390,17 @@ formattedSource: aString
 	^[ Compiler format: aString in: targetClass notifying: nil ]
 		on: Error do: [ :e | aString withCuisLineEndings ]! !
 
-!SmalltalkMentorReview class methodsFor: 'instance creation' stamp: 'HAW 14/Aug/2026, 6:52:14 pm (UTC)'!
+!SmalltalkMentorReview class methodsFor: 'instance creation' stamp: 'HAW 17/Aug/2026, 4:48:22 pm (UTC)'!
 openFor: aClass selector: aSelector category: aCategory current: currentSrc suggested: suggestedSrc rationale: aRationale messages: aMessagesCollection mentor: aMentor
-	^self new
-		setClass: aClass
+	^(self new
+		initializeClass: aClass
 		selector: aSelector
 		category: aCategory
 		current: currentSrc
 		suggested: suggestedSrc
 		rationale: aRationale
 		messages: aMessagesCollection
-		mentor: aMentor;
-		open! !
+		mentor: aMentor) open! !
 
 !SmalltalkMentorNoCopyEditor methodsFor: 'clipboard' stamp: 'HAW 14/Aug/2026, 6:18:50 pm (UTC)'!
 clipboardTextPut: aText
@@ -1370,8 +1408,9 @@ clipboardTextPut: aText
 	instead of copying the mentor's answer. Swallow the clipboard write."
 	^aText! !
 
-!SmalltalkMentorNode methodsFor: 'initialization' stamp: 'HAW 15/Aug/2026, 1:07:57 pm (UTC)'!
-setLabel: aLabel kind: aKind children: aChildrenCollection
+!SmalltalkMentorNode methodsFor: 'initialization' stamp: 'HAW 17/Aug/2026, 4:48:03 pm (UTC)'!
+initializeLabel: aLabel kind: aKind payload: aPayload children: aChildrenCollection model: aModel
+	self setItem: aPayload model: aModel.
 	label := aLabel.
 	kind := aKind.
 	childNodes := aChildrenCollection! !
@@ -1403,10 +1442,8 @@ sendSettingMessageTo: aModel
 	"Called by the tree when this node is selected."
 	aModel nodeSelected: self! !
 
-!SmalltalkMentorNode class methodsFor: 'instance creation' stamp: 'HAW 15/Aug/2026, 1:07:51 pm (UTC)'!
+!SmalltalkMentorNode class methodsFor: 'instance creation' stamp: 'HAW 17/Aug/2026, 4:48:18 pm (UTC)'!
 label: aLabel kind: aKind payload: aPayload children: aChildrenCollection model: aModel
 	^self new
-		setItem: aPayload model: aModel;
-		setLabel: aLabel kind: aKind children: aChildrenCollection;
-		yourself! !
+		initializeLabel: aLabel kind: aKind payload: aPayload children: aChildrenCollection model: aModel! !
 SmalltalkMentor initialize!
