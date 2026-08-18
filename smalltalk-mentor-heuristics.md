@@ -23,7 +23,7 @@
 - [complete-objects] Classes should be instantiated with all the necessary parameters so its instances are created completed
 - [valid-objects] Objects should be valid from the moment they are created. That means that instance creation messages should have assertions to validate the parameters. The instance creation assertions should be in the class side, not the instance side, and they should be encapsulated in a message.
 - [prefer-immutable] Inmutable objects are preferable over mutable ones.
-- [avoid-setters-use-syncWith] Setters should be avoided. If they are necessary and a validation has to be made, use a message `syncWith: anotherInstance` that will copy all instance variables from `anotherInstance` that we know is already valid per previous rule
+- [avoid-setters-use-syncWith] Setters should be avoided. If they are necessary and a validation has to be made, use a message `syncWith: anotherInstance` that will copy all instance variables from `anotherInstance` that we know is already valid per the previous heuristic
 - [getter-returns-copy] Getter should return a copy of the object if it is mutable to avoid breaking encapsulation
 - [avoid-breaking-encapsulation] Avoid breaking encapsulation, do not ask, tell
 - [avoid-nil] The use of `nil` should be avoided
@@ -42,7 +42,7 @@ self assertIsValidBalance: aBalance.
 - [and-or-take-blocks] Messages `and:` and `or:` should receive a block as a parameter
 - [ifTrue-ifFalse] Prefer `ifTrue:ifFalse:` over `ifFalse:ifTrue:`
 - [and-or-over-&&-||] Use `and:` and `or:` messages over `&&` and `||` because the former do short circuit
-- [redundant-ifTrue-condition] Do not use `object = true ifTrue:` but `object ifTrue:` unless object can be `nil` in witch case apply the `[avoid-nil]`rule
+- [redundant-ifTrue-condition] Do not use `object = true ifTrue:` but `object ifTrue:` unless object can be `nil` in witch case apply the `[avoid-nil]` heuristic
 - [prefer-equal-over-identity] Use `=` over `==` to compare for equality unless we really want to know it is exactly the same object
 - [ifEmpty-over-isEmpty-ifTrue] Prefer `ifEmpty:` over `isEmpty ifTrue:`
 - [isNil-over-equal-nil] Prefer `isNil` over `= nil ifTrue`. The same for `notNil` over `= nil ifFalse:` or `~= nil ifTrue:`
