@@ -13,6 +13,7 @@
 
 ## Naming
 - [variable-name-reveals-role] Variable names should not be meaningless and it should reveal the role of the object it is naming, not the type of it
+- [do-not-use-abbreviated-name] No name for variables, messages, classes or anything that should be named, should used an abbreviated word.
 - [parameter-prefix] Parameter should start with `a` or `an` when code is written in English or `un`, `una`, `unos`, `unas` when code is written in Spanish
 - [message-keywords-names] The keywords of a message name should always start with lowercase
 - [message-names] Message names should help reading the collaboration, that is when the message is sent to a receiver, as prose

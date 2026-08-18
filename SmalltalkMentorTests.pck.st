@@ -1,6 +1,6 @@
-'From Cuis7.9 [latest update: #8113] on 18 August 2026 at 11:26:34 am'!
+'From Cuis7.9 [latest update: #8113] on 18 August 2026 at 3:45:03 pm'!
 'Description '!
-!provides: 'SmalltalkMentorTests' 1 3!
+!provides: 'SmalltalkMentorTests' 1 4!
 !requires: 'SmalltalkMentor' nil nil nil!
 SystemOrganization addCategory: #SmalltalkMentorTests!
 
@@ -391,6 +391,20 @@ testTestingForExceptionWithoutSideEffect
 		caughtIn: 'testCannotCreateWithNegativeBalance
 	[ Account withBalance: -100 ] on: Error do: [ :e | self assert: e messageText = ''Balance must be positive'' ]'
 		fix: [ :s | self does: s include: 'withMessageText:' ]! !
+
+!SmalltalkMentorRuleTest methodsFor: 'naming rules tests' stamp: 'HAW 18/Aug/2026, 6:44:33 pm (UTC)'!
+testDoNotUseAbbreviatedName
+	"The names reveal their roles, so this targets the abbreviation rule specifically rather
+	than [variable-name-reveals-role]: calc (calculate), aColl (a collection), tot (total),
+	elem (element)."
+	self
+		assertRule: 'do-not-use-abbreviated-name'
+		caughtIn: 'calcTotalFor: aColl
+	| tot |
+	tot := 0.
+	aColl do: [ :elem | tot := tot + elem price ].
+	^tot'
+		fix: [ :suggestedSource | false ]! !
 
 !SmalltalkMentorRuleTest methodsFor: 'naming rules tests' stamp: 'HAW 13/Aug/2026, 7:59:12 pm (UTC)'!
 testMessageKeywordsNames
