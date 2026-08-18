@@ -1,9 +1,19 @@
-'From Cuis7.9 [latest update: #8113] on 17 August 2026 at 1:26:47 pm'!
+'From Cuis7.9 [latest update: #8113] on 18 August 2026 at 9:41:17 am'!
 'Description '!
-!provides: 'SmalltalkMentorTests' 1 1!
+!provides: 'SmalltalkMentorTests' 1 2!
 !requires: 'SmalltalkMentor' nil nil nil!
 SystemOrganization addCategory: #SmalltalkMentorTests!
 
+
+!classDefinition: #SmalltalkMentorFixedRuleTest category: #SmalltalkMentorTests!
+TestCase subclass: #SmalltalkMentorFixedRuleTest
+	instanceVariableNames: 'review fixtures'
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'SmalltalkMentorTests'!
+!classDefinition: 'SmalltalkMentorFixedRuleTest class' category: #SmalltalkMentorTests!
+SmalltalkMentorFixedRuleTest class
+	instanceVariableNames: ''!
 
 !classDefinition: #SmalltalkMentorRuleTest category: #SmalltalkMentorTests!
 TestCase subclass: #SmalltalkMentorRuleTest
@@ -15,6 +25,104 @@ TestCase subclass: #SmalltalkMentorRuleTest
 SmalltalkMentorRuleTest class
 	instanceVariableNames: ''!
 
+
+!SmalltalkMentorFixedRuleTest methodsFor: 'running' stamp: 'HAW 18/Aug/2026, 12:31:44 pm (UTC)'!
+setUp
+	"The static verifications are pure (they take the class to check as an argument), so a bare
+	review instance is enough - no mentor or LLM is needed."
+	review := SmalltalkMentorClassReview new.
+	fixtures := OrderedCollection new! !
+
+!SmalltalkMentorFixedRuleTest methodsFor: 'running' stamp: 'HAW 18/Aug/2026, 12:31:46 pm (UTC)'!
+tearDown
+	fixtures do: [ :cls | cls removeFromSystem ].
+	fixtures := OrderedCollection new! !
+
+!SmalltalkMentorFixedRuleTest methodsFor: 'support' stamp: 'HAW 18/Aug/2026, 12:31:50 pm (UTC)'!
+includesSubstring: aSubstring in: aString
+	^(review firstIndexOf: aSubstring in: aString) > 0! !
+
+!SmalltalkMentorFixedRuleTest methodsFor: 'support' stamp: 'HAW 18/Aug/2026, 12:31:48 pm (UTC)'!
+newFixtureInstanceVariableNames: instanceNames classVariableNames: classNames
+	"A throwaway class (removed in tearDown) used to exercise one static rule. Its category is
+	outside every SmalltalkMentor package so no package ever claims it."
+	| cls |
+	cls := Object subclass: #SMMentorFixture
+		instanceVariableNames: instanceNames
+		classVariableNames: classNames
+		poolDictionaries: ''
+		category: 'SMMentorFixtures'.
+	fixtures add: cls.
+	^cls! !
+
+!SmalltalkMentorFixedRuleTest methodsFor: 'tests' stamp: 'HAW 18/Aug/2026, 12:32:11 pm (UTC)'!
+testClassMustBeReferenced
+	| cls findings |
+	cls := self newFixtureInstanceVariableNames: '' classVariableNames: ''.
+	findings := review classReferencedFindingsFor: cls.
+	self assert: findings notEmpty.
+	"a class that other classes reference is not flagged"
+	self assert: (review classReferencedFindingsFor: SmalltalkMentorFinding) isEmpty! !
+
+!SmalltalkMentorFixedRuleTest methodsFor: 'tests' stamp: 'HAW 18/Aug/2026, 12:31:58 pm (UTC)'!
+testClassVariableMustBeReadAndWritten
+	| cls findings |
+	cls := self newFixtureInstanceVariableNames: '' classVariableNames: 'UnusedClassVar'.
+	findings := review classVarFindingsFor: cls.
+	self assert: (findings anySatisfy: [ :f | f editKind = #variable and: [ f editTarget value = 'UnusedClassVar' ] ])! !
+
+!SmalltalkMentorFixedRuleTest methodsFor: 'tests' stamp: 'HAW 18/Aug/2026, 12:31:56 pm (UTC)'!
+testInstanceVariableMustBeReadAndWritten
+	| cls findings |
+	cls := self newFixtureInstanceVariableNames: 'unusedIvar' classVariableNames: ''.
+	findings := review instVarFindingsFor: cls.
+	self assert: (findings anySatisfy: [ :f | f editKind = #variable and: [ f editTarget value = 'unusedIvar' ] ])! !
+
+!SmalltalkMentorFixedRuleTest methodsFor: 'tests' stamp: 'HAW 18/Aug/2026, 12:32:04 pm (UTC)'!
+testMethodMustBeCategorized
+	| cls findings |
+	cls := self newFixtureInstanceVariableNames: '' classVariableNames: ''.
+	cls compile: 'looseMethod ^1' classified: 'as yet unclassified'.
+	findings := review uncategorizedMethodsFindingsFor: cls.
+	self assert: (findings anySatisfy: [ :f | f editTarget value = #looseMethod ])! !
+
+!SmalltalkMentorFixedRuleTest methodsFor: 'tests' stamp: 'HAW 18/Aug/2026, 12:33:28 pm (UTC)'!
+testMethodMustHaveSenders
+	| cls findings |
+	cls := self newFixtureInstanceVariableNames: '' classVariableNames: ''.
+	cls compile: 'orphanMethodXyz ^42' classified: 'accessing'.
+	findings := review methodsWithoutSendersFindingsFor: cls.
+	"Compare by asString, not the #orphanMethodXyz literal: a Symbol literal here would itself
+	count as a sender and defeat the rule."
+	self assert: (findings anySatisfy: [ :f | f editTarget value asString = 'orphanMethodXyz' ])! !
+
+!SmalltalkMentorFixedRuleTest methodsFor: 'tests' stamp: 'HAW 18/Aug/2026, 12:32:02 pm (UTC)'!
+testSentMessageMustHaveImplementer
+	| cls findings |
+	cls := self newFixtureInstanceVariableNames: '' classVariableNames: ''.
+	cls compile: 'callsMissing ^self zzzNoSuchSelectorXyz' classified: 'accessing'.
+	findings := review messagesWithoutImplementersFindingsFor: cls.
+	self assert: (findings anySatisfy: [ :f | self includesSubstring: 'zzzNoSuchSelectorXyz' in: f title ])! !
+
+!SmalltalkMentorFixedRuleTest methodsFor: 'tests' stamp: 'HAW 18/Aug/2026, 12:32:09 pm (UTC)'!
+testUnusedAndWriteOnlyTempsAreFlaggedButUsedAndCapturedAreNot
+	| cls findings |
+	cls := self newFixtureInstanceVariableNames: '' classVariableNames: ''.
+	cls compile: 'withTemps
+	| usedTemp reallyUnused writeOnly |
+	usedTemp := 1.
+	writeOnly := 2.
+	^usedTemp' classified: 'accessing'.
+	cls compile: 'withCapture
+	| shared |
+	[ shared := 5 ] value.
+	^shared' classified: 'accessing'.
+	findings := review unusedTempsFindingsFor: cls.
+	self assert: 2 equals: findings size.
+	self assert: (findings anySatisfy: [ :f | self includesSubstring: 'reallyUnused' in: f title ]).
+	self assert: (findings anySatisfy: [ :f | self includesSubstring: 'writeOnly' in: f title ]).
+	self deny: (findings anySatisfy: [ :f | self includesSubstring: 'usedTemp' in: f title ]).
+	self deny: (findings anySatisfy: [ :f | self includesSubstring: 'shared' in: f title ])! !
 
 !SmalltalkMentorRuleTest methodsFor: 'support' stamp: 'HAW 14/Aug/2026, 12:21:39 pm (UTC)'!
 assertRule: ruleId caughtIn: methodSource fix: aFixBlock

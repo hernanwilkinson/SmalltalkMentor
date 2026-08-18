@@ -15,10 +15,17 @@ breaks your rules and proposes a fix, and the student applies the refactoring th
   suggested version, with a conversation you can continue.
 - **Review a whole class** — press `cmd+0` on a class and get a window that combines:
   - **Static checks** (pure Smalltalk, no LLM, instant): unread/unwritten instance and
-    class variables, methods with no senders, messages with no implementer, and
-    uncategorized methods.
+    class variables, methods with no senders, messages with no implementer, uncategorized
+    methods, unused/write-only temporaries, and whether the class is referenced.
   - **Per-method LLM reviews** (lazy — one call when you click a method).
+- **Review a method category** — press `cmd+0` on a protocol (the method-category list)
+  to review every method in it, lazily, one at a time.
+- **Review a class category** — press `cmd+0` on a system category (the class-category
+  list) to get every class in it, sorted alphabetically; each expands into a full class
+  review.
 - **Multiple LLM providers** — Claude, ChatGPT, Deepseek, Nvidia NIM, Gemini.
+- **Looks like the browser** — the review windows use the system-browser theme, so the
+  lists, buttons and code panes match the tools you already use.
 - **Your own rules** — a plain Markdown file; edits take effect on the next review, no
   recompile.
 - **Answers in Spanish or English**, per conversation.
@@ -55,8 +62,8 @@ To run the tests as well, load **`SmalltalkMentorTests.pck.st`** *after* `Smallt
 To (re)install or remove the menus manually:
 
 ```smalltalk
-SmalltalkMentor current install.
-SmalltalkMentor current uninstall.
+SmalltalkMentor initializeMenues.   "register the menus and cmd+0 shortcuts"
+SmalltalkMentor unloadMenues.       "remove them"
 ```
 
 ## Configuring the LLM keys
@@ -123,8 +130,11 @@ add, remove, or reword rules freely, and add new categories (e.g. `## Collection
 
 ## Using it from the Smalltalk UI
 
-A **Smalltalk Mentor** submenu is added to the code pane, the message list, and the class
-list of the browser (and the method-set / debugger code panes).
+A **Smalltalk Mentor** submenu is added to all four browser panes — the code pane, the
+message list, the method-category (protocol) list and the class-category (system category)
+list — as well as the class list (and the method-set / debugger code panes). Each carries
+its own `cmd+0` action (*Review this method / method category / class / class category*)
+plus *Toggle response language* and *Choose LLM provider and model…*.
 
 ### Reviewing one method
 
@@ -153,15 +163,33 @@ opens with a tree on the left and a detail pane on the right:
   *Browse* (open a system browser on it).
 - A **provider button** below the tree switches the LLM for that window's reviews.
 
+### Reviewing a method category
+
+Select a protocol in the **method-category list** (the third browser column) and press
+`cmd+0` (or *Review this method category*). You get the same tree/detail window, its list
+being the methods of that category — each reviewed lazily by the LLM when you select it.
+The virtual `-- all --` category reviews every method of the class.
+
+### Reviewing a class category
+
+Select a system category in the **class-category list** (the first browser column) and
+press `cmd+0` (or *Review this class category*). The tree's top level is the classes of
+that category, **sorted alphabetically**; expanding a class shows exactly the same subtree
+as a class review (its static rule roots and its methods), so each class behaves as a full
+class review in place.
+
 ### The built-in (non-LLM) checks
 
-These run instantly in Smalltalk when you open a class review:
+These run instantly in Smalltalk when you open a class (or class-category) review:
 
 1. Every **instance variable** is both read and written.
 2. Every implemented **message has senders** (test methods and overrides are excluded).
 3. Every **message sent has an implementer** (catches typos / missing methods).
 4. Every **class variable** is both read and written.
 5. Every **method is categorized** (not in *as yet unclassified*).
+6. No method declares an **unused or write-only temporary** variable.
+7. The **class is referenced** somewhere (flags dead classes with no references and no
+   subclasses).
 
 ## Choosing the provider, model and language
 
@@ -183,14 +211,20 @@ review the same method with two different providers side by side.
 
 ## Tests
 
-The **`SmalltalkMentorTests`** package (load it after `SmalltalkMentor`) provides
-`SmalltalkMentorRuleTest` — one live test per rule. Each asks Claude Opus to review a
-method that violates the rule and checks the fix is applied (or the rule id is cited),
-best-of-3 to absorb the model's non-determinism. Running the suite makes real API calls,
-so it needs a valid Anthropic key.
+The **`SmalltalkMentorTests`** package (load it after `SmalltalkMentor`) has two test
+classes:
+
+- **`SmalltalkMentorRuleTest`** — one live test per *LLM* rule. Each asks Claude Opus to
+  review a method that violates the rule and checks the fix is applied (or the rule id is
+  cited), best-of-3 to absorb the model's non-determinism. Running it makes real API calls,
+  so it needs a valid Anthropic key.
+- **`SmalltalkMentorFixedRuleTest`** — one test per *built-in (non-LLM)* check. These are
+  deterministic and need no API key: each builds a throwaway fixture class that violates a
+  rule and asserts the corresponding static check flags it.
 
 ```smalltalk
-SmalltalkMentorRuleTest run: #testAndOrTakeBlocks.        "one rule"
+SmalltalkMentorFixedRuleTest run: #testClassMustBeReferenced.   "one static rule, no key"
+SmalltalkMentorRuleTest run: #testAndOrTakeBlocks.              "one LLM rule, needs a key"
 [ Transcript showln: (SmalltalkMentorRuleTest suite run) printString ] fork.  "all — off the UI process"
 ```
 
@@ -204,7 +238,14 @@ SmalltalkMentorRuleTest run: #testAndOrTakeBlocks.        "one rule"
   providers just re-sends it.
 - `SmalltalkMentorReview` — a single-method review (window or embedded panel).
 - `SmalltalkMentorClassReview` — the class-review window: static checks + lazy per-method
-  reviews, master/detail with a `HierarchicalListMorph` tree.
+  reviews, master/detail with a `HierarchicalListMorph` tree. Its node-builders are
+  parameterised by class so the category reviews can reuse them.
+  - `SmalltalkMentorMethodCategoryReview` — subclass reviewing one protocol's methods.
+  - `SmalltalkMentorClassCategoryReview` — subclass reviewing a system category, each class
+    expanding (lazily) into a class-review subtree.
+- `SmalltalkMentorReviewWindow` — a `SystemWindow` themed like the browser (`windowColor`
+  ↦ `Theme current browser`), used by every review window so the lists, buttons and code
+  panes match the system tools.
 
 ---
 
