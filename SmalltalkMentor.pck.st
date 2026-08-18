@@ -1,6 +1,6 @@
-'From Cuis7.9 [latest update: #8113] on 18 August 2026 at 11:24:25 am'!
+'From Cuis7.9 [latest update: #8113] on 18 August 2026 at 3:56:40 pm'!
 'Description Better menu definition'!
-!provides: 'SmalltalkMentor' 1 28!
+!provides: 'SmalltalkMentor' 1 29!
 !requires: 'JSON' 1 29 nil!
 !requires: 'OSProcess' 1 36 nil!
 SystemOrganization addCategory: #SmalltalkMentor!
@@ -157,33 +157,44 @@ SmalltalkMentorNode class
 	instanceVariableNames: ''!
 
 
-!SmalltalkMentorNoCopyTextModel methodsFor: 'accessing' stamp: 'HAW 16/Aug/2026, 9:41:27 pm (UTC)'!
+!SmalltalkMentorNoCopyTextModel methodsFor: 'accessing' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 styleClass: aClassOrMetaClass
+
 	"The class context used to syntax-highlight the suggestion as a method."
+
 	styleClass := aClassOrMetaClass! !
 
-!SmalltalkMentorNoCopyTextModel methodsFor: 'styling' stamp: 'HAW 16/Aug/2026, 9:41:40 pm (UTC)'!
+!SmalltalkMentorNoCopyTextModel methodsFor: 'styling' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 aboutToStyleWith: anSHTextStyler
+
 	"Style as a method in the reviewed class (classOrMetaClass set, workspace nil = method
 	mode, not the red doit mode)."
+
 	anSHTextStyler classOrMetaClass: styleClass.
 	^true! !
 
-!SmalltalkMentorNoCopyTextModel methodsFor: 'styling' stamp: 'HAW 14/Aug/2026, 6:19:02 pm (UTC)'!
+!SmalltalkMentorNoCopyTextModel methodsFor: 'styling' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 editorClass
+
 	"Use the editor that refuses to copy to the clipboard."
+
 	^SmalltalkMentorNoCopyEditor! !
 
-!SmalltalkMentorNoCopyTextModel methodsFor: 'styling' stamp: 'HAW 16/Aug/2026, 9:41:33 pm (UTC)'!
+!SmalltalkMentorNoCopyTextModel methodsFor: 'styling' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 textStylerClass
+
 	"Syntax-highlight the suggestion as Smalltalk."
+
 	^SHTextStylerST80! !
 
-!SmalltalkMentorTreeMorph methodsFor: 'events' stamp: 'HAW 16/Aug/2026, 6:26:10 pm (UTC)'!
+!SmalltalkMentorTreeMorph methodsFor: 'events' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 mouseButton2Down: aMouseButtonEvent localPosition: localEventPosition
+
 	"Right-click: select the item under the cursor and pop a context menu ('Run again' /
 	'Browse') that acts on its node via the model."
+
 	| itemMorph node menu |
+
 	itemMorph := self itemFromPoint: localEventPosition.
 	itemMorph ifNil: [ ^super mouseButton2Down: aMouseButtonEvent localPosition: localEventPosition ].
 	self setSelectedMorph: itemMorph.
@@ -193,34 +204,43 @@ mouseButton2Down: aMouseButtonEvent localPosition: localEventPosition
 	menu add: 'Browse' target: model action: #browseNode: argumentList: { node }.
 	menu popUpInWorld! !
 
-!SmalltalkMentorReviewWindow methodsFor: 'as yet unclassified' stamp: 'HAW 18/Aug/2026, 1:05:00 pm (UTC)'!
+!SmalltalkMentorReviewWindow methodsFor: 'as yet unclassified' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 windowColor
+
 	"Use the same tool color as the system browser so the lists, buttons and code panes are
 	themed identically (a plain SystemWindow with no model would fall back to a gray default)."
+
 	^Theme current browser! !
 
-!LLMProvider methodsFor: 'accessing' stamp: 'HAW 7/Aug/2026, 6:48:09 pm (UTC)'!
+!LLMProvider methodsFor: 'accessing' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 model
+
 	^model! !
 
-!LLMProvider methodsFor: 'accessing' stamp: 'HAW 7/Aug/2026, 6:48:18 pm (UTC)'!
+!LLMProvider methodsFor: 'accessing' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 model: aString
+
 	model := aString! !
 
-!LLMProvider methodsFor: 'accessing' stamp: 'HAW 7/Aug/2026, 6:47:51 pm (UTC)'!
+!LLMProvider methodsFor: 'accessing' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 name
+
 	^name! !
 
-!LLMProvider methodsFor: 'printing' stamp: 'HAW 7/Aug/2026, 6:48:30 pm (UTC)'!
+!LLMProvider methodsFor: 'printing' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 printOn: aStream
+
 	aStream nextPutAll: (name ifNil: [ self class name ]), ' (', (model ifNil: [ '?' ]), ')'! !
 
-!LLMProvider methodsFor: 'requesting' stamp: 'HAW 7/Aug/2026, 8:08:07 pm (UTC)'!
+!LLMProvider methodsFor: 'requesting' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 completionForMessages: neutralMessages
+
 	"Template method: write the request body, POST it via curl (the image has no TLS), and
 	answer the assistant's text. Subclass hooks: #endpoint, #authCurlArgs, #bodyForMessages:,
 	#extractTextFrom:."
+
 	| reqPath respPath curl |
+
 	reqPath := '/tmp/smalltalk-mentor-req.json'.
 	respPath := '/tmp/smalltalk-mentor-resp.json'.
 	reqPath asFileEntry fileContents: (self bodyForMessages: neutralMessages).
@@ -231,80 +251,105 @@ completionForMessages: neutralMessages
 	OSProcess waitForCommand: curl.
 	^self extractTextFrom: respPath asFileEntry fileContents! !
 
-!LLMProvider methodsFor: 'private' stamp: 'HAW 7/Aug/2026, 6:48:42 pm (UTC)'!
+!LLMProvider methodsFor: 'private' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 authCurlArgs
+
 	"The curl -H authorization argument(s) for this provider, reading the key from its
 	key file at request time via $(cat ...). Subclasses answer this."
+
 	^self subclassResponsibility! !
 
-!LLMProvider methodsFor: 'private' stamp: 'HAW 7/Aug/2026, 6:48:48 pm (UTC)'!
+!LLMProvider methodsFor: 'private' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 bodyForMessages: neutralMessages
+
 	"Render the JSON request body from a collection of neutral {role, content} messages
 	(role is 'user' or 'assistant'). Subclasses answer this in their wire format."
+
 	^self subclassResponsibility! !
 
-!LLMProvider methodsFor: 'private' stamp: 'HAW 7/Aug/2026, 6:48:37 pm (UTC)'!
+!LLMProvider methodsFor: 'private' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 endpoint
+
 	"The full request URL. Subclasses answer this (Gemini folds the model into the URL)."
+
 	^self subclassResponsibility! !
 
-!LLMProvider methodsFor: 'private' stamp: 'HAW 7/Aug/2026, 6:48:56 pm (UTC)'!
+!LLMProvider methodsFor: 'private' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 extractTextFrom: jsonString
+
 	"Parse the provider's JSON response and answer the assistant's text. Subclasses answer."
+
 	^self subclassResponsibility! !
 
-!LLMProvider methodsFor: 'private' stamp: 'HAW 18/Aug/2026, 1:45:04 pm (UTC)'!
+!LLMProvider methodsFor: 'private' stamp: 'HAW 18/Aug/2026, 6:55:23 pm (UTC)'!
 homeKeyPath
+
 	"Path of this provider's key file under the shared ~/.smalltalk-mentor directory, using the
 	same file name as in the image directory (checked after the image-directory key)."
+
 	^'$HOME/.smalltalk-mentor/', self keyImageBasename! !
 
-!LLMProvider methodsFor: 'private' stamp: 'HAW 17/Aug/2026, 9:50:56 pm (UTC)'!
+!LLMProvider methodsFor: 'private' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 imageKeyPath
+
 	"Absolute path of this provider's key file in the image directory (checked before the
 	home-directory key)."
+
 	^(Smalltalk imagePath ), '/', self keyImageBasename! !
 
-!LLMProvider methodsFor: 'private' stamp: 'HAW 14/Aug/2026, 2:20:18 pm (UTC)'!
+!LLMProvider methodsFor: 'private' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 keyImageBasename
+
 	"File name of this provider's key inside the image directory. Subclasses answer this."
+
 	^self subclassResponsibility! !
 
-!LLMProvider methodsFor: 'private' stamp: 'HAW 18/Aug/2026, 1:45:06 pm (UTC)'!
+!LLMProvider methodsFor: 'private' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 keyLookupShellCommand
+
 	"Shell command that prints this provider's API key: the key file in the image directory,
 	falling back to the same-named file under ~/.smalltalk-mentor."
+
 	^'cat "', self imageKeyPath, '" 2>/dev/null || cat "', self homeKeyPath, '" 2>/dev/null'! !
 
-!AnthropicProvider methodsFor: 'initialization' stamp: 'HAW 7/Aug/2026, 6:49:10 pm (UTC)'!
+!AnthropicProvider methodsFor: 'initialization' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 initialize
+
 	name := 'Claude'.
 	model := 'claude-opus-4-8'! !
 
-!AnthropicProvider methodsFor: 'private' stamp: 'HAW 18/Aug/2026, 1:45:08 pm (UTC)'!
+!AnthropicProvider methodsFor: 'private' stamp: 'HAW 18/Aug/2026, 6:55:35 pm (UTC)'!
 authCurlArgs
+
 	"Anthropic uses x-api-key plus a version header. The key is read from the image directory,
 	then ~/.smalltalk-mentor, then the ANTHROPIC_API_KEY environment variable."
+
 	^'-H "anthropic-version: 2023-06-01" -H "x-api-key: $(', self keyLookupShellCommand, ' || printf %s "$ANTHROPIC_API_KEY")"'! !
 
-!AnthropicProvider methodsFor: 'private' stamp: 'HAW 7/Aug/2026, 6:49:27 pm (UTC)'!
+!AnthropicProvider methodsFor: 'private' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 bodyForMessages: neutralMessages
+
 	"Anthropic Messages API: {model, max_tokens, messages:[{role, content}]} - the neutral
 	messages are already in this shape."
+
 	^Json render: (JsonObject new
 		at: 'model' put: model;
 		at: 'max_tokens' put: 2000;
 		at: 'messages' put: neutralMessages asArray;
 		yourself)! !
 
-!AnthropicProvider methodsFor: 'private' stamp: 'HAW 7/Aug/2026, 6:49:15 pm (UTC)'!
+!AnthropicProvider methodsFor: 'private' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 endpoint
+
 	^'https://api.anthropic.com/v1/messages'! !
 
-!AnthropicProvider methodsFor: 'private' stamp: 'HAW 7/Aug/2026, 6:49:37 pm (UTC)'!
+!AnthropicProvider methodsFor: 'private' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 extractTextFrom: jsonString
+
 	"Anthropic reply: content is a list of blocks; concatenate the text ones."
+
 	| resp |
+
 	resp := Json readFrom: jsonString readStream.
 	(resp includesKey: 'error') ifTrue: [
 		^self error: 'API error: ', ((resp at: 'error') at: 'message' ifAbsent: [ jsonString ]) ].
@@ -315,26 +360,33 @@ extractTextFrom: jsonString
 				ifTrue: [ acc, (block at: 'text' ifAbsent: [ '' ]) ]
 				ifFalse: [ acc ] ]! !
 
-!AnthropicProvider methodsFor: 'private' stamp: 'HAW 14/Aug/2026, 2:20:23 pm (UTC)'!
+!AnthropicProvider methodsFor: 'private' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 keyImageBasename
+
 	^'anthropic.key'! !
 
-!GeminiProvider methodsFor: 'initialization' stamp: 'HAW 7/Aug/2026, 6:50:34 pm (UTC)'!
+!GeminiProvider methodsFor: 'initialization' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 initialize
+
 	name := 'Gemini'.
 	model := 'gemini-2.0-flash'! !
 
-!GeminiProvider methodsFor: 'private' stamp: 'HAW 18/Aug/2026, 1:45:13 pm (UTC)'!
+!GeminiProvider methodsFor: 'private' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 authCurlArgs
+
 	"Gemini uses the x-goog-api-key header. The key is read from the image directory, then
 	~/.smalltalk-mentor."
+
 	^'-H "x-goog-api-key: $(', self keyLookupShellCommand, ')"'! !
 
-!GeminiProvider methodsFor: 'private' stamp: 'HAW 7/Aug/2026, 6:51:00 pm (UTC)'!
+!GeminiProvider methodsFor: 'private' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 bodyForMessages: neutralMessages
+
 	"Gemini generateContent: {contents:[{role, parts:[{text}]}], generationConfig}. Roles
 	are 'user' and 'model' (assistant -> model)."
+
 	| contents |
+
 	contents := neutralMessages collect: [ :m |
 		JsonObject new
 			at: 'role' put: ((m at: 'role') = 'assistant' ifTrue: [ 'model' ] ifFalse: [ 'user' ]);
@@ -345,15 +397,20 @@ bodyForMessages: neutralMessages
 		at: 'generationConfig' put: (JsonObject new at: 'maxOutputTokens' put: 2000; yourself);
 		yourself)! !
 
-!GeminiProvider methodsFor: 'private' stamp: 'HAW 7/Aug/2026, 6:50:47 pm (UTC)'!
+!GeminiProvider methodsFor: 'private' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 endpoint
+
 	"Gemini folds the model into the URL path."
+
 	^'https://generativelanguage.googleapis.com/v1beta/models/', model, ':generateContent'! !
 
-!GeminiProvider methodsFor: 'private' stamp: 'HAW 7/Aug/2026, 6:51:09 pm (UTC)'!
+!GeminiProvider methodsFor: 'private' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 extractTextFrom: jsonString
+
 	"Gemini reply: candidates first content parts, concatenated."
+
 	| resp candidates parts |
+
 	resp := Json readFrom: jsonString readStream.
 	(resp includesKey: 'error') ifTrue: [
 		^self error: 'API error: ', ((resp at: 'error') at: 'message' ifAbsent: [ jsonString ]) ].
@@ -363,34 +420,43 @@ extractTextFrom: jsonString
 		at: 'parts' ifAbsent: [ ^self error: 'No parts in content: ', jsonString ].
 	^parts inject: '' into: [ :acc :p | acc, (p at: 'text' ifAbsent: [ '' ]) ]! !
 
-!GeminiProvider methodsFor: 'private' stamp: 'HAW 14/Aug/2026, 2:20:34 pm (UTC)'!
+!GeminiProvider methodsFor: 'private' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 keyImageBasename
+
 	^'gemini.key'! !
 
-!OpenAICompatibleProvider methodsFor: 'accessing' stamp: 'HAW 7/Aug/2026, 6:49:49 pm (UTC)'!
+!OpenAICompatibleProvider methodsFor: 'accessing' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 endpoint
+
 	^endpoint! !
 
-!OpenAICompatibleProvider methodsFor: 'private' stamp: 'HAW 18/Aug/2026, 1:45:10 pm (UTC)'!
+!OpenAICompatibleProvider methodsFor: 'private' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 authCurlArgs
+
 	"OpenAI-compatible APIs use a Bearer token. The key is read from the image directory, then
 	~/.smalltalk-mentor."
+
 	^'-H "authorization: Bearer $(', self keyLookupShellCommand, ')"'! !
 
-!OpenAICompatibleProvider methodsFor: 'private' stamp: 'HAW 7/Aug/2026, 6:50:21 pm (UTC)'!
+!OpenAICompatibleProvider methodsFor: 'private' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 bodyForMessages: neutralMessages
+
 	"OpenAI chat/completions: {model, messages:[{role, content}], max_tokens} - the neutral
 	messages are already in this shape."
+
 	^Json render: (JsonObject new
 		at: 'model' put: model;
 		at: 'messages' put: neutralMessages asArray;
 		at: 'max_tokens' put: 2000;
 		yourself)! !
 
-!OpenAICompatibleProvider methodsFor: 'private' stamp: 'HAW 7/Aug/2026, 6:50:29 pm (UTC)'!
+!OpenAICompatibleProvider methodsFor: 'private' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 extractTextFrom: jsonString
+
 	"OpenAI-compatible reply: choices first message content."
+
 	| resp choices |
+
 	resp := Json readFrom: jsonString readStream.
 	(resp includesKey: 'error') ifTrue: [
 		| err |
@@ -401,77 +467,98 @@ extractTextFrom: jsonString
 	^(choices first at: 'message' ifAbsent: [ ^self error: 'No message in choice: ', jsonString ])
 		at: 'content' ifAbsent: [ '' ]! !
 
-!OpenAICompatibleProvider methodsFor: 'private' stamp: 'HAW 14/Aug/2026, 2:21:08 pm (UTC)'!
+!OpenAICompatibleProvider methodsFor: 'private' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 keyImageBasename
+
 	^imageKeyBasename! !
 
-!OpenAICompatibleProvider methodsFor: 'as yet unclassified' stamp: 'HAW 18/Aug/2026, 1:45:35 pm (UTC)'!
+!OpenAICompatibleProvider methodsFor: 'as yet unclassified' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 initializeName: aName endpoint: anEndpoint model: aModel imageKeyBasename: anImageBasename
+
 	name := aName.
 	endpoint := anEndpoint.
 	model := aModel.
 	imageKeyBasename := anImageBasename! !
 
-!OpenAICompatibleProvider class methodsFor: 'as yet unclassified' stamp: 'HAW 18/Aug/2026, 1:45:37 pm (UTC)'!
+!OpenAICompatibleProvider class methodsFor: 'as yet unclassified' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 name: aName endpoint: anEndpoint model: aModel imageKeyBasename: anImageBasename
+
 	"Configure an OpenAI-compatible provider (ChatGPT / Deepseek / Nvidia NIM). Its key is read
 	from <imageDir>/<imageKeyBasename> then ~/.smalltalk-mentor/<imageKeyBasename>."
+
 	^self new
 		initializeName: aName endpoint: anEndpoint model: aModel imageKeyBasename: anImageBasename! !
 
-!SmalltalkMentor methodsFor: 'initialization' stamp: 'HAW 14/Aug/2026, 6:50:48 pm (UTC)'!
+!SmalltalkMentor methodsFor: 'initialization' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 initialize
+
 	"Start with the first provider selected and Spanish as the response language."
+
 	provider := SmalltalkMentor providers first.
 	language := 'Spanish'! !
 
-!SmalltalkMentor methodsFor: 'copying' stamp: 'HAW 14/Aug/2026, 6:51:09 pm (UTC)'!
+!SmalltalkMentor methodsFor: 'copying' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 postCopy
+
 	"A copied mentor gets its own frozen provider, so a review keeps its provider/model even
 	if the shared mentor's provider or model later changes."
+
 	super postCopy.
 	provider := provider copy! !
 
-!SmalltalkMentor methodsFor: 'accessing' stamp: 'HAW 14/Aug/2026, 6:08:23 pm (UTC)'!
+!SmalltalkMentor methodsFor: 'accessing' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 language
+
 	^language! !
 
-!SmalltalkMentor methodsFor: 'accessing' stamp: 'HAW 14/Aug/2026, 6:08:30 pm (UTC)'!
+!SmalltalkMentor methodsFor: 'accessing' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 language: aLanguage
+
 	language := aLanguage! !
 
-!SmalltalkMentor methodsFor: 'accessing' stamp: 'HAW 14/Aug/2026, 6:07:46 pm (UTC)'!
+!SmalltalkMentor methodsFor: 'accessing' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 model
+
 	"The model of the current provider."
+
 	^self provider model! !
 
-!SmalltalkMentor methodsFor: 'accessing' stamp: 'HAW 14/Aug/2026, 6:07:46 pm (UTC)'!
+!SmalltalkMentor methodsFor: 'accessing' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 model: aString
+
 	"Set the model of the current provider."
+
 	self provider model: aString! !
 
-!SmalltalkMentor methodsFor: 'accessing' stamp: 'HAW 14/Aug/2026, 6:50:54 pm (UTC)'!
+!SmalltalkMentor methodsFor: 'accessing' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 provider
+
 	^provider! !
 
-!SmalltalkMentor methodsFor: 'accessing' stamp: 'HAW 14/Aug/2026, 6:51:02 pm (UTC)'!
+!SmalltalkMentor methodsFor: 'accessing' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 provider: aProvider
+
 	provider := aProvider! !
 
-!SmalltalkMentor methodsFor: 'accessing' stamp: 'HAW 14/Aug/2026, 6:08:34 pm (UTC)'!
+!SmalltalkMentor methodsFor: 'accessing' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 providers
+
 	"The known providers (registry lives on the class)."
+
 	^SmalltalkMentor providers! !
 
-!SmalltalkMentor methodsFor: 'rules' stamp: 'HAW 17/Aug/2026, 9:50:56 pm (UTC)'!
+!SmalltalkMentor methodsFor: 'rules' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 currentReviewRules
+
 	"The rules to enforce, looked up in order:
 	 1. <imageDirectory>/smalltalk-mentor-rules.md  (per-image rules, checked first)
 	 2. ~/.smalltalk-mentor/rules.md                (per-user rules)
 	 3. the built-in #defaultReviewRules
 	Files are read via the shell (avoids resolving $HOME in the image), mirroring the key
 	handling."
+
 	| tmp raw |
+
 	tmp := '/tmp/smalltalk-mentor-rules.txt'.
 	OSProcess waitForCommand:
 		'sh -c ''I="', (Smalltalk imagePath ), '/smalltalk-mentor-rules.md"; H="$HOME/.smalltalk-mentor/rules.md"; if [ -s "$I" ]; then cat "$I"; elif [ -s "$H" ]; then cat "$H"; fi > ', tmp, ' 2>/dev/null || : > ', tmp, ''''.
@@ -479,12 +566,14 @@ currentReviewRules
 	raw := raw withBlanksTrimmed.
 	^raw isEmpty ifTrue: [ self defaultReviewRules ] ifFalse: [ raw ]! !
 
-!SmalltalkMentor methodsFor: 'rules' stamp: 'HAW 14/Aug/2026, 6:07:46 pm (UTC)'!
+!SmalltalkMentor methodsFor: 'rules' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 defaultReviewRules
+
 	"Built-in project rules, used when ~/.smalltalk-mentor/rules.md is absent or blank.
 	Grouped under ## Category headings; each rule is prefixed with a short [id] name so the
 	mentor can cite it. Edit here, or override by creating that file (see #reviewRulesFilePath
 	/ #writeDefaultReviewRulesFile)."
+
 	^'## Testing
 - [assert-equals] Prefer `assert: expected equals: actual` over `assert: expected = actual`
   (and over other `assert:`/`deny:` boolean-equality forms) so a failing test shows both
@@ -494,36 +583,46 @@ defaultReviewRules
 - [valid-on-creation] Objects should be valid from the moment they are created: instance
   creation messages validate their arguments with assertions encapsulated on the class side.'! !
 
-!SmalltalkMentor methodsFor: 'rules' stamp: 'HAW 14/Aug/2026, 6:07:46 pm (UTC)'!
+!SmalltalkMentor methodsFor: 'rules' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 reviewRulesFilePath
+
 	"Where project-specific review rules live."
+
 	^'~/.smalltalk-mentor/rules.md'! !
 
-!SmalltalkMentor methodsFor: 'rules' stamp: 'HAW 14/Aug/2026, 6:23:15 pm (UTC)'!
+!SmalltalkMentor methodsFor: 'rules' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 writeDefaultReviewRulesFile
+
 	"Create ~/.smalltalk-mentor/rules.md seeded with the built-in defaults, only if it does
 	not already exist. Gives you a file to start editing.
 	Evaluate:  SmalltalkMentor current writeDefaultReviewRulesFile"
+
 	| tmp |
+
 	tmp := '/tmp/smalltalk-mentor-rules-seed.txt'.
 	tmp asFileEntry fileContents: self defaultReviewRules.
 	OSProcess waitForCommand:
 		'sh -c ''mkdir -p "$HOME/.smalltalk-mentor"; F="$HOME/.smalltalk-mentor/rules.md"; [ -f "$F" ] || cp ', tmp, ' "$F"'''.
 	Transcript show: 'Seeded ', self reviewRulesFilePath, ' (if it did not already exist)'; newLine! !
 
-!SmalltalkMentor methodsFor: 'reviewing' stamp: 'HAW 14/Aug/2026, 6:07:46 pm (UTC)'!
+!SmalltalkMentor methodsFor: 'reviewing' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 askAbout: source
+
 	"Single-shot convenience: review a method source with no follow-up conversation.
 	See #completionForMessages: and #promptFor:."
+
 	^self completionForMessages: {
 		self userMessage: (self promptFor: source) }! !
 
-!SmalltalkMentor methodsFor: 'reviewing' stamp: 'HAW 18/Aug/2026, 12:00:22 pm (UTC)'!
+!SmalltalkMentor methodsFor: 'reviewing' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 reviewClassCategoryFromMorph: aMorph
+
 	"Class-category (system category) list menu action / cmd+0 on a class category. aMorph is
 	the category-list morph; its model is the browser. Snapshot this mentor and open a
 	class-category review of every class in the selected category."
+
 	| browser systemCategory reviewMentor |
+
 	browser := aMorph model.
 	systemCategory := [ browser selectedSystemCategory ] on: Error do: [ :e | nil ].
 	systemCategory ifNil: [
@@ -532,23 +631,29 @@ reviewClassCategoryFromMorph: aMorph
 	self showTransientToast: 'Smalltalk Mentor is reviewing class category ', systemCategory asString, ' with ', reviewMentor provider name.
 	SmalltalkMentorClassCategoryReview reviewSystemCategory: systemCategory mentor: reviewMentor! !
 
-!SmalltalkMentor methodsFor: 'reviewing' stamp: 'HAW 15/Aug/2026, 1:59:07 am (UTC)'!
+!SmalltalkMentor methodsFor: 'reviewing' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 reviewClassFromMorph: aMorph
+
 	"Class-list menu action / cmd+0 on a class. aMorph is the class-list morph; its model is
 	the browser. Snapshot this mentor and open a class review."
+
 	| aClass reviewMentor |
+
 	aClass := [ aMorph model selectedClass ] on: Error do: [ :e | nil ].
 	aClass ifNil: [ ^PopUpMenu inform: 'Select a class first, then press cmd+0.' ].
 	reviewMentor := self copy.
 	self showTransientToast: 'Smalltalk Mentor is reviewing class ', aClass name, ' with ', reviewMentor provider name.
 	SmalltalkMentorClassReview reviewClass: aClass mentor: reviewMentor! !
 
-!SmalltalkMentor methodsFor: 'reviewing' stamp: 'HAW 18/Aug/2026, 12:55:21 pm (UTC)'!
+!SmalltalkMentor methodsFor: 'reviewing' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 reviewFromMorph: aMorph
+
 	"Entry point for the cmd+0 shortcut / menu, from the code editor OR the message list. The
 	code provider is the editor's #codeProvider or, for the message list, the morph's #model
 	(the browser). Snapshots this mentor and hands off to a background review."
+
 	| codeProvider aClass aSelector source category reviewMentor |
+
 	codeProvider := (aMorph respondsTo: #codeProvider) ifTrue: [ aMorph codeProvider ] ifFalse: [ nil ].
 	codeProvider ifNil: [ codeProvider := (aMorph respondsTo: #model) ifTrue: [ aMorph model ] ifFalse: [ nil ] ].
 	(codeProvider notNil and: [ codeProvider respondsTo: #selectedClassOrMetaClass ]) ifFalse: [
@@ -570,12 +675,15 @@ reviewFromMorph: aMorph
 		category: category
 		toast: (self showThinkingToast: 'Smalltalk Mentor is reviewing ', aClass name, '>>', aSelector printString, ' with ', reviewMentor provider name)! !
 
-!SmalltalkMentor methodsFor: 'reviewing' stamp: 'HAW 18/Aug/2026, 12:00:20 pm (UTC)'!
+!SmalltalkMentor methodsFor: 'reviewing' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 reviewMethodCategoryFromMorph: aMorph
+
 	"Method-category list menu action / cmd+0 on a method category. aMorph is the category-list
 	morph; its model is the browser. Snapshot this mentor and open a method-category review of
 	every method in the selected category."
+
 	| browser classOrMeta category reviewMentor |
+
 	browser := aMorph model.
 	classOrMeta := [ browser selectedClassOrMetaClass ] on: Error do: [ :e | nil ].
 	category := [ browser selectedMessageCategoryName ] on: Error do: [ :e | nil ].
@@ -585,11 +693,13 @@ reviewMethodCategoryFromMorph: aMorph
 	self showTransientToast: 'Smalltalk Mentor is reviewing method category ', category asString, ' of ', classOrMeta name, ' with ', reviewMentor provider name.
 	SmalltalkMentorMethodCategoryReview reviewCategory: category of: classOrMeta mentor: reviewMentor! !
 
-!SmalltalkMentor methodsFor: 'reviewing' stamp: 'HAW 14/Aug/2026, 6:52:00 pm (UTC)'!
+!SmalltalkMentor methodsFor: 'reviewing' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 reviewSource: source class: aClass selector: aSelector category: category toast: aToast
+
 	"Fork the first network call (on this snapshot mentor's provider) so the UI is never
 	blocked, then open the conversational review window bound to this mentor when the answer
 	arrives. aToast (may be nil) is removed once the reply arrives or on error."
+
 	[ [ | messages answer proposal |
 	   messages := OrderedCollection with: (self userMessage: (self promptFor: source)).
 	   answer := self provider completionForMessages: messages.
@@ -612,11 +722,14 @@ reviewSource: source class: aClass selector: aSelector category: category toast:
 				aToast ifNotNil: [ aToast delete ].
 				PopUpMenu inform: 'Smalltalk Mentor review failed: ', e messageText ] ] ] fork! !
 
-!SmalltalkMentor methodsFor: 'llm - prompt' stamp: 'HAW 14/Aug/2026, 6:07:46 pm (UTC)'!
+!SmalltalkMentor methodsFor: 'llm - prompt' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 parseProposalFrom: aString
+
 	"Extract the JSON object from the provider's reply (tolerating stray prose or ``` fences)
 	and parse it. Returns a Dictionary-like JsonObject."
+
 	| start stop json |
+
 	start := aString indexOf: ${.
 	stop := aString lastIndexOf: $}.
 	(start = 0 or: [ stop < start ]) ifTrue: [
@@ -624,11 +737,13 @@ parseProposalFrom: aString
 	json := aString copyFrom: start to: stop.
 	^Json readFrom: json readStream! !
 
-!SmalltalkMentor methodsFor: 'llm - prompt' stamp: 'HAW 14/Aug/2026, 6:07:46 pm (UTC)'!
+!SmalltalkMentor methodsFor: 'llm - prompt' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 promptFor: source
+
 	"Assemble the review prompt: intro, response language, mandatory project rules
 	(grouped under ## Category headings, each named with a [id]), JSON output contract,
 	and the method source. The suggestion is the improved version of THIS method only."
+
 	^'You are a Smalltalk expert reviewing a single method from a Cuis Smalltalk image.
 
 Write the "rationale" field, and all of your conversational replies, in ', self language, '. Do NOT translate Smalltalk code, selectors, or identifiers - "suggestedSource" must remain valid Smalltalk.
@@ -644,31 +759,38 @@ Here is the method:
 
 ', source! !
 
-!SmalltalkMentor methodsFor: 'llm - messages' stamp: 'HAW 14/Aug/2026, 6:07:46 pm (UTC)'!
+!SmalltalkMentor methodsFor: 'llm - messages' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 assistantMessage: aString
+
 	^JsonObject new
 		at: 'role' put: 'assistant';
 		at: 'content' put: aString;
 		yourself! !
 
-!SmalltalkMentor methodsFor: 'llm - messages' stamp: 'HAW 14/Aug/2026, 6:07:46 pm (UTC)'!
+!SmalltalkMentor methodsFor: 'llm - messages' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 completionForMessages: aCollectionOfMessages
+
 	"Send a full conversation (neutral {role, content} messages) to the current provider
 	and answer the raw assistant text."
+
 	^self provider completionForMessages: aCollectionOfMessages! !
 
-!SmalltalkMentor methodsFor: 'llm - messages' stamp: 'HAW 14/Aug/2026, 6:07:46 pm (UTC)'!
+!SmalltalkMentor methodsFor: 'llm - messages' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 userMessage: aString
+
 	^JsonObject new
 		at: 'role' put: 'user';
 		at: 'content' put: aString;
 		yourself! !
 
-!SmalltalkMentor methodsFor: 'ui' stamp: 'HAW 18/Aug/2026, 1:58:45 pm (UTC)'!
+!SmalltalkMentor methodsFor: 'ui' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 chooseProvider
+
 	"Menu action: pick the active provider from a list, then its model id. Runs on the UI
 	process."
+
 	| providerNames chosenIndex chosenProvider modelAnswer |
+
 	providerNames := (self providers collect: [ :eachProvider | eachProvider name ]) asArray.
 	chosenIndex := PopUpMenu withCaption: 'Choose LLM provider' chooseFrom: providerNames.
 	chosenIndex = 0 ifTrue: [ ^self ].
@@ -679,12 +801,15 @@ chooseProvider
 	self provider: chosenProvider.
 	self showTransientToast: 'Provider: ', chosenProvider name, ' (', chosenProvider model, ')'! !
 
-!SmalltalkMentor methodsFor: 'ui' stamp: 'HAW 14/Aug/2026, 6:07:46 pm (UTC)'!
+!SmalltalkMentor methodsFor: 'ui' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 showThinkingToast: aString
+
 	"Create a small transient toast near the top of the World and answer it, so the caller
 	can remove it when work finishes. Must be sent on the UI process. Answers nil if there
 	is no World."
+
 	| world label box ext |
+
 	world := UISupervisor ui world.
 	world ifNil: [ ^nil ].
 	label := LabelMorph contents: aString.
@@ -699,46 +824,55 @@ showThinkingToast: aString
 	world addMorph: box.
 	^box! !
 
-!SmalltalkMentor methodsFor: 'ui' stamp: 'HAW 14/Aug/2026, 6:07:46 pm (UTC)'!
+!SmalltalkMentor methodsFor: 'ui' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 showTransientToast: aString
+
 	"Show a toast that auto-dismisses after a couple of seconds."
+
 	| toast |
+
 	toast := self showThinkingToast: aString.
 	[ (Delay forSeconds: 2) wait.
 	  UISupervisor whenUIinSafeState: [ toast ifNotNil: [ toast delete ] ] ] fork.
 	^toast! !
 
-!SmalltalkMentor methodsFor: 'ui' stamp: 'HAW 14/Aug/2026, 6:08:45 pm (UTC)'!
+!SmalltalkMentor methodsFor: 'ui' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 toggleLanguage
+
 	"Flip the response language between Spanish and English, and briefly confirm."
+
 	language := self language = 'Spanish' ifTrue: [ 'English' ] ifFalse: [ 'Spanish' ].
 	self showTransientToast: 'Smalltalk Mentor response language: ', self language! !
 
 !SmalltalkMentor methodsFor: 'as yet unclassified' stamp: 'HAW 18/Aug/2026, 12:49:31 pm (UTC)'!
 smalltalkEditorMenuSpec ^Array new! !
 
-!SmalltalkMentor class methodsFor: 'initialization' stamp: 'HAW 18/Aug/2026, 10:53:24 am (UTC)'!
+!SmalltalkMentor class methodsFor: 'initialization' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 initialize
+
 	"Install the cmd+0 menu on the current instance when the package loads."
 
-	self initializeMenues ! !
+	self initializeMenues! !
 
-!SmalltalkMentor class methodsFor: 'initialization' stamp: 'HAW 17/Aug/2026, 10:12:54 pm (UTC)'!
+!SmalltalkMentor class methodsFor: 'initialization' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 unload
-	
-	self unloadMenues ! !
 
-!SmalltalkMentor class methodsFor: 'accessing' stamp: 'HAW 14/Aug/2026, 6:07:56 pm (UTC)'!
+	self unloadMenues! !
+
+!SmalltalkMentor class methodsFor: 'accessing' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 current
+
 	"The single Smalltalk Mentor instance, holding the selected provider and language."
+
 	^Current ifNil: [ Current := self new ]! !
 
-!SmalltalkMentor class methodsFor: 'providers' stamp: 'HAW 17/Aug/2026, 9:57:20 pm (UTC)'!
+!SmalltalkMentor class methodsFor: 'providers' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 buildProviders
+
 	"The known providers, with sensible default models (change per provider via the menu,
 	or with `aProvider model: '...'`). Each reads its key from <imageDir>/<name>.key first,
 	then its home key file, then (Anthropic) the env var."
-	
+
 	^OrderedCollection new
 		add: self claude;
 		add: self chatGPT;
@@ -781,9 +915,11 @@ nvidiaNIM
 		model: 'meta/llama-3.1-70b-instruct'
 		imageKeyBasename: 'nvidia.key'! !
 
-!SmalltalkMentor class methodsFor: 'providers' stamp: 'HAW 7/Aug/2026, 6:51:59 pm (UTC)'!
+!SmalltalkMentor class methodsFor: 'providers' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 providers
+
 	"The known LLM providers (cached so per-provider model changes persist for the session)."
+
 	^Providers ifNil: [ Providers := self buildProviders ]! !
 
 !SmalltalkMentor class methodsFor: 'menues' stamp: 'HAW 18/Aug/2026, 12:00:06 pm (UTC)'!
@@ -796,10 +932,12 @@ browserWindowMenuSpecs
 		{ #systemCatListMenuSpec. self classCategoryReviewMenuSpecSend }.
 		{ #SmalltalkEditor. self smalltalkEditorMenuSpecSend }}! !
 
-!SmalltalkMentor class methodsFor: 'menues' stamp: 'HAW 18/Aug/2026, 12:00:02 pm (UTC)'!
+!SmalltalkMentor class methodsFor: 'menues' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 classCategoryReviewMenuSpec
+
 	"A 'Smalltalk Mentor' submenu for the class-category (system category) list pane: review
 	every class of the selected category, toggle the language, or choose the provider/model."
+
 	^{
 		{ 12000. 'Smalltalk Mentor'. nil. nil. 12000. #helpIcon }.
 		{ 12010. 'Review this class category (0)'. $0. self current. #reviewClassCategoryFromMorph:. #helpIcon }.
@@ -807,14 +945,17 @@ classCategoryReviewMenuSpec
 		{ 12030. 'Choose LLM provider and model...'. nil. self current. #chooseProvider. #helpIcon }
 	}! !
 
-!SmalltalkMentor class methodsFor: 'menues' stamp: 'HAW 18/Aug/2026, 12:00:04 pm (UTC)'!
+!SmalltalkMentor class methodsFor: 'menues' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 classCategoryReviewMenuSpecSend
+
 	^MessageSend receiver: self selector: #classCategoryReviewMenuSpec! !
 
-!SmalltalkMentor class methodsFor: 'menues' stamp: 'HAW 18/Aug/2026, 11:59:55 am (UTC)'!
+!SmalltalkMentor class methodsFor: 'menues' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 classReviewMenuSpec
+
 	"A 'Smalltalk Mentor' submenu for the class-list pane: review the class, toggle the
 	response language, or choose the provider/model (all act on the current instance)."
+
 	^{
 		{ 12000. 'Smalltalk Mentor'. nil. nil. 12000. #helpIcon }.
 		{ 12010. 'Review this class (0)'. $0. self current. #reviewClassFromMorph:. #helpIcon }.
@@ -822,41 +963,39 @@ classReviewMenuSpec
 		{ 12030. 'Choose LLM provider and model...'. nil. self current. #chooseProvider. #helpIcon }
 	}! !
 
-!SmalltalkMentor class methodsFor: 'menues' stamp: 'HAW 17/Aug/2026, 10:01:35 pm (UTC)'!
+!SmalltalkMentor class methodsFor: 'menues' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 classReviewMenuSpecSend
+
 	^MessageSend receiver: self selector: #classReviewMenuSpec! !
 
-!SmalltalkMentor class methodsFor: 'menues' stamp: 'HAW 18/Aug/2026, 10:59:08 am (UTC)'!
+!SmalltalkMentor class methodsFor: 'menues' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 debuggerWindowMenuSpecs
 
-	^{ { #SmalltalkEditor. self smalltalkEditorMenuSpecSend } }.
+	^{ { #SmalltalkEditor. self smalltalkEditorMenuSpecSend } }.! !
 
-
-	! !
-
-!SmalltalkMentor class methodsFor: 'menues' stamp: 'HAW 18/Aug/2026, 10:58:44 am (UTC)'!
+!SmalltalkMentor class methodsFor: 'menues' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 initializeMenues
 
 	BrowserWindow registerAll: self browserWindowMenuSpecs.
 	MethodSetWindow registerAll: self methodSetWindowMenuSpecs.
-	DebuggerWindow registerAll: self debuggerWindowMenuSpecs.
-	! !
+	DebuggerWindow registerAll: self debuggerWindowMenuSpecs.! !
 
-!SmalltalkMentor class methodsFor: 'menues' stamp: 'HAW 18/Aug/2026, 10:51:52 am (UTC)'!
+!SmalltalkMentor class methodsFor: 'menues' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 messageListMenuSpec
 
-	^self smalltalkEditorMenuSpec
-	! !
+	^self smalltalkEditorMenuSpec! !
 
 !SmalltalkMentor class methodsFor: 'menues' stamp: 'HAW 18/Aug/2026, 10:51:19 am (UTC)'!
 messageListMenuSpecSend
 
 	^ MessageSend receiver: self selector: #messageListMenuSpec! !
 
-!SmalltalkMentor class methodsFor: 'menues' stamp: 'HAW 18/Aug/2026, 11:59:58 am (UTC)'!
+!SmalltalkMentor class methodsFor: 'menues' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 methodCategoryReviewMenuSpec
+
 	"A 'Smalltalk Mentor' submenu for the method-category (protocol) list pane: review every
 	method of the selected category, toggle the language, or choose the provider/model."
+
 	^{
 		{ 12000. 'Smalltalk Mentor'. nil. nil. 12000. #helpIcon }.
 		{ 12010. 'Review this method category (0)'. $0. self current. #reviewMethodCategoryFromMorph:. #helpIcon }.
@@ -864,22 +1003,23 @@ methodCategoryReviewMenuSpec
 		{ 12030. 'Choose LLM provider and model...'. nil. self current. #chooseProvider. #helpIcon }
 	}! !
 
-!SmalltalkMentor class methodsFor: 'menues' stamp: 'HAW 18/Aug/2026, 12:00:00 pm (UTC)'!
+!SmalltalkMentor class methodsFor: 'menues' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 methodCategoryReviewMenuSpecSend
+
 	^MessageSend receiver: self selector: #methodCategoryReviewMenuSpec! !
 
-!SmalltalkMentor class methodsFor: 'menues' stamp: 'HAW 18/Aug/2026, 10:58:53 am (UTC)'!
+!SmalltalkMentor class methodsFor: 'menues' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 methodSetWindowMenuSpecs
 
 	^ { { #messageListMenuSpec. self messageListMenuSpecSend }.
-		{ #SmalltalkEditor. self smalltalkEditorMenuSpecSend }}
+		{ #SmalltalkEditor. self smalltalkEditorMenuSpecSend }}! !
 
-	! !
-
-!SmalltalkMentor class methodsFor: 'menues' stamp: 'HAW 18/Aug/2026, 10:57:31 am (UTC)'!
+!SmalltalkMentor class methodsFor: 'menues' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 smalltalkEditorMenuSpec
+
 	"A 'Smalltalk Mentor' submenu in the code pane. Actions target this instance (self).
 	Fields: id, label, shortcutChar, target, selector, icon."
+
 	^{
 		{ 12000. 'Smalltalk Mentor'. nil. nil. 12000. #helpIcon }.
 		{ 12010. 'Ask for a better version (0)'. $0. self current. #reviewFromMorph:. #helpIcon }.
@@ -892,26 +1032,29 @@ smalltalkEditorMenuSpecSend
 
 	^MessageSend receiver: self selector: #smalltalkEditorMenuSpec! !
 
-!SmalltalkMentor class methodsFor: 'menues' stamp: 'HAW 18/Aug/2026, 10:59:59 am (UTC)'!
+!SmalltalkMentor class methodsFor: 'menues' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 unloadMenues
 
 	BrowserWindow unregisterAll: self browserWindowMenuSpecs.
 	MethodSetWindow unregisterAll: self methodSetWindowMenuSpecs.
-	DebuggerWindow unregisterAll: self debuggerWindowMenuSpecs.
-! !
+	DebuggerWindow unregisterAll: self debuggerWindowMenuSpecs.! !
 
-!SmalltalkMentorClassReview methodsFor: 'initialization' stamp: 'HAW 17/Aug/2026, 4:48:04 pm (UTC)'!
+!SmalltalkMentorClassReview methodsFor: 'initialization' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 initializeClass: aClass mentor: aMentor
+
 	targetClass := aClass theNonMetaClass.
 	mentor := aMentor.
 	methodReviewCache := Dictionary new! !
 
-!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 18/Aug/2026, 11:32:57 am (UTC)'!
+!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 classReferencedFindingsFor: aClass
+
 	"Rule 7: the class should be referenced. Flags a class that no other class mentions and
 	that has no subclasses - i.e. dead code. References from the class's own methods do not
 	count."
+
 	| result external |
+
 	result := OrderedCollection new.
 	external := (Smalltalk allCallsOn: aClass binding)
 		reject: [ :mr | mr actualClass theNonMetaClass == aClass ].
@@ -923,12 +1066,15 @@ classReferencedFindingsFor: aClass
 			editTarget: nil) ].
 	^result! !
 
-!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 18/Aug/2026, 11:34:14 am (UTC)'!
+!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 classReviewRootNodesFor: aClass
+
 	"The class-review subtree for aClass: one root per static rule (children = its failing
 	elements), then 'Instance methods' and 'Class methods' grouped by category. Reused both as
 	the roots of a class review and, lazily, under each class of a class-category review."
+
 	| roots |
+
 	roots := OrderedCollection new.
 	(self ruleGroupsFor: aClass) do: [ :group |
 		| children |
@@ -941,10 +1087,13 @@ classReviewRootNodesFor: aClass
 	roots add: (self methodsSideNodeFor: aClass class label: 'Class methods').
 	^roots! !
 
-!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 18/Aug/2026, 1:53:32 pm (UTC)'!
+!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 classVariableFindingsFor: aClass
+
 	"Rule 4: every class variable should be both read and written (instance or class side)."
+
 	| findings |
+
 	findings := OrderedCollection new.
 	aClass classVarNames asSortedCollection do: [ :classVariableName |
 		| binding sources assignmentCount occurrenceCount isWritten isRead problem |
@@ -967,13 +1116,16 @@ classVariableFindingsFor: aClass
 				editTarget: (aClass -> classVariableName)) ] ].
 	^findings! !
 
-!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 18/Aug/2026, 1:47:11 pm (UTC)'!
+!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 commonLeafSubclassProtocolFindingsFor: rootClass
+
 	"Rule 8: when rootClass has more than one leaf subclass, every message that instances of ALL
 	those leaf subclasses answer - restricted to protocol introduced within rootClass's own
 	hierarchy - should be implemented in rootClass itself, concretely or as subclassResponsibility,
 	so the shared protocol is declared in one place. Flags each such message rootClass omits."
+
 	| leafSubclasses sharedSelectors findings |
+
 	findings := OrderedCollection new.
 	leafSubclasses := rootClass allSubclasses select: [ :eachSubclass | eachSubclass subclasses isEmpty ].
 	(leafSubclasses size between: 2 and: 300) ifFalse: [ ^findings ].
@@ -983,11 +1135,14 @@ commonLeafSubclassProtocolFindingsFor: rootClass
 			findings add: (self missingRootProtocolFindingFor: sharedSelector root: rootClass) ] ].
 	^findings! !
 
-!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 18/Aug/2026, 1:53:26 pm (UTC)'!
+!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 18/Aug/2026, 6:55:49 pm (UTC)'!
 instanceVariableFindingsFor: aClass
+
 	"Rule 1: every instance variable should be both read and written in the instance-side
 	methods."
+
 	| findings |
+
 	findings := OrderedCollection new.
 	aClass instVarNames do: [ :instanceVariableName |
 		| instanceVariableIndex accessorSelectors isRead isWritten problem |
@@ -1006,10 +1161,13 @@ instanceVariableFindingsFor: aClass
 				editTarget: (aClass -> instanceVariableName)) ] ].
 	^findings! !
 
-!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 18/Aug/2026, 1:53:40 pm (UTC)'!
+!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 messagesWithoutImplementersFindingsFor: aClass
+
 	"Rule 3: every message sent by this class's methods should have an implementer."
+
 	| findings seenMessages |
+
 	findings := OrderedCollection new.
 	seenMessages := Set new.
 	{ aClass. aClass class } do: [ :classOrMetaclass |
@@ -1025,11 +1183,14 @@ messagesWithoutImplementersFindingsFor: aClass
 							editTarget: (classOrMetaclass -> eachSelector)) ] ] ] ] ].
 	^findings! !
 
-!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 18/Aug/2026, 1:53:37 pm (UTC)'!
+!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 methodsWithoutSendersFindingsFor: aClass
+
 	"Rule 2: every implemented message should have a sender. Excludes methods that override an
 	inherited implementation and test methods (run by metaprogramming)."
+
 	| findings |
+
 	findings := OrderedCollection new.
 	{ aClass. aClass class } do: [ :classOrMetaclass |
 		classOrMetaclass selectors asSortedCollection do: [ :eachSelector |
@@ -1043,10 +1204,12 @@ methodsWithoutSendersFindingsFor: aClass
 					editTarget: (classOrMetaclass -> eachSelector)) ] ] ].
 	^findings! !
 
-!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 18/Aug/2026, 1:54:26 pm (UTC)'!
+!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 ruleGroupsFor: aClass
+
 	"The static (Smalltalk) verifications for aClass, as title -> (collection of findings)
 	associations. Each becomes a rule root in the tree."
+
 	^OrderedCollection new
 		add: 'Instance variables read & written' -> (self instanceVariableFindingsFor: aClass);
 		add: 'Class variables read & written' -> (self classVariableFindingsFor: aClass);
@@ -1058,10 +1221,13 @@ ruleGroupsFor: aClass
 		add: 'Shared leaf-subclass protocol in root' -> (self commonLeafSubclassProtocolFindingsFor: aClass);
 		yourself! !
 
-!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 18/Aug/2026, 1:53:49 pm (UTC)'!
+!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 uncategorizedMethodsFindingsFor: aClass
+
 	"Rule 5: every method should be in a meaningful protocol (not 'as yet unclassified')."
+
 	| findings |
+
 	findings := OrderedCollection new.
 	{ aClass. aClass class } do: [ :classOrMetaclass |
 		classOrMetaclass selectors asSortedCollection do: [ :eachSelector |
@@ -1075,26 +1241,33 @@ uncategorizedMethodsFindingsFor: aClass
 					editTarget: (classOrMetaclass -> eachSelector)) ] ] ].
 	^findings! !
 
-!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 18/Aug/2026, 1:53:59 pm (UTC)'!
+!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 unusedTemporariesFindingsFor: aClass
+
 	"Rule 6: no method should declare a temporary variable that is never read - an unreferenced
 	temporary, or one that is only written."
+
 	| findings |
+
 	findings := OrderedCollection new.
 	{ aClass. aClass class } do: [ :classOrMetaclass |
 		classOrMetaclass selectors asSortedCollection do: [ :eachSelector |
 			findings addAll: (self unusedTemporariesFindingsIn: classOrMetaclass selector: eachSelector) ] ].
 	^findings! !
 
-!SmalltalkMentorClassReview methodsFor: 'tree' stamp: 'HAW 18/Aug/2026, 11:34:17 am (UTC)'!
+!SmalltalkMentorClassReview methodsFor: 'tree' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 buildRootNodes
+
 	^self classReviewRootNodesFor: targetClass! !
 
-!SmalltalkMentorClassReview methodsFor: 'tree' stamp: 'HAW 18/Aug/2026, 1:54:12 pm (UTC)'!
+!SmalltalkMentorClassReview methodsFor: 'tree' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 methodsSideNodeFor: aClassOrMetaclass label: aLabel
+
 	"A side node ('Instance methods' / 'Class methods') whose children are category nodes, each
 	with one method leaf per method."
+
 	| categoryNodes |
+
 	categoryNodes := OrderedCollection new.
 	aClassOrMetaclass organization categories asSortedCollection do: [ :categoryName |
 		| selectorsInCategory methodNodes |
@@ -1108,81 +1281,102 @@ methodsSideNodeFor: aClassOrMetaclass label: aLabel
 		label: aLabel, ' (', aClassOrMetaclass selectors size printString, ')'
 		kind: #side payload: nil children: categoryNodes model: self! !
 
-!SmalltalkMentorClassReview methodsFor: 'tree' stamp: 'HAW 16/Aug/2026, 6:24:02 pm (UTC)'!
+!SmalltalkMentorClassReview methodsFor: 'tree' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 nodeSelected: aNode
+
 	"Dispatch a tree selection: a method leaf triggers a (lazy) LLM review; a finding leaf
 	shows an editor (method or class-definition) or text; headers clear the panel."
+
 	aNode kind = #method ifTrue: [ ^self showMethodReview: aNode payload ].
 	aNode kind = #finding ifTrue: [ ^self showFinding: aNode payload ].
 	self clearDetail! !
 
-!SmalltalkMentorClassReview methodsFor: 'tree' stamp: 'HAW 15/Aug/2026, 1:09:51 pm (UTC)'!
+!SmalltalkMentorClassReview methodsFor: 'tree' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 rootNodes
+
 	"Tree roots (cached): one per static rule (children = its failing elements), then
 	'Instance methods' and 'Class methods' grouped by category."
+
 	^treeRoots ifNil: [ treeRoots := self buildRootNodes ]! !
 
-!SmalltalkMentorClassReview methodsFor: 'tree' stamp: 'HAW 15/Aug/2026, 3:44:34 pm (UTC)'!
+!SmalltalkMentorClassReview methodsFor: 'tree' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 selectedIndex
+
 	"The currently selected wrapper node (or nil). The tree reads this back to keep the row
 	highlighted."
+
 	^selectedIndex! !
 
-!SmalltalkMentorClassReview methodsFor: 'tree' stamp: 'HAW 16/Aug/2026, 6:17:54 pm (UTC)'!
+!SmalltalkMentorClassReview methodsFor: 'tree' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 selectedIndex: aWrapper
+
 	"The tree passes the selected wrapper node here (via complexContents), not an integer.
 	Remember it, refresh the visual selection (so the row shows selected), and act on it."
+
 	selectedIndex := aWrapper.
 	self changed: #selectedIndex.
 	(aWrapper isKindOf: SmalltalkMentorNode) ifTrue: [ self nodeSelected: aWrapper ]! !
 
-!SmalltalkMentorClassReview methodsFor: 'detail' stamp: 'HAW 15/Aug/2026, 1:11:14 pm (UTC)'!
+!SmalltalkMentorClassReview methodsFor: 'detail' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 clearDetail
+
 	detailHolder removeAllMorphs! !
 
-!SmalltalkMentorClassReview methodsFor: 'detail' stamp: 'HAW 16/Aug/2026, 9:26:59 pm (UTC)'!
+!SmalltalkMentorClassReview methodsFor: 'detail' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 codePaneForBrowser: aBrowser
+
 	"A code pane identical to a class browser's (method-mode syntax highlighting, refactorings
 	menu, senders/implementors, etc.), backed by a real Browser model."
+
 	^TextModelMorph
 		textProvider: aBrowser
 		textGetter: #acceptedContents
 		textSetter: #contents:notifying:
 		selectionGetter: #contentsSelection! !
 
-!SmalltalkMentorClassReview methodsFor: 'detail' stamp: 'HAW 18/Aug/2026, 1:23:34 pm (UTC)'!
+!SmalltalkMentorClassReview methodsFor: 'detail' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 renderDetail: aMorph
+
 	"Replace the detail pane with aMorph, themed with the window's tool color. Morphs added
 	after the window opened do NOT inherit the window colour automatically (openInWorld only
 	themes what was there at open time), so LLM review panels / editors / text would otherwise
 	show the default gray theme instead of the browser one."
+
 	detailHolder removeAllMorphs.
 	detailHolder addMorph: aMorph layoutSpec: LayoutSpec useAll.
 	window ifNotNil: [ aMorph adoptWidgetsColor: window widgetsColor ]! !
 
-!SmalltalkMentorClassReview methodsFor: 'detail' stamp: 'HAW 18/Aug/2026, 11:34:30 am (UTC)'!
+!SmalltalkMentorClassReview methodsFor: 'detail' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 showFinding: aFinding
+
 	"A static finding was selected: for a method-related finding show an editable code pane on
 	that method; for a variable-related finding show the class definition editor with the
 	variable selected; otherwise show the text description."
+
 	aFinding editKind = #method ifTrue: [ ^self showMethodEditorFor: aFinding editTarget ].
 	aFinding editKind = #variable ifTrue: [ ^self showClassDefinitionEditorFor: aFinding editTarget ].
 	self showText: aFinding detail! !
 
-!SmalltalkMentorClassReview methodsFor: 'detail' stamp: 'HAW 18/Aug/2026, 1:23:40 pm (UTC)'!
+!SmalltalkMentorClassReview methodsFor: 'detail' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 showMethodEditorFor: aClassSelectorAssociation
+
 	"Show the method in a real browser code pane (same styling, menu and refactorings as the
 	system browser). Editing + cmd+S compiles it into the class."
+
 	| browser |
+
 	browser := Browser new.
 	browser setClass: aClassSelectorAssociation key selector: aClassSelectorAssociation value.
 	self renderDetail: (self codePaneForBrowser: browser)! !
 
-!SmalltalkMentorClassReview methodsFor: 'detail' stamp: 'HAW 15/Aug/2026, 1:10:28 pm (UTC)'!
+!SmalltalkMentorClassReview methodsFor: 'detail' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 showMethodReview: aClassSelectorAssociation
+
 	"Lazily review the method when selected: reuse the cached review, otherwise show the
 	'analyzing' toast and fork the LLM call, then show the review panel."
+
 	| cached |
+
 	cached := methodReviewCache at: aClassSelectorAssociation ifAbsent: [ nil ].
 	cached ifNotNil: [ ^self showReviewPanel: cached ].
 	self showThinkingFor: aClassSelectorAssociation.
@@ -1198,19 +1392,24 @@ showMethodReview: aClassSelectorAssociation
 				self hideThinking.
 				self showText: 'Review failed: ', e messageText ] ] ] fork! !
 
-!SmalltalkMentorClassReview methodsFor: 'detail' stamp: 'HAW 18/Aug/2026, 1:23:36 pm (UTC)'!
+!SmalltalkMentorClassReview methodsFor: 'detail' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 showReviewPanel: aReview
+
 	self renderDetail: aReview buildContent! !
 
-!SmalltalkMentorClassReview methodsFor: 'detail' stamp: 'HAW 18/Aug/2026, 1:23:38 pm (UTC)'!
+!SmalltalkMentorClassReview methodsFor: 'detail' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 showText: aString
+
 	self renderDetail: (TextModelMorph withText: aString asText)! !
 
-!SmalltalkMentorClassReview methodsFor: 'reviewing' stamp: 'HAW 18/Aug/2026, 1:58:28 pm (UTC)'!
+!SmalltalkMentorClassReview methodsFor: 'reviewing' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 buildReviewFor: aClassSelectorAssociation
+
 	"Do the LLM review for one method with its own frozen mentor (per-method language), and
 	answer a ready SmalltalkMentorReview."
+
 	| reviewedClass reviewedSelector source methodMentor prompt answer proposal conversationMessages review |
+
 	reviewedClass := aClassSelectorAssociation key.
 	reviewedSelector := aClassSelectorAssociation value.
 	source := reviewedClass sourceCodeAt: reviewedSelector.
@@ -1231,25 +1430,31 @@ buildReviewFor: aClassSelectorAssociation
 		mentor: methodMentor.
 	^review! !
 
-!SmalltalkMentorClassReview methodsFor: 'thinking' stamp: 'HAW 15/Aug/2026, 1:10:43 pm (UTC)'!
+!SmalltalkMentorClassReview methodsFor: 'thinking' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 hideThinking
+
 	thinkingToast ifNotNil: [ thinkingToast delete. thinkingToast := nil ]! !
 
-!SmalltalkMentorClassReview methodsFor: 'thinking' stamp: 'HAW 18/Aug/2026, 1:54:14 pm (UTC)'!
+!SmalltalkMentorClassReview methodsFor: 'thinking' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 showThinkingFor: aClassSelectorAssociation
+
 	"Show the 'analyzing' toast (as when a single method is reviewed) and a placeholder in the
 	right panel."
+
 	| reviewedClass reviewedSelector location |
+
 	reviewedClass := aClassSelectorAssociation key.
 	reviewedSelector := aClassSelectorAssociation value.
 	location := reviewedClass name, '>>', reviewedSelector printString.
 	thinkingToast := mentor showThinkingToast: 'Smalltalk Mentor is analyzing ', location, ' with ', mentor provider name.
 	self showText: 'Analyzing ', location, ' with ', mentor provider name, ' ...'! !
 
-!SmalltalkMentorClassReview methodsFor: 'menu actions' stamp: 'HAW 18/Aug/2026, 11:34:33 am (UTC)'!
+!SmalltalkMentorClassReview methodsFor: 'menu actions' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 browseNode: aNode
+
 	"Context menu 'Browse': open a class browser on the selected method, or on the relevant
 	class definition for variable/other nodes."
+
 	aNode kind = #method ifTrue: [
 		^BrowserWindow fullOnClass: aNode payload key selector: aNode payload value ].
 	aNode kind = #finding ifTrue: [
@@ -1263,11 +1468,14 @@ browseNode: aNode
 		^BrowserWindow fullOnClass: aNode payload selector: nil ].
 	^BrowserWindow fullOnClass: targetClass selector: nil! !
 
-!SmalltalkMentorClassReview methodsFor: 'menu actions' stamp: 'HAW 18/Aug/2026, 1:54:22 pm (UTC)'!
+!SmalltalkMentorClassReview methodsFor: 'menu actions' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 changeProvider
+
 	"Button below the tree: pick the LLM provider (and model) for this class review's future
 	lazy reviews. Uses a copy so model changes stay local to this window."
+
 	| providerNames chosenIndex chosenProvider modelAnswer |
+
 	providerNames := (mentor providers collect: [ :eachProvider | eachProvider name ]) asArray.
 	chosenIndex := PopUpMenu withCaption: 'Choose LLM provider' chooseFrom: providerNames.
 	chosenIndex = 0 ifTrue: [ ^self ].
@@ -1277,24 +1485,29 @@ changeProvider
 	mentor provider: chosenProvider.
 	providerButton ifNotNil: [ providerButton label: 'LLM: ', mentor provider printString ]! !
 
-!SmalltalkMentorClassReview methodsFor: 'menu actions' stamp: 'HAW 16/Aug/2026, 6:26:17 pm (UTC)'!
+!SmalltalkMentorClassReview methodsFor: 'menu actions' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 runAgainNode: aNode
+
 	"Context menu 'Run again': for a method review re-run the LLM review; otherwise re-run the
 	static verifications and refresh the tree."
+
 	aNode kind = #method ifTrue: [
 		methodReviewCache removeKey: aNode payload ifAbsent: [ ].
 		^self showMethodReview: aNode payload ].
 	treeRoots := nil.
 	self changed: #rootNodes! !
 
-!SmalltalkMentorClassReview methodsFor: 'ui' stamp: 'HAW 18/Aug/2026, 1:05:04 pm (UTC)'!
+!SmalltalkMentorClassReview methodsFor: 'ui' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 openWindow
+
 	"Master-detail window built the same way as the system browser (a LinearLayoutMorph row
 	inside the window's own layoutMorph, with a drag adjuster between the panes) and themed with
 	the browser tool color: left = tree (with right-click menu) + provider button; right =
 	detail. The provider is NOT in the title (it can differ per method review); it is shown
 	inside each method review panel and on the button below the tree."
+
 	| leftCol row |
+
 	window := SmalltalkMentorReviewWindow new.
 	window setLabel: 'Smalltalk Mentor - ', self windowLabel.
 	treeMorph := SmalltalkMentorTreeMorph
@@ -1315,28 +1528,37 @@ openWindow
 	window layoutMorph addMorph: row proportionalHeight: 1.0.
 	window openInWorld! !
 
-!SmalltalkMentorClassReview methodsFor: 'ui' stamp: 'HAW 15/Aug/2026, 1:09:04 pm (UTC)'!
+!SmalltalkMentorClassReview methodsFor: 'ui' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 start
+
 	"Open the class-review window. The static findings are computed lazily by the tree; method
 	reviews happen when a method is selected."
+
 	self openWindow! !
 
-!SmalltalkMentorClassReview methodsFor: 'ui' stamp: 'HAW 18/Aug/2026, 11:34:19 am (UTC)'!
+!SmalltalkMentorClassReview methodsFor: 'ui' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 windowLabel
+
 	"The window title suffix (after 'Smalltalk Mentor - '). Subclasses override for the
 	method-category and class-category reviews."
+
 	^'class ', targetClass name! !
 
-!SmalltalkMentorClassReview methodsFor: 'private' stamp: 'HAW 15/Aug/2026, 1:56:54 am (UTC)'!
+!SmalltalkMentorClassReview methodsFor: 'private' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 categoryOf: aSelector in: aClassOrMeta
+
 	"The method's protocol, defaulting safely."
+
 	^[ aClassOrMeta organization categoryOfElement: aSelector ]
 		on: Error do: [ :e | 'as yet unclassified' ]! !
 
-!SmalltalkMentorClassReview methodsFor: 'private' stamp: 'HAW 18/Aug/2026, 1:58:56 pm (UTC)'!
+!SmalltalkMentorClassReview methodsFor: 'private' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 countOf: aSubstring in: aString
+
 	"Case-sensitive count of non-overlapping occurrences of aSubstring in aString."
+
 	| substringSize occurrenceCount scanIndex |
+
 	substringSize := aSubstring size.
 	substringSize = 0 ifTrue: [ ^0 ].
 	occurrenceCount := 0.
@@ -1347,21 +1569,27 @@ countOf: aSubstring in: aString
 			ifFalse: [ scanIndex := scanIndex + 1 ] ].
 	^occurrenceCount! !
 
-!SmalltalkMentorClassReview methodsFor: 'private' stamp: 'HAW 18/Aug/2026, 1:59:00 pm (UTC)'!
+!SmalltalkMentorClassReview methodsFor: 'private' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 firstIndexOf: aSubstring in: aString
+
 	"First 1-based index of aSubstring in aString (case-sensitive), or 0."
+
 	| substringSize |
+
 	substringSize := aSubstring size.
 	substringSize = 0 ifTrue: [ ^0 ].
 	1 to: aString size - substringSize + 1 do: [ :scanIndex |
 		(aString copyFrom: scanIndex to: scanIndex + substringSize - 1) = aSubstring ifTrue: [ ^scanIndex ] ].
 	^0! !
 
-!SmalltalkMentorClassReview methodsFor: 'private' stamp: 'HAW 18/Aug/2026, 1:47:18 pm (UTC)'!
+!SmalltalkMentorClassReview methodsFor: 'private' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 missingRootProtocolFindingFor: aSelector root: rootClass
+
 	"A finding: aSelector is answered by every leaf subclass of rootClass but rootClass does not
 	implement it. Points at one subclass implementation as a reference to lift."
+
 	| anImplementor |
+
 	anImplementor := rootClass allSubclasses detect: [ :eachSubclass | eachSubclass includesSelector: aSelector ] ifNone: [ nil ].
 	^SmalltalkMentorFinding
 		title: 'Not in root: #', aSelector, ' (every leaf subclass of ', rootClass name, ' answers it)'
@@ -1369,12 +1597,15 @@ missingRootProtocolFindingFor: aSelector root: rootClass
 		editKind: (anImplementor isNil ifTrue: [ #none ] ifFalse: [ #method ])
 		editTarget: (anImplementor isNil ifTrue: [ nil ] ifFalse: [ anImplementor -> aSelector ])! !
 
-!SmalltalkMentorClassReview methodsFor: 'private' stamp: 'HAW 18/Aug/2026, 1:47:14 pm (UTC)'!
+!SmalltalkMentorClassReview methodsFor: 'private' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 sharedSelectorsAmongLeaves: leafSubclasses ofRoot: rootClass
+
 	"The selectors that instances of every leaf subclass answer, restricted to protocol
 	introduced within rootClass's own hierarchy (protocol inherited from above rootClass is
 	excluded, so shared Object protocol is not reported)."
+
 	| protocolAboveRoot sharedSelectors |
+
 	protocolAboveRoot := rootClass superclass
 		ifNil: [ Set new ]
 		ifNotNil: [ :aSuperclass | aSuperclass allSelectors asSet ].
@@ -1386,14 +1617,17 @@ sharedSelectorsAmongLeaves: leafSubclasses ofRoot: rootClass
 			ifNotNil: [ sharedSelectors select: [ :eachSelector | protocolIntroducedBelowRoot includes: eachSelector ] ] ].
 	^sharedSelectors ifNil: [ Set new ]! !
 
-!SmalltalkMentorClassReview methodsFor: 'private' stamp: 'HAW 18/Aug/2026, 1:53:57 pm (UTC)'!
+!SmalltalkMentorClassReview methodsFor: 'private' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 unusedTemporariesFindingsIn: aClassOrMetaclass selector: aSelector
+
 	"The unused/write-only temporary variables of one method, as findings (empty if none, or if
 	the method cannot be parsed). isUnusedTemp is 'never read' (hasRefs not), which covers both
 	an unreferenced temporary and a write-only one. Only real TempVariableNodes are considered:
 	closure analysis bundles block-captured temporaries into a RemoteTempVectorNode (a subclass
 	whose name is a range like '<0-6>') that must be ignored. Arguments are not temporaries."
+
 	| findings |
+
 	findings := OrderedCollection new.
 	[ | methodNode temporaryNodes |
 	  methodNode := (aClassOrMetaclass >> aSelector) methodNode.
@@ -1415,12 +1649,15 @@ unusedTemporariesFindingsIn: aClassOrMetaclass selector: aSelector
 		on: Error do: [ :error | ].
 	^findings! !
 
-!SmalltalkMentorClassReview methodsFor: 'as yet unclassified' stamp: 'HAW 18/Aug/2026, 1:54:18 pm (UTC)'!
+!SmalltalkMentorClassReview methodsFor: 'as yet unclassified' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 showClassDefinitionEditorFor: aClassVariableAssociation
+
 	"Show the class definition (of the finding's class) in a real browser code pane
 	(class-definition mode: refactorings, add/remove instance variable, etc.). Accept redefines
 	the class. The variable is pre-selected."
+
 	| definedClass variableName browser codePane classDefinitionText variableIndex |
+
 	definedClass := aClassVariableAssociation key.
 	variableName := aClassVariableAssociation value.
 	browser := Browser new.
@@ -1432,32 +1669,40 @@ showClassDefinitionEditorFor: aClassVariableAssociation
 	variableIndex := self firstIndexOf: variableName in: classDefinitionText.
 	variableIndex > 0 ifTrue: [ [ codePane editor selectFrom: variableIndex to: variableIndex + variableName size - 1 ] on: Error do: [ :error | ] ]! !
 
-!SmalltalkMentorClassReview class methodsFor: 'instance creation' stamp: 'HAW 17/Aug/2026, 4:48:20 pm (UTC)'!
+!SmalltalkMentorClassReview class methodsFor: 'instance creation' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 reviewClass: aClass mentor: aMentor
+
 	"Open a class-review window for aClass using aMentor (a frozen snapshot). Runs the four
 	static verifications synchronously, opens the window, then reviews every method in the
 	background."
+
 	^(self new initializeClass: aClass mentor: aMentor) start! !
 
-!SmalltalkMentorClassCategoryReview methodsFor: 'initialization' stamp: 'HAW 18/Aug/2026, 11:58:18 am (UTC)'!
+!SmalltalkMentorClassCategoryReview methodsFor: 'initialization' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 initializeSystemCategory: aString mentor: aMentor
+
 	systemCategory := aString.
 	mentor := aMentor.
 	methodReviewCache := Dictionary new! !
 
-!SmalltalkMentorClassCategoryReview methodsFor: 'private' stamp: 'HAW 18/Aug/2026, 11:58:20 am (UTC)'!
+!SmalltalkMentorClassCategoryReview methodsFor: 'private' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 classesInCategory
+
 	"The (non-meta) classes of the reviewed system category, sorted alphabetically by name."
+
 	^((SystemOrganization listAtCategoryNamed: systemCategory)
 		collect: [ :nameSym | Smalltalk at: nameSym ifAbsent: [ nil ] ])
 		select: [ :each | each isBehavior ]! !
 
-!SmalltalkMentorClassCategoryReview methodsFor: 'tree' stamp: 'HAW 18/Aug/2026, 1:58:34 pm (UTC)'!
+!SmalltalkMentorClassCategoryReview methodsFor: 'tree' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 buildRootNodes
+
 	"One top node per class of the system category, sorted alphabetically. Each class expands
 	lazily into the very same subtree a class review shows for it (static rule roots + method
 	categories), so opening a class here behaves like reviewing that class."
+
 	| sortedClasses |
+
 	sortedClasses := self classesInCategory asSortedCollection: [ :firstClass :secondClass | firstClass name <= secondClass name ].
 	^(sortedClasses collect: [ :eachClass |
 		SmalltalkMentorNode
@@ -1467,30 +1712,38 @@ buildRootNodes
 			childrenBlock: [ self classReviewRootNodesFor: eachClass ]
 			model: self ]) asOrderedCollection! !
 
-!SmalltalkMentorClassCategoryReview methodsFor: 'ui' stamp: 'HAW 18/Aug/2026, 11:58:25 am (UTC)'!
+!SmalltalkMentorClassCategoryReview methodsFor: 'ui' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 windowLabel
+
 	^'class category ', systemCategory asString! !
 
-!SmalltalkMentorClassCategoryReview class methodsFor: 'instance creation' stamp: 'HAW 18/Aug/2026, 11:58:27 am (UTC)'!
+!SmalltalkMentorClassCategoryReview class methodsFor: 'instance creation' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 reviewSystemCategory: aString mentor: aMentor
+
 	"Open a class-category review window: every class of the system category aString, each
 	behaving as a class review when expanded, using aMentor for lazy method reviews."
+
 	^(self new initializeSystemCategory: aString mentor: aMentor) start! !
 
-!SmalltalkMentorMethodCategoryReview methodsFor: 'initialization' stamp: 'HAW 18/Aug/2026, 11:57:59 am (UTC)'!
+!SmalltalkMentorMethodCategoryReview methodsFor: 'initialization' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 initializeClassOrMeta: aClassOrMeta category: aCategory mentor: aMentor
+
 	"aClassOrMeta is the class or metaclass whose method category is being reviewed; it is NOT
 	normalized to the instance side, so a class-side category reviews class methods."
+
 	targetClass := aClassOrMeta.
 	category := aCategory.
 	mentor := aMentor.
 	methodReviewCache := Dictionary new! !
 
-!SmalltalkMentorMethodCategoryReview methodsFor: 'tree' stamp: 'HAW 18/Aug/2026, 1:58:40 pm (UTC)'!
+!SmalltalkMentorMethodCategoryReview methodsFor: 'tree' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 buildRootNodes
+
 	"One method leaf per method of the reviewed category (reviewed lazily on selection, exactly
 	as in a class review). The virtual '-- all --' category reviews every method of the class."
+
 	| selectorsToReview |
+
 	selectorsToReview := category asString = ClassOrganizer allCategory asString
 		ifTrue: [ targetClass selectors asSortedCollection ]
 		ifFalse: [ (targetClass organization listAtCategoryNamed: category) asSortedCollection ].
@@ -1502,47 +1755,58 @@ buildRootNodes
 			children: #()
 			model: self ]) asOrderedCollection! !
 
-!SmalltalkMentorMethodCategoryReview methodsFor: 'ui' stamp: 'HAW 18/Aug/2026, 11:58:03 am (UTC)'!
+!SmalltalkMentorMethodCategoryReview methodsFor: 'ui' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 windowLabel
+
 	^'method category ', category asString, ' of ', targetClass name! !
 
-!SmalltalkMentorMethodCategoryReview class methodsFor: 'instance creation' stamp: 'HAW 18/Aug/2026, 11:58:05 am (UTC)'!
+!SmalltalkMentorMethodCategoryReview class methodsFor: 'instance creation' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 reviewCategory: aCategory of: aClassOrMeta mentor: aMentor
+
 	"Open a method-category review window: the methods of aCategory in aClassOrMeta, each
 	reviewed lazily by aMentor when selected."
+
 	^(self new initializeClassOrMeta: aClassOrMeta category: aCategory mentor: aMentor) start! !
 
-!SmalltalkMentorFinding methodsFor: 'initialization' stamp: 'HAW 17/Aug/2026, 4:48:01 pm (UTC)'!
+!SmalltalkMentorFinding methodsFor: 'initialization' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 initializeTitle: aTitle detail: aDetail editKind: anEditKind editTarget: anEditTarget
+
 	title := aTitle.
 	detail := aDetail.
 	editKind := anEditKind.
 	editTarget := anEditTarget! !
 
-!SmalltalkMentorFinding methodsFor: 'accessing' stamp: 'HAW 16/Aug/2026, 6:21:31 pm (UTC)'!
+!SmalltalkMentorFinding methodsFor: 'accessing' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 detail
+
 	^detail! !
 
-!SmalltalkMentorFinding methodsFor: 'accessing' stamp: 'HAW 16/Aug/2026, 6:21:36 pm (UTC)'!
+!SmalltalkMentorFinding methodsFor: 'accessing' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 editKind
+
 	^editKind! !
 
-!SmalltalkMentorFinding methodsFor: 'accessing' stamp: 'HAW 16/Aug/2026, 6:21:41 pm (UTC)'!
+!SmalltalkMentorFinding methodsFor: 'accessing' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 editTarget
+
 	^editTarget! !
 
-!SmalltalkMentorFinding methodsFor: 'accessing' stamp: 'HAW 16/Aug/2026, 6:21:25 pm (UTC)'!
+!SmalltalkMentorFinding methodsFor: 'accessing' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 title
+
 	^title! !
 
-!SmalltalkMentorFinding class methodsFor: 'instance creation' stamp: 'HAW 17/Aug/2026, 4:48:16 pm (UTC)'!
+!SmalltalkMentorFinding class methodsFor: 'instance creation' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 title: aTitle detail: aDetail editKind: anEditKind editTarget: anEditTarget
+
 	"editKind is #method (editTarget = class->selector), #variable (editTarget = var name in
 	targetClass), or #none (text-only detail)."
+
 	^self new initializeTitle: aTitle detail: aDetail editKind: anEditKind editTarget: anEditTarget! !
 
-!SmalltalkMentorReview methodsFor: 'initialization' stamp: 'HAW 17/Aug/2026, 4:48:06 pm (UTC)'!
+!SmalltalkMentorReview methodsFor: 'initialization' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 initializeClass: aClass selector: aSelector category: aCategory current: currentSrc suggested: suggestedSrc rationale: aRationale messages: aMessagesCollection mentor: aMentor
+
 	targetClass := aClass.
 	selector := aSelector.
 	category := aCategory.
@@ -1553,13 +1817,16 @@ initializeClass: aClass selector: aSelector category: aCategory current: current
 	mentor := aMentor.
 	busy := false! !
 
-!SmalltalkMentorReview methodsFor: 'ui' stamp: 'HAW 18/Aug/2026, 1:58:05 pm (UTC)'!
+!SmalltalkMentorReview methodsFor: 'ui' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 buildContent
+
 	"Build (once) and answer the review's content morph: a provider/model label, transcript,
 	original | suggested panes, follow-up input, and buttons. The ORIGINAL pane is a real
 	browser code pane (method-mode highlighting, refactorings, editable/compilable). The
 	SUGGESTED pane is syntax-highlighted too but no-copy (students type the fix)."
+
 	| contentColumn panesRow buttonsRow originalPaneMorph sendButton suggestedPaneText providerLabel originalBrowser suggestedModel |
+
 	contentMorph ifNotNil: [ ^contentMorph ].
 	contentColumn := LayoutMorph newColumn.
 	providerLabel := LabelMorph contents: 'LLM: ', mentor provider printString.
@@ -1594,28 +1861,36 @@ buildContent
 	contentMorph := contentColumn.
 	^contentMorph! !
 
-!SmalltalkMentorReview methodsFor: 'ui' stamp: 'HAW 6/Aug/2026, 5:15:11 pm (UTC)'!
+!SmalltalkMentorReview methodsFor: 'ui' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 closeWindow
+
 	window ifNotNil: [ window delete ]! !
 
-!SmalltalkMentorReview methodsFor: 'ui' stamp: 'HAW 18/Aug/2026, 1:08:35 pm (UTC)'!
+!SmalltalkMentorReview methodsFor: 'ui' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 open
+
 	"Open the review as its own window (single-method review), themed with the browser tool
 	color. The provider/model is shown in the panel (via #buildContent), not the title."
+
 	window := SmalltalkMentorReviewWindow new.
 	window setLabel: 'Smalltalk Mentor - ', targetClass name, '>>', selector printString.
 	window addMorph: self buildContent layoutSpec: LayoutSpec useAll.
 	window openInWorld! !
 
-!SmalltalkMentorReview methodsFor: 'accessing' stamp: 'HAW 15/Aug/2026, 1:54:10 am (UTC)'!
+!SmalltalkMentorReview methodsFor: 'accessing' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 listLabel
+
 	"How this method review appears in the class-review window's left list."
+
 	^targetClass name, '>>', selector printString! !
 
-!SmalltalkMentorReview methodsFor: 'compiling' stamp: 'HAW 18/Aug/2026, 1:58:10 pm (UTC)'!
+!SmalltalkMentorReview methodsFor: 'compiling' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 accept
+
 	"Compile the current contents of the right-hand pane into the target class."
+
 	| suggestedSourceText |
+
 	suggestedSourceText := suggestedMorph text asString.
 	suggestedSourceText isEmpty ifTrue: [ ^PopUpMenu inform: 'Nothing to compile.' ].
 	[ targetClass compile: suggestedSourceText classified: category ]
@@ -1624,22 +1899,27 @@ accept
 	Transcript show: 'Compiled Smalltalk Mentor suggestion into ', targetClass name, '>>', selector printString; newLine.
 	self closeWindow! !
 
-!SmalltalkMentorReview methodsFor: 'conversation' stamp: 'HAW 6/Aug/2026, 7:15:06 pm (UTC)'!
+!SmalltalkMentorReview methodsFor: 'conversation' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 appendTranscript: aString
+
 	"Append a line to the dialogue transcript and scroll it to the bottom (must run on
 	the UI process)."
+
 	| newText end |
+
 	newText := transcriptMorph text asString, aString, String newLineString.
 	transcriptMorph model actualContents: newText asText.
 	end := newText size.
 	[ transcriptMorph editor selectFrom: end + 1 to: end.
 	  transcriptMorph scrollSelectionIntoView ] on: Error do: [ :e | ]! !
 
-!SmalltalkMentorReview methodsFor: 'conversation' stamp: 'HAW 17/Aug/2026, 4:48:37 pm (UTC)'!
+!SmalltalkMentorReview methodsFor: 'conversation' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 postUserContent: contentString transcriptLabel: aLabel
+
 	"Shared engine: append a user turn, show it, and fork the (non-blocking) call to THIS
 	conversation's mentor's provider, updating the suggestion pane + transcript with the
 	reply. Ignored while busy."
+
 	busy == true ifTrue: [ ^self ].
 	messages add: (mentor userMessage: contentString).
 	self appendTranscript: aLabel.
@@ -1660,11 +1940,14 @@ postUserContent: contentString transcriptLabel: aLabel
 				self appendTranscript: 'Error: ', e messageText.
 				busy := false ] ] ] fork! !
 
-!SmalltalkMentorReview methodsFor: 'conversation' stamp: 'HAW 14/Aug/2026, 12:20:18 pm (UTC)'!
+!SmalltalkMentorReview methodsFor: 'conversation' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 sendFollowUp
+
 	"Send the typed follow-up (plus the current suggestion-pane code) to the provider, keeping
 	the conversation. Triggered by the Send button or by pressing Enter in the input field."
+
 	| note content |
+
 	busy == true ifTrue: [ ^self ].
 	note := inputMorph contents withBlanksTrimmed.
 	note isEmpty ifTrue: [ ^self ].
@@ -1675,19 +1958,24 @@ sendFollowUp
 	inputMorph contents: ''.
 	self postUserContent: content transcriptLabel: 'You: ', note! !
 
-!SmalltalkMentorReview methodsFor: 'conversation' stamp: 'HAW 17/Aug/2026, 4:48:09 pm (UTC)'!
+!SmalltalkMentorReview methodsFor: 'conversation' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 showSuggestion: aString
+
 	"Replace the right-hand pane with a new suggestion, pretty-printed so it is properly
 	multi-lined (some providers, e.g. Nvidia NIM, return single-line source)."
+
 	suggestedSource := self formattedSource: aString.
 	suggestedMorph ifNotNil: [ suggestedMorph model actualContents: suggestedSource asText ]! !
 
-!SmalltalkMentorReview methodsFor: 'conversation' stamp: 'HAW 18/Aug/2026, 1:57:48 pm (UTC)'!
+!SmalltalkMentorReview methodsFor: 'conversation' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 switchLanguage
+
 	"Flip this conversation's language between Spanish and English (on this review's mentor),
 	relabel the button, and ask the provider to restate the current rationale in the new
 	language."
+
 	| conversationContent |
+
 	busy == true ifTrue: [ ^self ].
 	mentor language: (mentor language = 'Spanish' ifTrue: [ 'English' ] ifFalse: [ 'Spanish' ]).
 	languageButton ifNotNil: [ languageButton label: 'Idioma: ', mentor language ].
@@ -1695,18 +1983,21 @@ switchLanguage
 		' without changing suggestedSource. Reply with ONLY the same JSON object {canImprove, suggestedSource, rationale}.'.
 	self postUserContent: conversationContent transcriptLabel: 'You: (idioma -> ', mentor language, ')'! !
 
-!SmalltalkMentorReview methodsFor: 'private' stamp: 'HAW 14/Aug/2026, 2:56:35 pm (UTC)'!
+!SmalltalkMentorReview methodsFor: 'private' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 formattedSource: aString
+
 	"Pretty-print a suggested method so it is properly multi-lined and indented regardless of
 	how the provider formatted it - some models (e.g. Nvidia NIM / llama) return the whole
 	method on a single line. Falls back to the raw (line-ending-normalized) text if it does
 	not parse."
+
 	aString withBlanksTrimmed isEmpty ifTrue: [ ^aString ].
 	^[ Compiler format: aString in: targetClass notifying: nil ]
 		on: Error do: [ :e | aString withCuisLineEndings ]! !
 
-!SmalltalkMentorReview class methodsFor: 'instance creation' stamp: 'HAW 17/Aug/2026, 4:48:22 pm (UTC)'!
+!SmalltalkMentorReview class methodsFor: 'instance creation' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 openFor: aClass selector: aSelector category: aCategory current: currentSrc suggested: suggestedSrc rationale: aRationale messages: aMessagesCollection mentor: aMentor
+
 	^(self new
 		initializeClass: aClass
 		selector: aSelector
@@ -1717,58 +2008,74 @@ openFor: aClass selector: aSelector category: aCategory current: currentSrc sugg
 		messages: aMessagesCollection
 		mentor: aMentor) open! !
 
-!SmalltalkMentorNoCopyEditor methodsFor: 'clipboard' stamp: 'HAW 14/Aug/2026, 6:18:50 pm (UTC)'!
+!SmalltalkMentorNoCopyEditor methodsFor: 'clipboard' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 clipboardTextPut: aText
+
 	"Copy is disabled for the suggested-code pane so students type the refactoring themselves
 	instead of copying the mentor's answer. Swallow the clipboard write."
+
 	^aText! !
 
-!SmalltalkMentorNode methodsFor: 'initialization' stamp: 'HAW 17/Aug/2026, 4:48:03 pm (UTC)'!
+!SmalltalkMentorNode methodsFor: 'initialization' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 initializeLabel: aLabel kind: aKind payload: aPayload children: aChildrenCollection model: aModel
+
 	self setItem: aPayload model: aModel.
 	label := aLabel.
 	kind := aKind.
 	childNodes := aChildrenCollection! !
 
-!SmalltalkMentorNode methodsFor: 'accessing' stamp: 'HAW 15/Aug/2026, 1:08:23 pm (UTC)'!
+!SmalltalkMentorNode methodsFor: 'accessing' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 kind
+
 	^kind! !
 
-!SmalltalkMentorNode methodsFor: 'accessing' stamp: 'HAW 15/Aug/2026, 1:08:29 pm (UTC)'!
+!SmalltalkMentorNode methodsFor: 'accessing' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 payload
+
 	"The wrapped domain object (a finding detail string, or a class->selector association)."
+
 	^item! !
 
-!SmalltalkMentorNode methodsFor: 'tree wrapper' stamp: 'HAW 15/Aug/2026, 1:08:03 pm (UTC)'!
+!SmalltalkMentorNode methodsFor: 'tree wrapper' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 asString
+
 	^label! !
 
-!SmalltalkMentorNode methodsFor: 'tree wrapper' stamp: 'HAW 18/Aug/2026, 11:32:11 am (UTC)'!
+!SmalltalkMentorNode methodsFor: 'tree wrapper' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 contents
+
 	"Child wrappers for the tree. Children may be provided lazily as a block (evaluated and
 	cached on first expansion) so a subtree's cost is only paid when it is opened."
+
 	(childNodes isKindOf: BlockClosure) ifTrue: [ childNodes := childNodes value ].
 	^childNodes ifNil: [ #() ]! !
 
-!SmalltalkMentorNode methodsFor: 'tree wrapper' stamp: 'HAW 18/Aug/2026, 11:32:14 am (UTC)'!
+!SmalltalkMentorNode methodsFor: 'tree wrapper' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 hasContents
+
 	"A node with a lazy children block always shows as expandable."
+
 	(childNodes isKindOf: BlockClosure) ifTrue: [ ^true ].
 	^(childNodes ifNil: [ #() ]) notEmpty! !
 
-!SmalltalkMentorNode methodsFor: 'tree wrapper' stamp: 'HAW 15/Aug/2026, 1:08:35 pm (UTC)'!
+!SmalltalkMentorNode methodsFor: 'tree wrapper' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 sendSettingMessageTo: aModel
+
 	"Called by the tree when this node is selected."
+
 	aModel nodeSelected: self! !
 
-!SmalltalkMentorNode class methodsFor: 'instance creation' stamp: 'HAW 17/Aug/2026, 4:48:18 pm (UTC)'!
+!SmalltalkMentorNode class methodsFor: 'instance creation' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 label: aLabel kind: aKind payload: aPayload children: aChildrenCollection model: aModel
+
 	^self new
 		initializeLabel: aLabel kind: aKind payload: aPayload children: aChildrenCollection model: aModel! !
 
-!SmalltalkMentorNode class methodsFor: 'as yet unclassified' stamp: 'HAW 18/Aug/2026, 11:32:16 am (UTC)'!
+!SmalltalkMentorNode class methodsFor: 'as yet unclassified' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 label: aLabel kind: aKind payload: aPayload childrenBlock: aBlock model: aModel
+
 	"Like #label:kind:payload:children:model: but the children are computed lazily by aBlock
 	the first time the node is expanded."
+
 	^self new initializeLabel: aLabel kind: aKind payload: aPayload children: aBlock model: aModel! !
 SmalltalkMentor initialize!
