@@ -16,7 +16,8 @@ breaks your rules and proposes a fix, and the student applies the refactoring th
 - **Review a whole class** — press `cmd+0` on a class and get a window that combines:
   - **Static checks** (pure Smalltalk, no LLM, instant): unread/unwritten instance and
     class variables, methods with no senders, messages with no implementer, uncategorized
-    methods, unused/write-only temporaries, and whether the class is referenced.
+    methods, unused/write-only temporaries, whether the class is referenced, and shared
+    leaf-subclass protocol that should be lifted to the root class.
   - **Per-method LLM reviews** (lazy — one call when you click a method).
 - **Review a method category** — press `cmd+0` on a protocol (the method-category list)
   to review every method in it, lazily, one at a time.
@@ -68,28 +69,29 @@ SmalltalkMentor unloadMenues.       "remove them"
 
 ## Configuring the LLM keys
 
-Each provider reads its API key from a file, tried in this order:
+Each provider reads its API key from a file named `<provider>.key`, tried in this order:
 
-1. `<image directory>/<provider>.key`  — per-image key, checked first
-2. a per-user key file in your home directory
+1. `<image directory>/<provider>.key`   — per-image key, checked first
+2. `~/.smalltalk-mentor/<provider>.key`  — per-user key, **same file name**
 3. (Claude only) the `ANTHROPIC_API_KEY` environment variable
 
-| Provider   | Default model                     | Image-dir key    | Home key             |
-|------------|-----------------------------------|------------------|----------------------|
-| Claude     | `claude-opus-4-8`                 | `anthropic.key`  | `~/.anthropic/key`   |
-| ChatGPT    | `gpt-4o`                          | `openai.key`     | `~/.openai/key`      |
-| Deepseek   | `deepseek-chat`                   | `deepseek.key`   | `~/.deepseek/key`    |
-| Nvidia NIM | `meta/llama-3.1-70b-instruct`     | `nvidia.key`     | `~/.nvidia/key`      |
-| Gemini     | `gemini-2.0-flash`                | `gemini.key`     | `~/.gemini/key`      |
+| Provider   | Default model                     | Key file name   |
+|------------|-----------------------------------|-----------------|
+| Claude     | `claude-opus-4-8`                 | `anthropic.key` |
+| ChatGPT    | `gpt-4o`                          | `openai.key`    |
+| Deepseek   | `deepseek-chat`                   | `deepseek.key`  |
+| Nvidia NIM | `meta/llama-3.1-70b-instruct`     | `nvidia.key`    |
+| Gemini     | `gemini-2.0-flash`                | `gemini.key`    |
 
-Create the key file for the provider(s) you use. For example, for Claude:
+The same file name is used in both locations (no per-provider directories). Create the key
+file for the provider(s) you use. For example, for Claude:
 
 ```bash
 # per image (recommended if you keep the image in a project folder)
 printf '%s' 'sk-ant-...' > "$(dirname <your.image>)/anthropic.key"
 
-# or per user
-mkdir -p ~/.anthropic && printf '%s' 'sk-ant-...' > ~/.anthropic/key && chmod 600 ~/.anthropic/key
+# or per user (shared by every image)
+mkdir -p ~/.smalltalk-mentor && printf '%s' 'sk-ant-...' > ~/.smalltalk-mentor/anthropic.key && chmod 600 ~/.smalltalk-mentor/anthropic.key
 ```
 
 > The key file must contain only the key. It is only read at request time and is never
@@ -190,6 +192,9 @@ These run instantly in Smalltalk when you open a class (or class-category) revie
 6. No method declares an **unused or write-only temporary** variable.
 7. The **class is referenced** somewhere (flags dead classes with no references and no
    subclasses).
+8. When a class has more than one **leaf subclass**, every message that instances of *all*
+   those leaf subclasses answer is implemented in the **root** class — concretely or as
+   `subclassResponsibility` — so shared protocol is declared in one place.
 
 ## Choosing the provider, model and language
 

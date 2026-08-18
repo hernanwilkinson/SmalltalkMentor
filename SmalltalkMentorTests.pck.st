@@ -1,6 +1,6 @@
-'From Cuis7.9 [latest update: #8113] on 18 August 2026 at 9:41:17 am'!
+'From Cuis7.9 [latest update: #8113] on 18 August 2026 at 11:26:34 am'!
 'Description '!
-!provides: 'SmalltalkMentorTests' 1 2!
+!provides: 'SmalltalkMentorTests' 1 3!
 !requires: 'SmalltalkMentor' nil nil nil!
 SystemOrganization addCategory: #SmalltalkMentorTests!
 
@@ -33,96 +33,128 @@ setUp
 	review := SmalltalkMentorClassReview new.
 	fixtures := OrderedCollection new! !
 
-!SmalltalkMentorFixedRuleTest methodsFor: 'running' stamp: 'HAW 18/Aug/2026, 12:31:46 pm (UTC)'!
+!SmalltalkMentorFixedRuleTest methodsFor: 'running' stamp: 'HAW 18/Aug/2026, 1:49:36 pm (UTC)'!
 tearDown
-	fixtures do: [ :cls | cls removeFromSystem ].
+	fixtures reverse do: [ :eachFixtureClass | eachFixtureClass removeFromSystem ].
 	fixtures := OrderedCollection new! !
 
 !SmalltalkMentorFixedRuleTest methodsFor: 'support' stamp: 'HAW 18/Aug/2026, 12:31:50 pm (UTC)'!
 includesSubstring: aSubstring in: aString
 	^(review firstIndexOf: aSubstring in: aString) > 0! !
 
-!SmalltalkMentorFixedRuleTest methodsFor: 'support' stamp: 'HAW 18/Aug/2026, 12:31:48 pm (UTC)'!
+!SmalltalkMentorFixedRuleTest methodsFor: 'support' stamp: 'HAW 18/Aug/2026, 1:49:39 pm (UTC)'!
+newFixtureClassNamed: aClassNameSymbol superclass: aSuperclass
+	"A throwaway class (removed in tearDown) used to build small hierarchies. Its category is
+	outside every SmalltalkMentor package so no package ever claims it."
+	| createdClass |
+	createdClass := aSuperclass subclass: aClassNameSymbol
+		instanceVariableNames: ''
+		classVariableNames: ''
+		poolDictionaries: ''
+		category: 'SMMentorFixtures'.
+	fixtures add: createdClass.
+	^createdClass! !
+
+!SmalltalkMentorFixedRuleTest methodsFor: 'support' stamp: 'HAW 18/Aug/2026, 1:55:09 pm (UTC)'!
 newFixtureInstanceVariableNames: instanceNames classVariableNames: classNames
 	"A throwaway class (removed in tearDown) used to exercise one static rule. Its category is
 	outside every SmalltalkMentor package so no package ever claims it."
-	| cls |
-	cls := Object subclass: #SMMentorFixture
+	| createdClass |
+	createdClass := Object subclass: #SMMentorFixture
 		instanceVariableNames: instanceNames
 		classVariableNames: classNames
 		poolDictionaries: ''
 		category: 'SMMentorFixtures'.
-	fixtures add: cls.
-	^cls! !
+	fixtures add: createdClass.
+	^createdClass! !
 
-!SmalltalkMentorFixedRuleTest methodsFor: 'tests' stamp: 'HAW 18/Aug/2026, 12:32:11 pm (UTC)'!
+!SmalltalkMentorFixedRuleTest methodsFor: 'tests' stamp: 'HAW 18/Aug/2026, 1:55:24 pm (UTC)'!
 testClassMustBeReferenced
-	| cls findings |
-	cls := self newFixtureInstanceVariableNames: '' classVariableNames: ''.
-	findings := review classReferencedFindingsFor: cls.
+	| classToVerify findings |
+	classToVerify := self newFixtureInstanceVariableNames: '' classVariableNames: ''.
+	findings := review classReferencedFindingsFor: classToVerify.
 	self assert: findings notEmpty.
 	"a class that other classes reference is not flagged"
 	self assert: (review classReferencedFindingsFor: SmalltalkMentorFinding) isEmpty! !
 
-!SmalltalkMentorFixedRuleTest methodsFor: 'tests' stamp: 'HAW 18/Aug/2026, 12:31:58 pm (UTC)'!
+!SmalltalkMentorFixedRuleTest methodsFor: 'tests' stamp: 'HAW 18/Aug/2026, 1:55:14 pm (UTC)'!
 testClassVariableMustBeReadAndWritten
-	| cls findings |
-	cls := self newFixtureInstanceVariableNames: '' classVariableNames: 'UnusedClassVar'.
-	findings := review classVarFindingsFor: cls.
-	self assert: (findings anySatisfy: [ :f | f editKind = #variable and: [ f editTarget value = 'UnusedClassVar' ] ])! !
+	| classToVerify findings |
+	classToVerify := self newFixtureInstanceVariableNames: '' classVariableNames: 'UnusedClassVariable'.
+	findings := review classVariableFindingsFor: classToVerify.
+	self assert: (findings anySatisfy: [ :finding | finding editKind = #variable and: [ finding editTarget value = 'UnusedClassVariable' ] ])! !
 
-!SmalltalkMentorFixedRuleTest methodsFor: 'tests' stamp: 'HAW 18/Aug/2026, 12:31:56 pm (UTC)'!
+!SmalltalkMentorFixedRuleTest methodsFor: 'tests' stamp: 'HAW 18/Aug/2026, 1:55:12 pm (UTC)'!
 testInstanceVariableMustBeReadAndWritten
-	| cls findings |
-	cls := self newFixtureInstanceVariableNames: 'unusedIvar' classVariableNames: ''.
-	findings := review instVarFindingsFor: cls.
-	self assert: (findings anySatisfy: [ :f | f editKind = #variable and: [ f editTarget value = 'unusedIvar' ] ])! !
+	| classToVerify findings |
+	classToVerify := self newFixtureInstanceVariableNames: 'unusedInstanceVariable' classVariableNames: ''.
+	findings := review instanceVariableFindingsFor: classToVerify.
+	self assert: (findings anySatisfy: [ :finding | finding editKind = #variable and: [ finding editTarget value = 'unusedInstanceVariable' ] ])! !
 
-!SmalltalkMentorFixedRuleTest methodsFor: 'tests' stamp: 'HAW 18/Aug/2026, 12:32:04 pm (UTC)'!
+!SmalltalkMentorFixedRuleTest methodsFor: 'tests' stamp: 'HAW 18/Aug/2026, 1:55:21 pm (UTC)'!
 testMethodMustBeCategorized
-	| cls findings |
-	cls := self newFixtureInstanceVariableNames: '' classVariableNames: ''.
-	cls compile: 'looseMethod ^1' classified: 'as yet unclassified'.
-	findings := review uncategorizedMethodsFindingsFor: cls.
-	self assert: (findings anySatisfy: [ :f | f editTarget value = #looseMethod ])! !
+	| classToVerify findings |
+	classToVerify := self newFixtureInstanceVariableNames: '' classVariableNames: ''.
+	classToVerify compile: 'looseMethod ^1' classified: 'as yet unclassified'.
+	findings := review uncategorizedMethodsFindingsFor: classToVerify.
+	self assert: (findings anySatisfy: [ :finding | finding editTarget value asString = 'looseMethod' ])! !
 
-!SmalltalkMentorFixedRuleTest methodsFor: 'tests' stamp: 'HAW 18/Aug/2026, 12:33:28 pm (UTC)'!
+!SmalltalkMentorFixedRuleTest methodsFor: 'tests' stamp: 'HAW 18/Aug/2026, 1:55:16 pm (UTC)'!
 testMethodMustHaveSenders
-	| cls findings |
-	cls := self newFixtureInstanceVariableNames: '' classVariableNames: ''.
-	cls compile: 'orphanMethodXyz ^42' classified: 'accessing'.
-	findings := review methodsWithoutSendersFindingsFor: cls.
+	| classToVerify findings |
+	classToVerify := self newFixtureInstanceVariableNames: '' classVariableNames: ''.
+	classToVerify compile: 'orphanMethodXyz ^42' classified: 'accessing'.
+	findings := review methodsWithoutSendersFindingsFor: classToVerify.
 	"Compare by asString, not the #orphanMethodXyz literal: a Symbol literal here would itself
 	count as a sender and defeat the rule."
-	self assert: (findings anySatisfy: [ :f | f editTarget value asString = 'orphanMethodXyz' ])! !
+	self assert: (findings anySatisfy: [ :finding | finding editTarget value asString = 'orphanMethodXyz' ])! !
 
-!SmalltalkMentorFixedRuleTest methodsFor: 'tests' stamp: 'HAW 18/Aug/2026, 12:32:02 pm (UTC)'!
+!SmalltalkMentorFixedRuleTest methodsFor: 'tests' stamp: 'HAW 18/Aug/2026, 1:55:18 pm (UTC)'!
 testSentMessageMustHaveImplementer
-	| cls findings |
-	cls := self newFixtureInstanceVariableNames: '' classVariableNames: ''.
-	cls compile: 'callsMissing ^self zzzNoSuchSelectorXyz' classified: 'accessing'.
-	findings := review messagesWithoutImplementersFindingsFor: cls.
-	self assert: (findings anySatisfy: [ :f | self includesSubstring: 'zzzNoSuchSelectorXyz' in: f title ])! !
+	| classToVerify findings |
+	classToVerify := self newFixtureInstanceVariableNames: '' classVariableNames: ''.
+	classToVerify compile: 'callsMissing ^self zzzNoSuchSelectorXyz' classified: 'accessing'.
+	findings := review messagesWithoutImplementersFindingsFor: classToVerify.
+	self assert: (findings anySatisfy: [ :finding | self includesSubstring: 'zzzNoSuchSelectorXyz' in: finding title ])! !
 
-!SmalltalkMentorFixedRuleTest methodsFor: 'tests' stamp: 'HAW 18/Aug/2026, 12:32:09 pm (UTC)'!
-testUnusedAndWriteOnlyTempsAreFlaggedButUsedAndCapturedAreNot
-	| cls findings |
-	cls := self newFixtureInstanceVariableNames: '' classVariableNames: ''.
-	cls compile: 'withTemps
-	| usedTemp reallyUnused writeOnly |
-	usedTemp := 1.
+!SmalltalkMentorFixedRuleTest methodsFor: 'tests' stamp: 'HAW 18/Aug/2026, 1:49:43 pm (UTC)'!
+testSharedLeafSubclassProtocolMustBeInRoot
+	| rootClass firstLeaf secondLeaf findings |
+	rootClass := self newFixtureClassNamed: #SMFixtureRoot superclass: Object.
+	firstLeaf := self newFixtureClassNamed: #SMFixtureFirstLeaf superclass: rootClass.
+	secondLeaf := self newFixtureClassNamed: #SMFixtureSecondLeaf superclass: rootClass.
+	firstLeaf compile: 'sharedOperation ^1' classified: 'operations'.
+	secondLeaf compile: 'sharedOperation ^2' classified: 'operations'.
+	firstLeaf compile: 'onlyInOneLeaf ^0' classified: 'operations'.
+	findings := review commonLeafSubclassProtocolFindingsFor: rootClass.
+	"answered by every leaf but missing in the root -> flagged"
+	self assert: (findings anySatisfy: [ :finding | self includesSubstring: 'sharedOperation' in: finding title ]).
+	"answered by only one leaf -> not flagged"
+	self deny: (findings anySatisfy: [ :finding | self includesSubstring: 'onlyInOneLeaf' in: finding title ]).
+	"once the root declares it (even as subclassResponsibility) it is no longer flagged"
+	rootClass compile: 'sharedOperation ^self subclassResponsibility' classified: 'operations'.
+	findings := review commonLeafSubclassProtocolFindingsFor: rootClass.
+	self deny: (findings anySatisfy: [ :finding | self includesSubstring: 'sharedOperation' in: finding title ])! !
+
+!SmalltalkMentorFixedRuleTest methodsFor: 'tests' stamp: 'HAW 18/Aug/2026, 1:55:26 pm (UTC)'!
+testUnusedAndWriteOnlyTemporariesAreFlaggedButUsedAndCapturedAreNot
+	| classToVerify findings |
+	classToVerify := self newFixtureInstanceVariableNames: '' classVariableNames: ''.
+	classToVerify compile: 'withTemporaries
+	| usedTemporary reallyUnused writeOnly |
+	usedTemporary := 1.
 	writeOnly := 2.
-	^usedTemp' classified: 'accessing'.
-	cls compile: 'withCapture
+	^usedTemporary' classified: 'accessing'.
+	classToVerify compile: 'withCapture
 	| shared |
 	[ shared := 5 ] value.
 	^shared' classified: 'accessing'.
-	findings := review unusedTempsFindingsFor: cls.
+	findings := review unusedTemporariesFindingsFor: classToVerify.
 	self assert: 2 equals: findings size.
-	self assert: (findings anySatisfy: [ :f | self includesSubstring: 'reallyUnused' in: f title ]).
-	self assert: (findings anySatisfy: [ :f | self includesSubstring: 'writeOnly' in: f title ]).
-	self deny: (findings anySatisfy: [ :f | self includesSubstring: 'usedTemp' in: f title ]).
-	self deny: (findings anySatisfy: [ :f | self includesSubstring: 'shared' in: f title ])! !
+	self assert: (findings anySatisfy: [ :finding | self includesSubstring: 'reallyUnused' in: finding title ]).
+	self assert: (findings anySatisfy: [ :finding | self includesSubstring: 'writeOnly' in: finding title ]).
+	self deny: (findings anySatisfy: [ :finding | self includesSubstring: 'usedTemporary' in: finding title ]).
+	self deny: (findings anySatisfy: [ :finding | self includesSubstring: 'shared' in: finding title ])! !
 
 !SmalltalkMentorRuleTest methodsFor: 'support' stamp: 'HAW 14/Aug/2026, 12:21:39 pm (UTC)'!
 assertRule: ruleId caughtIn: methodSource fix: aFixBlock
@@ -144,27 +176,27 @@ assertRule: ruleId caughtIn: methodSource fix: aFixBlock
 		'Last suggestion: ', (last ifNil: [ '' ] ifNotNil: [ :p | p at: 'suggestedSource' ifAbsent: [ '' ] ]), String newLineString,
 		'Last rationale: ', (last ifNil: [ '' ] ifNotNil: [ :p | p at: 'rationale' ifAbsent: [ '' ] ])! !
 
-!SmalltalkMentorRuleTest methodsFor: 'support' stamp: 'HAW 13/Aug/2026, 7:56:07 pm (UTC)'!
+!SmalltalkMentorRuleTest methodsFor: 'support' stamp: 'HAW 18/Aug/2026, 1:59:05 pm (UTC)'!
 does: aString include: aSubstring
 	"Case-insensitive substring test."
-	| s sub |
-	s := aString asString asLowercase.
-	sub := aSubstring asString asLowercase.
-	sub isEmpty ifTrue: [ ^true ].
-	sub size > s size ifTrue: [ ^false ].
-	1 to: s size - sub size + 1 do: [ :i |
-		(s copyFrom: i to: i + sub size - 1) = sub ifTrue: [ ^true ] ].
+	| lowercaseString lowercaseSubstring |
+	lowercaseString := aString asString asLowercase.
+	lowercaseSubstring := aSubstring asString asLowercase.
+	lowercaseSubstring isEmpty ifTrue: [ ^true ].
+	lowercaseSubstring size > lowercaseString size ifTrue: [ ^false ].
+	1 to: lowercaseString size - lowercaseSubstring size + 1 do: [ :scanIndex |
+		(lowercaseString copyFrom: scanIndex to: scanIndex + lowercaseSubstring size - 1) = lowercaseSubstring ifTrue: [ ^true ] ].
 	^false! !
 
-!SmalltalkMentorRuleTest methodsFor: 'support' stamp: 'HAW 13/Aug/2026, 7:56:14 pm (UTC)'!
+!SmalltalkMentorRuleTest methodsFor: 'support' stamp: 'HAW 18/Aug/2026, 1:59:10 pm (UTC)'!
 firstIndexOf: aSubstring in: aString
 	"First 1-based index of aSubstring in aString (case-insensitive), or 0 if absent."
-	| s sub |
-	s := aString asString asLowercase.
-	sub := aSubstring asString asLowercase.
-	(sub isEmpty or: [ sub size > s size ]) ifTrue: [ ^0 ].
-	1 to: s size - sub size + 1 do: [ :i |
-		(s copyFrom: i to: i + sub size - 1) = sub ifTrue: [ ^i ] ].
+	| lowercaseString lowercaseSubstring |
+	lowercaseString := aString asString asLowercase.
+	lowercaseSubstring := aSubstring asString asLowercase.
+	(lowercaseSubstring isEmpty or: [ lowercaseSubstring size > lowercaseString size ]) ifTrue: [ ^0 ].
+	1 to: lowercaseString size - lowercaseSubstring size + 1 do: [ :scanIndex |
+		(lowercaseString copyFrom: scanIndex to: scanIndex + lowercaseSubstring size - 1) = lowercaseSubstring ifTrue: [ ^scanIndex ] ].
 	^0! !
 
 !SmalltalkMentorRuleTest methodsFor: 'support' stamp: 'HAW 13/Aug/2026, 7:56:20 pm (UTC)'!

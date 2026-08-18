@@ -1,6 +1,6 @@
-'From Cuis7.9 [latest update: #8113] on 18 August 2026 at 10:24:39 am'!
+'From Cuis7.9 [latest update: #8113] on 18 August 2026 at 11:24:25 am'!
 'Description Better menu definition'!
-!provides: 'SmalltalkMentor' 1 27!
+!provides: 'SmalltalkMentor' 1 28!
 !requires: 'JSON' 1 29 nil!
 !requires: 'OSProcess' 1 36 nil!
 SystemOrganization addCategory: #SmalltalkMentor!
@@ -68,7 +68,7 @@ GeminiProvider class
 
 !classDefinition: #OpenAICompatibleProvider category: #SmalltalkMentor!
 LLMProvider subclass: #OpenAICompatibleProvider
-	instanceVariableNames: 'endpoint keyFilePath imageKeyBasename'
+	instanceVariableNames: 'endpoint imageKeyBasename'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'SmalltalkMentor'!
@@ -128,7 +128,7 @@ SmalltalkMentorFinding class
 
 !classDefinition: #SmalltalkMentorReview category: #SmalltalkMentor!
 Object subclass: #SmalltalkMentorReview
-	instanceVariableNames: 'targetClass selector category currentSource suggestedSource rationale window suggestedMorph messages transcriptMorph inputMorph busy langButton mentor contentMorph'
+	instanceVariableNames: 'targetClass selector category currentSource suggestedSource rationale window suggestedMorph messages transcriptMorph inputMorph busy languageButton mentor contentMorph'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'SmalltalkMentor'!
@@ -253,6 +253,12 @@ extractTextFrom: jsonString
 	"Parse the provider's JSON response and answer the assistant's text. Subclasses answer."
 	^self subclassResponsibility! !
 
+!LLMProvider methodsFor: 'private' stamp: 'HAW 18/Aug/2026, 1:45:04 pm (UTC)'!
+homeKeyPath
+	"Path of this provider's key file under the shared ~/.smalltalk-mentor directory, using the
+	same file name as in the image directory (checked after the image-directory key)."
+	^'$HOME/.smalltalk-mentor/', self keyImageBasename! !
+
 !LLMProvider methodsFor: 'private' stamp: 'HAW 17/Aug/2026, 9:50:56 pm (UTC)'!
 imageKeyPath
 	"Absolute path of this provider's key file in the image directory (checked before the
@@ -264,16 +270,22 @@ keyImageBasename
 	"File name of this provider's key inside the image directory. Subclasses answer this."
 	^self subclassResponsibility! !
 
+!LLMProvider methodsFor: 'private' stamp: 'HAW 18/Aug/2026, 1:45:06 pm (UTC)'!
+keyLookupShellCommand
+	"Shell command that prints this provider's API key: the key file in the image directory,
+	falling back to the same-named file under ~/.smalltalk-mentor."
+	^'cat "', self imageKeyPath, '" 2>/dev/null || cat "', self homeKeyPath, '" 2>/dev/null'! !
+
 !AnthropicProvider methodsFor: 'initialization' stamp: 'HAW 7/Aug/2026, 6:49:10 pm (UTC)'!
 initialize
 	name := 'Claude'.
 	model := 'claude-opus-4-8'! !
 
-!AnthropicProvider methodsFor: 'private' stamp: 'HAW 14/Aug/2026, 2:20:29 pm (UTC)'!
+!AnthropicProvider methodsFor: 'private' stamp: 'HAW 18/Aug/2026, 1:45:08 pm (UTC)'!
 authCurlArgs
-	"Anthropic uses x-api-key + a version header. Key looked up: image dir, then
-	~/.anthropic/key, then the ANTHROPIC_API_KEY env var."
-	^'-H "anthropic-version: 2023-06-01" -H "x-api-key: $(cat "', self imageKeyPath, '" 2>/dev/null || cat "$HOME/.anthropic/key" 2>/dev/null || printf %s "$ANTHROPIC_API_KEY")"'! !
+	"Anthropic uses x-api-key plus a version header. The key is read from the image directory,
+	then ~/.smalltalk-mentor, then the ANTHROPIC_API_KEY environment variable."
+	^'-H "anthropic-version: 2023-06-01" -H "x-api-key: $(', self keyLookupShellCommand, ' || printf %s "$ANTHROPIC_API_KEY")"'! !
 
 !AnthropicProvider methodsFor: 'private' stamp: 'HAW 7/Aug/2026, 6:49:27 pm (UTC)'!
 bodyForMessages: neutralMessages
@@ -312,10 +324,11 @@ initialize
 	name := 'Gemini'.
 	model := 'gemini-2.0-flash'! !
 
-!GeminiProvider methodsFor: 'private' stamp: 'HAW 14/Aug/2026, 2:20:40 pm (UTC)'!
+!GeminiProvider methodsFor: 'private' stamp: 'HAW 18/Aug/2026, 1:45:13 pm (UTC)'!
 authCurlArgs
-	"Gemini uses the x-goog-api-key header. Key looked up: image dir, then ~/.gemini/key."
-	^'-H "x-goog-api-key: $(cat "', self imageKeyPath, '" 2>/dev/null || cat "$HOME/.gemini/key" 2>/dev/null)"'! !
+	"Gemini uses the x-goog-api-key header. The key is read from the image directory, then
+	~/.smalltalk-mentor."
+	^'-H "x-goog-api-key: $(', self keyLookupShellCommand, ')"'! !
 
 !GeminiProvider methodsFor: 'private' stamp: 'HAW 7/Aug/2026, 6:51:00 pm (UTC)'!
 bodyForMessages: neutralMessages
@@ -358,15 +371,11 @@ keyImageBasename
 endpoint
 	^endpoint! !
 
-!OpenAICompatibleProvider methodsFor: 'accessing' stamp: 'HAW 7/Aug/2026, 6:50:00 pm (UTC)'!
-keyFilePath
-	^keyFilePath! !
-
-!OpenAICompatibleProvider methodsFor: 'private' stamp: 'HAW 14/Aug/2026, 2:21:14 pm (UTC)'!
+!OpenAICompatibleProvider methodsFor: 'private' stamp: 'HAW 18/Aug/2026, 1:45:10 pm (UTC)'!
 authCurlArgs
-	"OpenAI-compatible APIs use a Bearer token. Key looked up: image dir, then the provider's
-	home key file."
-	^'-H "authorization: Bearer $(cat "', self imageKeyPath, '" 2>/dev/null || cat "', keyFilePath, '" 2>/dev/null)"'! !
+	"OpenAI-compatible APIs use a Bearer token. The key is read from the image directory, then
+	~/.smalltalk-mentor."
+	^'-H "authorization: Bearer $(', self keyLookupShellCommand, ')"'! !
 
 !OpenAICompatibleProvider methodsFor: 'private' stamp: 'HAW 7/Aug/2026, 6:50:21 pm (UTC)'!
 bodyForMessages: neutralMessages
@@ -396,19 +405,19 @@ extractTextFrom: jsonString
 keyImageBasename
 	^imageKeyBasename! !
 
-!OpenAICompatibleProvider methodsFor: 'initialization' stamp: 'HAW 17/Aug/2026, 4:44:45 pm (UTC)'!
-initializeName: aName endpoint: anEndpoint model: aModel keyFilePath: aKeyPath imageKeyBasename: anImageBasename
+!OpenAICompatibleProvider methodsFor: 'as yet unclassified' stamp: 'HAW 18/Aug/2026, 1:45:35 pm (UTC)'!
+initializeName: aName endpoint: anEndpoint model: aModel imageKeyBasename: anImageBasename
 	name := aName.
 	endpoint := anEndpoint.
 	model := aModel.
-	keyFilePath := aKeyPath.
 	imageKeyBasename := anImageBasename! !
 
-!OpenAICompatibleProvider class methodsFor: 'instance creation' stamp: 'HAW 17/Aug/2026, 4:44:52 pm (UTC)'!
-name: aName endpoint: anEndpoint model: aModel keyFilePath: aKeyPath imageKeyBasename: anImageBasename
-	"Configure an OpenAI-compatible provider (ChatGPT / Deepseek / Nvidia NIM)."
+!OpenAICompatibleProvider class methodsFor: 'as yet unclassified' stamp: 'HAW 18/Aug/2026, 1:45:37 pm (UTC)'!
+name: aName endpoint: anEndpoint model: aModel imageKeyBasename: anImageBasename
+	"Configure an OpenAI-compatible provider (ChatGPT / Deepseek / Nvidia NIM). Its key is read
+	from <imageDir>/<imageKeyBasename> then ~/.smalltalk-mentor/<imageKeyBasename>."
 	^self new
-		initializeName: aName endpoint: anEndpoint model: aModel keyFilePath: aKeyPath imageKeyBasename: anImageBasename! !
+		initializeName: aName endpoint: anEndpoint model: aModel imageKeyBasename: anImageBasename! !
 
 !SmalltalkMentor methodsFor: 'initialization' stamp: 'HAW 14/Aug/2026, 6:50:48 pm (UTC)'!
 initialize
@@ -655,20 +664,20 @@ userMessage: aString
 		at: 'content' put: aString;
 		yourself! !
 
-!SmalltalkMentor methodsFor: 'ui' stamp: 'HAW 14/Aug/2026, 6:07:46 pm (UTC)'!
+!SmalltalkMentor methodsFor: 'ui' stamp: 'HAW 18/Aug/2026, 1:58:45 pm (UTC)'!
 chooseProvider
 	"Menu action: pick the active provider from a list, then its model id. Runs on the UI
 	process."
-	| names idx chosen answer |
-	names := (self providers collect: [ :p | p name ]) asArray.
-	idx := PopUpMenu withCaption: 'Choose LLM provider' chooseFrom: names.
-	idx = 0 ifTrue: [ ^self ].
-	chosen := self providers at: idx.
-	answer := self request: 'Model id for ', chosen name initialAnswer: chosen model.
-	(answer notNil and: [ answer withBlanksTrimmed notEmpty ])
-		ifTrue: [ chosen model: answer withBlanksTrimmed ].
-	self provider: chosen.
-	self showTransientToast: 'Provider: ', chosen name, ' (', chosen model, ')'! !
+	| providerNames chosenIndex chosenProvider modelAnswer |
+	providerNames := (self providers collect: [ :eachProvider | eachProvider name ]) asArray.
+	chosenIndex := PopUpMenu withCaption: 'Choose LLM provider' chooseFrom: providerNames.
+	chosenIndex = 0 ifTrue: [ ^self ].
+	chosenProvider := self providers at: chosenIndex.
+	modelAnswer := self request: 'Model id for ', chosenProvider name initialAnswer: chosenProvider model.
+	(modelAnswer notNil and: [ modelAnswer withBlanksTrimmed notEmpty ])
+		ifTrue: [ chosenProvider model: modelAnswer withBlanksTrimmed ].
+	self provider: chosenProvider.
+	self showTransientToast: 'Provider: ', chosenProvider name, ' (', chosenProvider model, ')'! !
 
 !SmalltalkMentor methodsFor: 'ui' stamp: 'HAW 14/Aug/2026, 6:07:46 pm (UTC)'!
 showThinkingToast: aString
@@ -738,13 +747,12 @@ buildProviders
 		add: self gemini;
 		yourself! !
 
-!SmalltalkMentor class methodsFor: 'providers' stamp: 'HAW 17/Aug/2026, 9:57:39 pm (UTC)'!
+!SmalltalkMentor class methodsFor: 'providers' stamp: 'HAW 18/Aug/2026, 1:45:39 pm (UTC)'!
 chatGPT
 
 	^ OpenAICompatibleProvider name: 'ChatGPT'
 		endpoint: 'https://api.openai.com/v1/chat/completions'
 		model: 'gpt-4o'
-		keyFilePath: '$HOME/.openai/key'
 		imageKeyBasename: 'openai.key'! !
 
 !SmalltalkMentor class methodsFor: 'providers' stamp: 'HAW 17/Aug/2026, 9:55:53 pm (UTC)'!
@@ -752,13 +760,12 @@ claude
 
 	^ AnthropicProvider new! !
 
-!SmalltalkMentor class methodsFor: 'providers' stamp: 'HAW 17/Aug/2026, 9:57:46 pm (UTC)'!
+!SmalltalkMentor class methodsFor: 'providers' stamp: 'HAW 18/Aug/2026, 1:45:41 pm (UTC)'!
 deepseek
 
 	^ OpenAICompatibleProvider name: 'Deepseek'
 		endpoint: 'https://api.deepseek.com/chat/completions'
 		model: 'deepseek-chat'
-		keyFilePath: '$HOME/.deepseek/key'
 		imageKeyBasename: 'deepseek.key'! !
 
 !SmalltalkMentor class methodsFor: 'providers' stamp: 'HAW 17/Aug/2026, 9:56:36 pm (UTC)'!
@@ -766,13 +773,12 @@ gemini
 
 	^ GeminiProvider new! !
 
-!SmalltalkMentor class methodsFor: 'providers' stamp: 'HAW 17/Aug/2026, 9:57:51 pm (UTC)'!
+!SmalltalkMentor class methodsFor: 'providers' stamp: 'HAW 18/Aug/2026, 1:45:44 pm (UTC)'!
 nvidiaNIM
 
 	^ OpenAICompatibleProvider name: 'Nvidia NIM'
 		endpoint: 'https://integrate.api.nvidia.com/v1/chat/completions'
 		model: 'meta/llama-3.1-70b-instruct'
-		keyFilePath: '$HOME/.nvidia/key'
 		imageKeyBasename: 'nvidia.key'! !
 
 !SmalltalkMentor class methodsFor: 'providers' stamp: 'HAW 7/Aug/2026, 6:51:59 pm (UTC)'!
@@ -935,154 +941,171 @@ classReviewRootNodesFor: aClass
 	roots add: (self methodsSideNodeFor: aClass class label: 'Class methods').
 	^roots! !
 
-!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 18/Aug/2026, 11:32:32 am (UTC)'!
-classVarFindingsFor: aClass
+!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 18/Aug/2026, 1:53:32 pm (UTC)'!
+classVariableFindingsFor: aClass
 	"Rule 4: every class variable should be both read and written (instance or class side)."
-	| result |
-	result := OrderedCollection new.
-	aClass classVarNames asSortedCollection do: [ :cv |
-		| binding sources assignments occurrences hasWrite hasRead problem |
-		binding := aClass bindingOf: cv.
+	| findings |
+	findings := OrderedCollection new.
+	aClass classVarNames asSortedCollection do: [ :classVariableName |
+		| binding sources assignmentCount occurrenceCount isWritten isRead problem |
+		binding := aClass bindingOf: classVariableName.
 		sources := OrderedCollection new.
-		(aClass whichSelectorsReferTo: binding) do: [ :sel | sources add: (aClass sourceCodeAt: sel) ].
-		(aClass class whichSelectorsReferTo: binding) do: [ :sel | sources add: (aClass class sourceCodeAt: sel) ].
-		assignments := sources inject: 0 into: [ :sum :src | sum + (self countOf: cv, ' :=' in: src) + (self countOf: cv, ':=' in: src) ].
-		occurrences := sources inject: 0 into: [ :sum :src | sum + (self countOf: cv in: src) ].
-		hasWrite := assignments > 0.
-		hasRead := occurrences > assignments.
-		(hasRead and: [ hasWrite ]) ifFalse: [
-			problem := (hasRead or: [ hasWrite ])
+		(aClass whichSelectorsReferTo: binding) do: [ :referringSelector | sources add: (aClass sourceCodeAt: referringSelector) ].
+		(aClass class whichSelectorsReferTo: binding) do: [ :referringSelector | sources add: (aClass class sourceCodeAt: referringSelector) ].
+		assignmentCount := sources inject: 0 into: [ :runningTotal :eachSource | runningTotal + (self countOf: classVariableName, ' :=' in: eachSource) + (self countOf: classVariableName, ':=' in: eachSource) ].
+		occurrenceCount := sources inject: 0 into: [ :runningTotal :eachSource | runningTotal + (self countOf: classVariableName in: eachSource) ].
+		isWritten := assignmentCount > 0.
+		isRead := occurrenceCount > assignmentCount.
+		(isRead and: [ isWritten ]) ifFalse: [
+			problem := (isRead or: [ isWritten ])
 				ifFalse: [ 'is never read nor written' ]
-				ifTrue: [ hasRead ifTrue: [ 'is read but never written' ] ifFalse: [ 'is written but never read' ] ].
-			result add: (SmalltalkMentorFinding
-				title: 'Class var ', cv, ' ', problem
-				detail: 'The class variable ''', cv, ''' of ', aClass name, ' ', problem, '.'
+				ifTrue: [ isRead ifTrue: [ 'is read but never written' ] ifFalse: [ 'is written but never read' ] ].
+			findings add: (SmalltalkMentorFinding
+				title: 'Class variable ', classVariableName, ' ', problem
+				detail: 'The class variable ''', classVariableName, ''' of ', aClass name, ' ', problem, '.'
 				editKind: #variable
-				editTarget: (aClass -> cv)) ] ].
-	^result! !
+				editTarget: (aClass -> classVariableName)) ] ].
+	^findings! !
 
-!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 18/Aug/2026, 11:32:27 am (UTC)'!
-instVarFindingsFor: aClass
+!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 18/Aug/2026, 1:47:11 pm (UTC)'!
+commonLeafSubclassProtocolFindingsFor: rootClass
+	"Rule 8: when rootClass has more than one leaf subclass, every message that instances of ALL
+	those leaf subclasses answer - restricted to protocol introduced within rootClass's own
+	hierarchy - should be implemented in rootClass itself, concretely or as subclassResponsibility,
+	so the shared protocol is declared in one place. Flags each such message rootClass omits."
+	| leafSubclasses sharedSelectors findings |
+	findings := OrderedCollection new.
+	leafSubclasses := rootClass allSubclasses select: [ :eachSubclass | eachSubclass subclasses isEmpty ].
+	(leafSubclasses size between: 2 and: 300) ifFalse: [ ^findings ].
+	sharedSelectors := self sharedSelectorsAmongLeaves: leafSubclasses ofRoot: rootClass.
+	sharedSelectors asSortedCollection do: [ :sharedSelector |
+		(rootClass includesSelector: sharedSelector) ifFalse: [
+			findings add: (self missingRootProtocolFindingFor: sharedSelector root: rootClass) ] ].
+	^findings! !
+
+!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 18/Aug/2026, 1:53:26 pm (UTC)'!
+instanceVariableFindingsFor: aClass
 	"Rule 1: every instance variable should be both read and written in the instance-side
 	methods."
-	| result |
-	result := OrderedCollection new.
-	aClass instVarNames do: [ :ivar |
-		| idx accessors hasRead hasWrite problem |
-		idx := aClass allInstVarNames indexOf: ivar.
-		accessors := aClass whichSelectorsAccess: ivar.
-		hasWrite := (aClass whichSelectorsStoreInto: ivar) notEmpty.
-		hasRead := accessors anySatisfy: [ :sel | (aClass >> sel) readsField: idx ].
-		(hasRead and: [ hasWrite ]) ifFalse: [
-			problem := (hasRead or: [ hasWrite ])
+	| findings |
+	findings := OrderedCollection new.
+	aClass instVarNames do: [ :instanceVariableName |
+		| instanceVariableIndex accessorSelectors isRead isWritten problem |
+		instanceVariableIndex := aClass allInstVarNames indexOf: instanceVariableName.
+		accessorSelectors := aClass whichSelectorsAccess: instanceVariableName.
+		isWritten := (aClass whichSelectorsStoreInto: instanceVariableName) notEmpty.
+		isRead := accessorSelectors anySatisfy: [ :accessorSelector | (aClass >> accessorSelector) readsField: instanceVariableIndex ].
+		(isRead and: [ isWritten ]) ifFalse: [
+			problem := (isRead or: [ isWritten ])
 				ifFalse: [ 'is never read nor written' ]
-				ifTrue: [ hasRead ifTrue: [ 'is read but never written' ] ifFalse: [ 'is written but never read' ] ].
-			result add: (SmalltalkMentorFinding
-				title: 'Inst var ', ivar, ' ', problem
-				detail: 'The instance variable ''', ivar, ''' of ', aClass name, ' ', problem, '.'
+				ifTrue: [ isRead ifTrue: [ 'is read but never written' ] ifFalse: [ 'is written but never read' ] ].
+			findings add: (SmalltalkMentorFinding
+				title: 'Instance variable ', instanceVariableName, ' ', problem
+				detail: 'The instance variable ''', instanceVariableName, ''' of ', aClass name, ' ', problem, '.'
 				editKind: #variable
-				editTarget: (aClass -> ivar)) ] ].
-	^result! !
+				editTarget: (aClass -> instanceVariableName)) ] ].
+	^findings! !
 
-!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 18/Aug/2026, 11:32:39 am (UTC)'!
+!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 18/Aug/2026, 1:53:40 pm (UTC)'!
 messagesWithoutImplementersFindingsFor: aClass
 	"Rule 3: every message sent by this class's methods should have an implementer."
-	| result seen |
-	result := OrderedCollection new.
-	seen := Set new.
-	{ aClass. aClass class } do: [ :cls |
-		cls selectors asSortedCollection do: [ :sel |
-			(cls >> sel) messages do: [ :sent |
-				(seen includes: sent) ifFalse: [
-					seen add: sent.
-					(Smalltalk allImplementorsOf: sent) isEmpty ifTrue: [
-						result add: (SmalltalkMentorFinding
-							title: 'No implementer: #', sent
-							detail: 'The message #', sent, ' is sent (e.g. in ', cls name, '>>', sel, ') but no class implements it - likely a typo or a missing method.'
+	| findings seenMessages |
+	findings := OrderedCollection new.
+	seenMessages := Set new.
+	{ aClass. aClass class } do: [ :classOrMetaclass |
+		classOrMetaclass selectors asSortedCollection do: [ :eachSelector |
+			(classOrMetaclass >> eachSelector) messages do: [ :sentMessage |
+				(seenMessages includes: sentMessage) ifFalse: [
+					seenMessages add: sentMessage.
+					(Smalltalk allImplementorsOf: sentMessage) isEmpty ifTrue: [
+						findings add: (SmalltalkMentorFinding
+							title: 'No implementer: #', sentMessage
+							detail: 'The message #', sentMessage, ' is sent (e.g. in ', classOrMetaclass name, '>>', eachSelector, ') but no class implements it - likely a typo or a missing method.'
 							editKind: #method
-							editTarget: (cls -> sel)) ] ] ] ] ].
-	^result! !
+							editTarget: (classOrMetaclass -> eachSelector)) ] ] ] ] ].
+	^findings! !
 
-!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 18/Aug/2026, 11:32:36 am (UTC)'!
+!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 18/Aug/2026, 1:53:37 pm (UTC)'!
 methodsWithoutSendersFindingsFor: aClass
 	"Rule 2: every implemented message should have a sender. Excludes methods that override an
 	inherited implementation and test methods (run by metaprogramming)."
-	| result |
-	result := OrderedCollection new.
-	{ aClass. aClass class } do: [ :cls |
-		cls selectors asSortedCollection do: [ :sel |
-			((Smalltalk allCallsOn: sel) isEmpty
-				and: [ (cls superclass canUnderstand: sel) not
-				and: [ (cls >> sel) isTestMethod not ] ]) ifTrue: [
-				result add: (SmalltalkMentorFinding
-					title: 'No senders: ', cls name, '>>', sel
-					detail: 'The method ', cls name, '>>', sel, ' has no senders in the image and does not override an inherited method - it may be dead code.'
+	| findings |
+	findings := OrderedCollection new.
+	{ aClass. aClass class } do: [ :classOrMetaclass |
+		classOrMetaclass selectors asSortedCollection do: [ :eachSelector |
+			((Smalltalk allCallsOn: eachSelector) isEmpty
+				and: [ (classOrMetaclass superclass canUnderstand: eachSelector) not
+				and: [ (classOrMetaclass >> eachSelector) isTestMethod not ] ]) ifTrue: [
+				findings add: (SmalltalkMentorFinding
+					title: 'No senders: ', classOrMetaclass name, '>>', eachSelector
+					detail: 'The method ', classOrMetaclass name, '>>', eachSelector, ' has no senders in the image and does not override an inherited method - it may be dead code.'
 					editKind: #method
-					editTarget: (cls -> sel)) ] ] ].
-	^result! !
+					editTarget: (classOrMetaclass -> eachSelector)) ] ] ].
+	^findings! !
 
-!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 18/Aug/2026, 11:34:11 am (UTC)'!
+!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 18/Aug/2026, 1:54:26 pm (UTC)'!
 ruleGroupsFor: aClass
 	"The static (Smalltalk) verifications for aClass, as title -> (collection of findings)
 	associations. Each becomes a rule root in the tree."
 	^OrderedCollection new
-		add: 'Instance vars read & written' -> (self instVarFindingsFor: aClass);
-		add: 'Class vars read & written' -> (self classVarFindingsFor: aClass);
+		add: 'Instance variables read & written' -> (self instanceVariableFindingsFor: aClass);
+		add: 'Class variables read & written' -> (self classVariableFindingsFor: aClass);
 		add: 'Methods have senders' -> (self methodsWithoutSendersFindingsFor: aClass);
 		add: 'Messages have implementers' -> (self messagesWithoutImplementersFindingsFor: aClass);
 		add: 'Methods are categorized' -> (self uncategorizedMethodsFindingsFor: aClass);
-		add: 'No unused or write-only temps' -> (self unusedTempsFindingsFor: aClass);
+		add: 'No unused or write-only temporaries' -> (self unusedTemporariesFindingsFor: aClass);
 		add: 'Class is referenced' -> (self classReferencedFindingsFor: aClass);
+		add: 'Shared leaf-subclass protocol in root' -> (self commonLeafSubclassProtocolFindingsFor: aClass);
 		yourself! !
 
-!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 18/Aug/2026, 11:32:42 am (UTC)'!
+!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 18/Aug/2026, 1:53:49 pm (UTC)'!
 uncategorizedMethodsFindingsFor: aClass
 	"Rule 5: every method should be in a meaningful protocol (not 'as yet unclassified')."
-	| result |
-	result := OrderedCollection new.
-	{ aClass. aClass class } do: [ :cls |
-		cls selectors asSortedCollection do: [ :sel |
-			| cat |
-			cat := self categoryOf: sel in: cls.
-			(cat isNil or: [ cat asString = 'as yet unclassified' ]) ifTrue: [
-				result add: (SmalltalkMentorFinding
-					title: 'Uncategorized: ', cls name, '>>', sel
-					detail: 'The method ', cls name, '>>', sel, ' is not categorized. Move it into a meaningful protocol.'
+	| findings |
+	findings := OrderedCollection new.
+	{ aClass. aClass class } do: [ :classOrMetaclass |
+		classOrMetaclass selectors asSortedCollection do: [ :eachSelector |
+			| categoryName |
+			categoryName := self categoryOf: eachSelector in: classOrMetaclass.
+			(categoryName isNil or: [ categoryName asString = 'as yet unclassified' ]) ifTrue: [
+				findings add: (SmalltalkMentorFinding
+					title: 'Uncategorized: ', classOrMetaclass name, '>>', eachSelector
+					detail: 'The method ', classOrMetaclass name, '>>', eachSelector, ' is not categorized. Move it into a meaningful protocol.'
 					editKind: #method
-					editTarget: (cls -> sel)) ] ] ].
-	^result! !
+					editTarget: (classOrMetaclass -> eachSelector)) ] ] ].
+	^findings! !
 
-!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 18/Aug/2026, 11:34:00 am (UTC)'!
-unusedTempsFindingsFor: aClass
+!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 18/Aug/2026, 1:53:59 pm (UTC)'!
+unusedTemporariesFindingsFor: aClass
 	"Rule 6: no method should declare a temporary variable that is never read - an unreferenced
-	temp, or one that is only written."
-	| result |
-	result := OrderedCollection new.
-	{ aClass. aClass class } do: [ :cls |
-		cls selectors asSortedCollection do: [ :sel |
-			result addAll: (self unusedTempFindingsIn: cls selector: sel) ] ].
-	^result! !
+	temporary, or one that is only written."
+	| findings |
+	findings := OrderedCollection new.
+	{ aClass. aClass class } do: [ :classOrMetaclass |
+		classOrMetaclass selectors asSortedCollection do: [ :eachSelector |
+			findings addAll: (self unusedTemporariesFindingsIn: classOrMetaclass selector: eachSelector) ] ].
+	^findings! !
 
 !SmalltalkMentorClassReview methodsFor: 'tree' stamp: 'HAW 18/Aug/2026, 11:34:17 am (UTC)'!
 buildRootNodes
 	^self classReviewRootNodesFor: targetClass! !
 
-!SmalltalkMentorClassReview methodsFor: 'tree' stamp: 'HAW 15/Aug/2026, 1:10:11 pm (UTC)'!
-methodsSideNodeFor: aClassOrMeta label: aLabel
-	"A side node ('Instance methods' / 'Class methods') whose children are category nodes,
-	each with one method leaf per method."
+!SmalltalkMentorClassReview methodsFor: 'tree' stamp: 'HAW 18/Aug/2026, 1:54:12 pm (UTC)'!
+methodsSideNodeFor: aClassOrMetaclass label: aLabel
+	"A side node ('Instance methods' / 'Class methods') whose children are category nodes, each
+	with one method leaf per method."
 	| categoryNodes |
 	categoryNodes := OrderedCollection new.
-	aClassOrMeta organization categories asSortedCollection do: [ :cat |
-		| sels methodNodes |
-		sels := (aClassOrMeta organization listAtCategoryNamed: cat) asSortedCollection.
-		sels notEmpty ifTrue: [
-			methodNodes := sels collect: [ :sel |
-				SmalltalkMentorNode label: sel asString kind: #method payload: (aClassOrMeta -> sel) children: #() model: self ].
+	aClassOrMetaclass organization categories asSortedCollection do: [ :categoryName |
+		| selectorsInCategory methodNodes |
+		selectorsInCategory := (aClassOrMetaclass organization listAtCategoryNamed: categoryName) asSortedCollection.
+		selectorsInCategory notEmpty ifTrue: [
+			methodNodes := selectorsInCategory collect: [ :eachSelector |
+				SmalltalkMentorNode label: eachSelector asString kind: #method payload: (aClassOrMetaclass -> eachSelector) children: #() model: self ].
 			categoryNodes add: (SmalltalkMentorNode
-				label: cat asString kind: #category payload: nil children: methodNodes model: self) ] ].
+				label: categoryName asString kind: #category payload: nil children: methodNodes model: self) ] ].
 	^SmalltalkMentorNode
-		label: aLabel, ' (', aClassOrMeta selectors size printString, ')'
+		label: aLabel, ' (', aClassOrMetaclass selectors size printString, ')'
 		kind: #side payload: nil children: categoryNodes model: self! !
 
 !SmalltalkMentorClassReview methodsFor: 'tree' stamp: 'HAW 16/Aug/2026, 6:24:02 pm (UTC)'!
@@ -1183,28 +1206,28 @@ showReviewPanel: aReview
 showText: aString
 	self renderDetail: (TextModelMorph withText: aString asText)! !
 
-!SmalltalkMentorClassReview methodsFor: 'reviewing' stamp: 'HAW 17/Aug/2026, 4:48:26 pm (UTC)'!
+!SmalltalkMentorClassReview methodsFor: 'reviewing' stamp: 'HAW 18/Aug/2026, 1:58:28 pm (UTC)'!
 buildReviewFor: aClassSelectorAssociation
 	"Do the LLM review for one method with its own frozen mentor (per-method language), and
 	answer a ready SmalltalkMentorReview."
-	| cls sel source methodMentor prompt answer proposal msgs review |
-	cls := aClassSelectorAssociation key.
-	sel := aClassSelectorAssociation value.
-	source := cls sourceCodeAt: sel.
+	| reviewedClass reviewedSelector source methodMentor prompt answer proposal conversationMessages review |
+	reviewedClass := aClassSelectorAssociation key.
+	reviewedSelector := aClassSelectorAssociation value.
+	source := reviewedClass sourceCodeAt: reviewedSelector.
 	methodMentor := mentor copy.
 	prompt := methodMentor promptFor: source.
 	answer := methodMentor provider completionForMessages: { methodMentor userMessage: prompt }.
 	proposal := methodMentor parseProposalFrom: answer.
-	msgs := OrderedCollection new.
-	msgs add: (methodMentor userMessage: prompt); add: (methodMentor assistantMessage: answer).
+	conversationMessages := OrderedCollection new.
+	conversationMessages add: (methodMentor userMessage: prompt); add: (methodMentor assistantMessage: answer).
 	review := SmalltalkMentorReview new
-		initializeClass: cls
-		selector: sel
-		category: (self categoryOf: sel in: cls)
+		initializeClass: reviewedClass
+		selector: reviewedSelector
+		category: (self categoryOf: reviewedSelector in: reviewedClass)
 		current: source
 		suggested: (proposal at: 'suggestedSource' ifAbsent: [ '' ])
 		rationale: (proposal at: 'rationale' ifAbsent: [ '' ])
-		messages: msgs
+		messages: conversationMessages
 		mentor: methodMentor.
 	^review! !
 
@@ -1212,16 +1235,16 @@ buildReviewFor: aClassSelectorAssociation
 hideThinking
 	thinkingToast ifNotNil: [ thinkingToast delete. thinkingToast := nil ]! !
 
-!SmalltalkMentorClassReview methodsFor: 'thinking' stamp: 'HAW 15/Aug/2026, 1:10:37 pm (UTC)'!
+!SmalltalkMentorClassReview methodsFor: 'thinking' stamp: 'HAW 18/Aug/2026, 1:54:14 pm (UTC)'!
 showThinkingFor: aClassSelectorAssociation
 	"Show the 'analyzing' toast (as when a single method is reviewed) and a placeholder in the
 	right panel."
-	| cls sel where |
-	cls := aClassSelectorAssociation key.
-	sel := aClassSelectorAssociation value.
-	where := cls name, '>>', sel printString.
-	thinkingToast := mentor showThinkingToast: 'Smalltalk Mentor is analyzing ', where, ' with ', mentor provider name.
-	self showText: 'Analyzing ', where, ' with ', mentor provider name, ' ...'! !
+	| reviewedClass reviewedSelector location |
+	reviewedClass := aClassSelectorAssociation key.
+	reviewedSelector := aClassSelectorAssociation value.
+	location := reviewedClass name, '>>', reviewedSelector printString.
+	thinkingToast := mentor showThinkingToast: 'Smalltalk Mentor is analyzing ', location, ' with ', mentor provider name.
+	self showText: 'Analyzing ', location, ' with ', mentor provider name, ' ...'! !
 
 !SmalltalkMentorClassReview methodsFor: 'menu actions' stamp: 'HAW 18/Aug/2026, 11:34:33 am (UTC)'!
 browseNode: aNode
@@ -1240,18 +1263,18 @@ browseNode: aNode
 		^BrowserWindow fullOnClass: aNode payload selector: nil ].
 	^BrowserWindow fullOnClass: targetClass selector: nil! !
 
-!SmalltalkMentorClassReview methodsFor: 'menu actions' stamp: 'HAW 15/Aug/2026, 1:11:23 pm (UTC)'!
+!SmalltalkMentorClassReview methodsFor: 'menu actions' stamp: 'HAW 18/Aug/2026, 1:54:22 pm (UTC)'!
 changeProvider
 	"Button below the tree: pick the LLM provider (and model) for this class review's future
 	lazy reviews. Uses a copy so model changes stay local to this window."
-	| names idx chosen answer |
-	names := (mentor providers collect: [ :p | p name ]) asArray.
-	idx := PopUpMenu withCaption: 'Choose LLM provider' chooseFrom: names.
-	idx = 0 ifTrue: [ ^self ].
-	chosen := (mentor providers at: idx) copy.
-	answer := mentor request: 'Model id for ', chosen name initialAnswer: chosen model.
-	(answer notNil and: [ answer withBlanksTrimmed notEmpty ]) ifTrue: [ chosen model: answer withBlanksTrimmed ].
-	mentor provider: chosen.
+	| providerNames chosenIndex chosenProvider modelAnswer |
+	providerNames := (mentor providers collect: [ :eachProvider | eachProvider name ]) asArray.
+	chosenIndex := PopUpMenu withCaption: 'Choose LLM provider' chooseFrom: providerNames.
+	chosenIndex = 0 ifTrue: [ ^self ].
+	chosenProvider := (mentor providers at: chosenIndex) copy.
+	modelAnswer := mentor request: 'Model id for ', chosenProvider name initialAnswer: chosenProvider model.
+	(modelAnswer notNil and: [ modelAnswer withBlanksTrimmed notEmpty ]) ifTrue: [ chosenProvider model: modelAnswer withBlanksTrimmed ].
+	mentor provider: chosenProvider.
 	providerButton ifNotNil: [ providerButton label: 'LLM: ', mentor provider printString ]! !
 
 !SmalltalkMentorClassReview methodsFor: 'menu actions' stamp: 'HAW 16/Aug/2026, 6:26:17 pm (UTC)'!
@@ -1310,75 +1333,104 @@ categoryOf: aSelector in: aClassOrMeta
 	^[ aClassOrMeta organization categoryOfElement: aSelector ]
 		on: Error do: [ :e | 'as yet unclassified' ]! !
 
-!SmalltalkMentorClassReview methodsFor: 'private' stamp: 'HAW 15/Aug/2026, 1:51:02 am (UTC)'!
-countOf: subString in: aString
-	"Case-sensitive count of non-overlapping occurrences of subString in aString."
-	| n count i |
-	n := subString size.
-	n = 0 ifTrue: [ ^0 ].
-	count := 0.
-	i := 1.
-	[ i + n - 1 <= aString size ] whileTrue: [
-		(aString copyFrom: i to: i + n - 1) = subString
-			ifTrue: [ count := count + 1. i := i + n ]
-			ifFalse: [ i := i + 1 ] ].
-	^count! !
+!SmalltalkMentorClassReview methodsFor: 'private' stamp: 'HAW 18/Aug/2026, 1:58:56 pm (UTC)'!
+countOf: aSubstring in: aString
+	"Case-sensitive count of non-overlapping occurrences of aSubstring in aString."
+	| substringSize occurrenceCount scanIndex |
+	substringSize := aSubstring size.
+	substringSize = 0 ifTrue: [ ^0 ].
+	occurrenceCount := 0.
+	scanIndex := 1.
+	[ scanIndex + substringSize - 1 <= aString size ] whileTrue: [
+		(aString copyFrom: scanIndex to: scanIndex + substringSize - 1) = aSubstring
+			ifTrue: [ occurrenceCount := occurrenceCount + 1. scanIndex := scanIndex + substringSize ]
+			ifFalse: [ scanIndex := scanIndex + 1 ] ].
+	^occurrenceCount! !
 
-!SmalltalkMentorClassReview methodsFor: 'private' stamp: 'HAW 16/Aug/2026, 6:24:33 pm (UTC)'!
-firstIndexOf: subString in: aString
-	"First 1-based index of subString in aString (case-sensitive), or 0."
-	| n |
-	n := subString size.
-	n = 0 ifTrue: [ ^0 ].
-	1 to: aString size - n + 1 do: [ :i |
-		(aString copyFrom: i to: i + n - 1) = subString ifTrue: [ ^i ] ].
+!SmalltalkMentorClassReview methodsFor: 'private' stamp: 'HAW 18/Aug/2026, 1:59:00 pm (UTC)'!
+firstIndexOf: aSubstring in: aString
+	"First 1-based index of aSubstring in aString (case-sensitive), or 0."
+	| substringSize |
+	substringSize := aSubstring size.
+	substringSize = 0 ifTrue: [ ^0 ].
+	1 to: aString size - substringSize + 1 do: [ :scanIndex |
+		(aString copyFrom: scanIndex to: scanIndex + substringSize - 1) = aSubstring ifTrue: [ ^scanIndex ] ].
 	^0! !
 
-!SmalltalkMentorClassReview methodsFor: 'private' stamp: 'HAW 18/Aug/2026, 12:29:18 pm (UTC)'!
-unusedTempFindingsIn: cls selector: sel
+!SmalltalkMentorClassReview methodsFor: 'private' stamp: 'HAW 18/Aug/2026, 1:47:18 pm (UTC)'!
+missingRootProtocolFindingFor: aSelector root: rootClass
+	"A finding: aSelector is answered by every leaf subclass of rootClass but rootClass does not
+	implement it. Points at one subclass implementation as a reference to lift."
+	| anImplementor |
+	anImplementor := rootClass allSubclasses detect: [ :eachSubclass | eachSubclass includesSelector: aSelector ] ifNone: [ nil ].
+	^SmalltalkMentorFinding
+		title: 'Not in root: #', aSelector, ' (every leaf subclass of ', rootClass name, ' answers it)'
+		detail: 'Instances of every leaf subclass of ', rootClass name, ' answer #', aSelector, ', but ', rootClass name, ' does not implement it. Lift it to ', rootClass name, ' as a concrete method or as subclassResponsibility so the shared protocol is declared in one place.'
+		editKind: (anImplementor isNil ifTrue: [ #none ] ifFalse: [ #method ])
+		editTarget: (anImplementor isNil ifTrue: [ nil ] ifFalse: [ anImplementor -> aSelector ])! !
+
+!SmalltalkMentorClassReview methodsFor: 'private' stamp: 'HAW 18/Aug/2026, 1:47:14 pm (UTC)'!
+sharedSelectorsAmongLeaves: leafSubclasses ofRoot: rootClass
+	"The selectors that instances of every leaf subclass answer, restricted to protocol
+	introduced within rootClass's own hierarchy (protocol inherited from above rootClass is
+	excluded, so shared Object protocol is not reported)."
+	| protocolAboveRoot sharedSelectors |
+	protocolAboveRoot := rootClass superclass
+		ifNil: [ Set new ]
+		ifNotNil: [ :aSuperclass | aSuperclass allSelectors asSet ].
+	sharedSelectors := nil.
+	leafSubclasses do: [ :eachLeaf | | protocolIntroducedBelowRoot |
+		protocolIntroducedBelowRoot := eachLeaf allSelectors asSet reject: [ :eachSelector | protocolAboveRoot includes: eachSelector ].
+		sharedSelectors := sharedSelectors
+			ifNil: [ protocolIntroducedBelowRoot ]
+			ifNotNil: [ sharedSelectors select: [ :eachSelector | protocolIntroducedBelowRoot includes: eachSelector ] ] ].
+	^sharedSelectors ifNil: [ Set new ]! !
+
+!SmalltalkMentorClassReview methodsFor: 'private' stamp: 'HAW 18/Aug/2026, 1:53:57 pm (UTC)'!
+unusedTemporariesFindingsIn: aClassOrMetaclass selector: aSelector
 	"The unused/write-only temporary variables of one method, as findings (empty if none, or if
 	the method cannot be parsed). isUnusedTemp is 'never read' (hasRefs not), which covers both
-	an unreferenced temp and a write-only one. Only real TempVariableNodes are considered:
-	closure analysis bundles block-captured temps into a RemoteTempVectorNode (a subclass whose
-	name is a range like '<0-6>') that must be ignored. Arguments are not temporaries."
+	an unreferenced temporary and a write-only one. Only real TempVariableNodes are considered:
+	closure analysis bundles block-captured temporaries into a RemoteTempVectorNode (a subclass
+	whose name is a range like '<0-6>') that must be ignored. Arguments are not temporaries."
 	| findings |
 	findings := OrderedCollection new.
-	[ | node temps |
-	  node := (cls >> sel) methodNode.
-	  node ensureClosureAnalysisDone.
-	  temps := IdentitySet new.
-	  node accept: (ParseNodeEnumerator ofBlock: [ :n |
-		(n isKindOf: BlockNode) ifTrue: [
-			(n temporaries ifNil: [ #() ]) do: [ :t |
-				t class == TempVariableNode ifTrue: [ temps add: t ] ] ] ]).
-	  (temps asSortedCollection: [ :x :y | x name <= y name ]) do: [ :t |
-		t isUnusedTemp ifTrue: [ | written problem |
-			written := (t instVarNamed: 'hasDefs') == true.
-			problem := written ifTrue: [ 'is assigned but never read' ] ifFalse: [ 'is declared but never used' ].
+	[ | methodNode temporaryNodes |
+	  methodNode := (aClassOrMetaclass >> aSelector) methodNode.
+	  methodNode ensureClosureAnalysisDone.
+	  temporaryNodes := IdentitySet new.
+	  methodNode accept: (ParseNodeEnumerator ofBlock: [ :parseNode |
+		(parseNode isKindOf: BlockNode) ifTrue: [
+			(parseNode temporaries ifNil: [ #() ]) do: [ :temporaryNode |
+				temporaryNode class == TempVariableNode ifTrue: [ temporaryNodes add: temporaryNode ] ] ] ]).
+	  (temporaryNodes asSortedCollection: [ :firstNode :secondNode | firstNode name <= secondNode name ]) do: [ :temporaryNode |
+		temporaryNode isUnusedTemp ifTrue: [ | isWritten problem |
+			isWritten := (temporaryNode instVarNamed: 'hasDefs') == true.
+			problem := isWritten ifTrue: [ 'is assigned but never read' ] ifFalse: [ 'is declared but never used' ].
 			findings add: (SmalltalkMentorFinding
-				title: 'Temp ', t name, ' ', problem, ': ', cls name, '>>', sel
-				detail: 'The temporary variable ''', t name, ''' in ', cls name, '>>', sel, ' ', problem, '.'
+				title: 'Temporary ', temporaryNode name, ' ', problem, ': ', aClassOrMetaclass name, '>>', aSelector
+				detail: 'The temporary variable ''', temporaryNode name, ''' in ', aClassOrMetaclass name, '>>', aSelector, ' ', problem, '.'
 				editKind: #method
-				editTarget: (cls -> sel)) ] ] ]
-		on: Error do: [ :e | ].
+				editTarget: (aClassOrMetaclass -> aSelector)) ] ] ]
+		on: Error do: [ :error | ].
 	^findings! !
 
-!SmalltalkMentorClassReview methodsFor: 'as yet unclassified' stamp: 'HAW 18/Aug/2026, 1:23:42 pm (UTC)'!
-showClassDefinitionEditorFor: aClassVarNameAssociation
+!SmalltalkMentorClassReview methodsFor: 'as yet unclassified' stamp: 'HAW 18/Aug/2026, 1:54:18 pm (UTC)'!
+showClassDefinitionEditorFor: aClassVariableAssociation
 	"Show the class definition (of the finding's class) in a real browser code pane
-	(class-definition mode: refactorings, add/remove ivar, etc.). Accept redefines the class.
-	The variable is pre-selected."
-	| cls varName browser pane text idx |
-	cls := aClassVarNameAssociation key.
-	varName := aClassVarNameAssociation value.
+	(class-definition mode: refactorings, add/remove instance variable, etc.). Accept redefines
+	the class. The variable is pre-selected."
+	| definedClass variableName browser codePane classDefinitionText variableIndex |
+	definedClass := aClassVariableAssociation key.
+	variableName := aClassVariableAssociation value.
 	browser := Browser new.
-	browser setClass: cls selector: nil.
+	browser setClass: definedClass selector: nil.
 	browser editClass.
-	pane := self codePaneForBrowser: browser.
-	self renderDetail: pane.
-	text := browser acceptedContents asString.
-	idx := self firstIndexOf: varName in: text.
-	idx > 0 ifTrue: [ [ pane editor selectFrom: idx to: idx + varName size - 1 ] on: Error do: [ :e | ] ]! !
+	codePane := self codePaneForBrowser: browser.
+	self renderDetail: codePane.
+	classDefinitionText := browser acceptedContents asString.
+	variableIndex := self firstIndexOf: variableName in: classDefinitionText.
+	variableIndex > 0 ifTrue: [ [ codePane editor selectFrom: variableIndex to: variableIndex + variableName size - 1 ] on: Error do: [ :error | ] ]! !
 
 !SmalltalkMentorClassReview class methodsFor: 'instance creation' stamp: 'HAW 17/Aug/2026, 4:48:20 pm (UTC)'!
 reviewClass: aClass mentor: aMentor
@@ -1400,19 +1452,19 @@ classesInCategory
 		collect: [ :nameSym | Smalltalk at: nameSym ifAbsent: [ nil ] ])
 		select: [ :each | each isBehavior ]! !
 
-!SmalltalkMentorClassCategoryReview methodsFor: 'tree' stamp: 'HAW 18/Aug/2026, 11:58:23 am (UTC)'!
+!SmalltalkMentorClassCategoryReview methodsFor: 'tree' stamp: 'HAW 18/Aug/2026, 1:58:34 pm (UTC)'!
 buildRootNodes
 	"One top node per class of the system category, sorted alphabetically. Each class expands
 	lazily into the very same subtree a class review shows for it (static rule roots + method
 	categories), so opening a class here behaves like reviewing that class."
-	| classes |
-	classes := self classesInCategory asSortedCollection: [ :a :b | a name <= b name ].
-	^(classes collect: [ :cls |
+	| sortedClasses |
+	sortedClasses := self classesInCategory asSortedCollection: [ :firstClass :secondClass | firstClass name <= secondClass name ].
+	^(sortedClasses collect: [ :eachClass |
 		SmalltalkMentorNode
-			label: cls name
+			label: eachClass name
 			kind: #classTop
-			payload: cls
-			childrenBlock: [ self classReviewRootNodesFor: cls ]
+			payload: eachClass
+			childrenBlock: [ self classReviewRootNodesFor: eachClass ]
 			model: self ]) asOrderedCollection! !
 
 !SmalltalkMentorClassCategoryReview methodsFor: 'ui' stamp: 'HAW 18/Aug/2026, 11:58:25 am (UTC)'!
@@ -1434,19 +1486,19 @@ initializeClassOrMeta: aClassOrMeta category: aCategory mentor: aMentor
 	mentor := aMentor.
 	methodReviewCache := Dictionary new! !
 
-!SmalltalkMentorMethodCategoryReview methodsFor: 'tree' stamp: 'HAW 18/Aug/2026, 12:29:20 pm (UTC)'!
+!SmalltalkMentorMethodCategoryReview methodsFor: 'tree' stamp: 'HAW 18/Aug/2026, 1:58:40 pm (UTC)'!
 buildRootNodes
 	"One method leaf per method of the reviewed category (reviewed lazily on selection, exactly
 	as in a class review). The virtual '-- all --' category reviews every method of the class."
-	| sels |
-	sels := category asString = ClassOrganizer allCategory asString
+	| selectorsToReview |
+	selectorsToReview := category asString = ClassOrganizer allCategory asString
 		ifTrue: [ targetClass selectors asSortedCollection ]
 		ifFalse: [ (targetClass organization listAtCategoryNamed: category) asSortedCollection ].
-	^(sels collect: [ :sel |
+	^(selectorsToReview collect: [ :eachSelector |
 		SmalltalkMentorNode
-			label: sel asString
+			label: eachSelector asString
 			kind: #method
-			payload: (targetClass -> sel)
+			payload: (targetClass -> eachSelector)
 			children: #()
 			model: self ]) asOrderedCollection! !
 
@@ -1501,45 +1553,45 @@ initializeClass: aClass selector: aSelector category: aCategory current: current
 	mentor := aMentor.
 	busy := false! !
 
-!SmalltalkMentorReview methodsFor: 'ui' stamp: 'HAW 16/Aug/2026, 9:42:12 pm (UTC)'!
+!SmalltalkMentorReview methodsFor: 'ui' stamp: 'HAW 18/Aug/2026, 1:58:05 pm (UTC)'!
 buildContent
 	"Build (once) and answer the review's content morph: a provider/model label, transcript,
 	original | suggested panes, follow-up input, and buttons. The ORIGINAL pane is a real
 	browser code pane (method-mode highlighting, refactorings, editable/compilable). The
 	SUGGESTED pane is syntax-highlighted too but no-copy (students type the fix)."
-	| col paneRow btnRow currentMorph sendBtn rightText providerLabel originalBrowser suggestedModel |
+	| contentColumn panesRow buttonsRow originalPaneMorph sendButton suggestedPaneText providerLabel originalBrowser suggestedModel |
 	contentMorph ifNotNil: [ ^contentMorph ].
-	col := LayoutMorph newColumn.
+	contentColumn := LayoutMorph newColumn.
 	providerLabel := LabelMorph contents: 'LLM: ', mentor provider printString.
 	transcriptMorph := TextModelMorph withText: ('Smalltalk Mentor: ', rationale, String newLineString) asText.
-	rightText := suggestedSource isEmpty ifTrue: [ currentSource ] ifFalse: [ suggestedSource ].
+	suggestedPaneText := suggestedSource isEmpty ifTrue: [ currentSource ] ifFalse: [ suggestedSource ].
 	originalBrowser := Browser new.
 	originalBrowser setClass: targetClass selector: selector.
-	currentMorph := TextModelMorph
+	originalPaneMorph := TextModelMorph
 		textProvider: originalBrowser
 		textGetter: #acceptedContents
 		textSetter: #contents:notifying:
 		selectionGetter: #contentsSelection.
-	suggestedModel := SmalltalkMentorNoCopyTextModel withText: rightText asText.
+	suggestedModel := SmalltalkMentorNoCopyTextModel withText: suggestedPaneText asText.
 	suggestedModel styleClass: targetClass.
 	suggestedMorph := TextModelMorph withModel: suggestedModel.
-	paneRow := LayoutMorph newRow.
-	paneRow addMorph: currentMorph layoutSpec: (LayoutSpec proportionalWidth: 0.5 proportionalHeight: 1.0).
-	paneRow addAdjusterAndMorph: suggestedMorph proportionalWidth: 0.5.
+	panesRow := LayoutMorph newRow.
+	panesRow addMorph: originalPaneMorph layoutSpec: (LayoutSpec proportionalWidth: 0.5 proportionalHeight: 1.0).
+	panesRow addAdjusterAndMorph: suggestedMorph proportionalWidth: 0.5.
 	inputMorph := EntryFieldMorph new.
 	inputMorph contents: ''.
 	inputMorph crAction: [ self sendFollowUp ].
-	sendBtn := PluggableButtonMorph model: self action: #sendFollowUp label: 'Send (Enter)'.
-	langButton := PluggableButtonMorph model: self action: #switchLanguage label: 'Idioma: ', mentor language.
-	btnRow := LayoutMorph newRow.
-	btnRow addMorph: sendBtn layoutSpec: (LayoutSpec proportionalWidth: 0.6 proportionalHeight: 1.0).
-	btnRow addMorph: langButton layoutSpec: (LayoutSpec proportionalWidth: 0.4 proportionalHeight: 1.0).
-	col addMorph: providerLabel layoutSpec: (LayoutSpec proportionalWidth: 1.0 fixedHeight: 20).
-	col addMorph: transcriptMorph layoutSpec: (LayoutSpec proportionalWidth: 1.0 proportionalHeight: 0.28).
-	col addAdjusterAndMorph: paneRow proportionalHeight: 0.72.
-	col addMorph: inputMorph layoutSpec: (LayoutSpec proportionalWidth: 1.0 fixedHeight: 30).
-	col addMorph: btnRow layoutSpec: (LayoutSpec proportionalWidth: 1.0 fixedHeight: 34).
-	contentMorph := col.
+	sendButton := PluggableButtonMorph model: self action: #sendFollowUp label: 'Send (Enter)'.
+	languageButton := PluggableButtonMorph model: self action: #switchLanguage label: 'Idioma: ', mentor language.
+	buttonsRow := LayoutMorph newRow.
+	buttonsRow addMorph: sendButton layoutSpec: (LayoutSpec proportionalWidth: 0.6 proportionalHeight: 1.0).
+	buttonsRow addMorph: languageButton layoutSpec: (LayoutSpec proportionalWidth: 0.4 proportionalHeight: 1.0).
+	contentColumn addMorph: providerLabel layoutSpec: (LayoutSpec proportionalWidth: 1.0 fixedHeight: 20).
+	contentColumn addMorph: transcriptMorph layoutSpec: (LayoutSpec proportionalWidth: 1.0 proportionalHeight: 0.28).
+	contentColumn addAdjusterAndMorph: panesRow proportionalHeight: 0.72.
+	contentColumn addMorph: inputMorph layoutSpec: (LayoutSpec proportionalWidth: 1.0 fixedHeight: 30).
+	contentColumn addMorph: buttonsRow layoutSpec: (LayoutSpec proportionalWidth: 1.0 fixedHeight: 34).
+	contentMorph := contentColumn.
 	^contentMorph! !
 
 !SmalltalkMentorReview methodsFor: 'ui' stamp: 'HAW 6/Aug/2026, 5:15:11 pm (UTC)'!
@@ -1560,15 +1612,15 @@ listLabel
 	"How this method review appears in the class-review window's left list."
 	^targetClass name, '>>', selector printString! !
 
-!SmalltalkMentorReview methodsFor: 'compiling' stamp: 'HAW 14/Aug/2026, 12:20:32 pm (UTC)'!
+!SmalltalkMentorReview methodsFor: 'compiling' stamp: 'HAW 18/Aug/2026, 1:58:10 pm (UTC)'!
 accept
 	"Compile the current contents of the right-hand pane into the target class."
-	| src |
-	src := suggestedMorph text asString.
-	src isEmpty ifTrue: [ ^PopUpMenu inform: 'Nothing to compile.' ].
-	[ targetClass compile: src classified: category ]
+	| suggestedSourceText |
+	suggestedSourceText := suggestedMorph text asString.
+	suggestedSourceText isEmpty ifTrue: [ ^PopUpMenu inform: 'Nothing to compile.' ].
+	[ targetClass compile: suggestedSourceText classified: category ]
 		on: Error
-		do: [ :e | ^PopUpMenu inform: 'Compile failed: ', e messageText ].
+		do: [ :error | ^PopUpMenu inform: 'Compile failed: ', error messageText ].
 	Transcript show: 'Compiled Smalltalk Mentor suggestion into ', targetClass name, '>>', selector printString; newLine.
 	self closeWindow! !
 
@@ -1630,18 +1682,18 @@ showSuggestion: aString
 	suggestedSource := self formattedSource: aString.
 	suggestedMorph ifNotNil: [ suggestedMorph model actualContents: suggestedSource asText ]! !
 
-!SmalltalkMentorReview methodsFor: 'conversation' stamp: 'HAW 14/Aug/2026, 6:52:47 pm (UTC)'!
+!SmalltalkMentorReview methodsFor: 'conversation' stamp: 'HAW 18/Aug/2026, 1:57:48 pm (UTC)'!
 switchLanguage
 	"Flip this conversation's language between Spanish and English (on this review's mentor),
 	relabel the button, and ask the provider to restate the current rationale in the new
 	language."
-	| content |
+	| conversationContent |
 	busy == true ifTrue: [ ^self ].
 	mentor language: (mentor language = 'Spanish' ifTrue: [ 'English' ] ifFalse: [ 'Spanish' ]).
-	langButton ifNotNil: [ langButton label: 'Idioma: ', mentor language ].
-	content := 'From now on, reply in ', mentor language, '. Restate your previous rationale in ', mentor language,
+	languageButton ifNotNil: [ languageButton label: 'Idioma: ', mentor language ].
+	conversationContent := 'From now on, reply in ', mentor language, '. Restate your previous rationale in ', mentor language,
 		' without changing suggestedSource. Reply with ONLY the same JSON object {canImprove, suggestedSource, rationale}.'.
-	self postUserContent: content transcriptLabel: 'You: (idioma -> ', mentor language, ')'! !
+	self postUserContent: conversationContent transcriptLabel: 'You: (idioma -> ', mentor language, ')'! !
 
 !SmalltalkMentorReview methodsFor: 'private' stamp: 'HAW 14/Aug/2026, 2:56:35 pm (UTC)'!
 formattedSource: aString
