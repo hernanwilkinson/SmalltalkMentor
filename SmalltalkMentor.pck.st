@@ -1,6 +1,6 @@
-'From Cuis7.9 [latest update: #8113] on 19 August 2026 at 10:53:55 am'!
+'From Cuis7.9 [latest update: #8113] on 19 August 2026 at 11:37:51 am'!
 'Description Better menu definition'!
-!provides: 'SmalltalkMentor' 1 38!
+!provides: 'SmalltalkMentor' 1 39!
 !requires: 'JSON' 1 29 nil!
 !requires: 'OSProcess' 1 36 nil!
 SystemOrganization addCategory: #SmalltalkMentor!
@@ -697,6 +697,14 @@ askAbout: source
 	^self completionForMessages: {
 		self userMessage: (self promptFor: source) }! !
 
+!SmalltalkMentor methodsFor: 'reviewing' stamp: 'HAW 19/Aug/2026, 2:34:56 pm (UTC)'!
+isTestMethodInClass: aClassOrMetaclass selector: aSelector
+
+	"Whether aSelector names an installed test method of aClassOrMetaclass. Guards the
+	not-installed case (e.g. a debugger DoIt), which is treated as a non-test."
+
+	^(aClassOrMetaclass includesSelector: aSelector) and: [ (aClassOrMetaclass >> aSelector) isTestMethod ]! !
+
 !SmalltalkMentor methodsFor: 'reviewing' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 reviewClassCategoryFromMorph: aMorph
 
@@ -776,7 +784,7 @@ reviewMethodCategoryFromMorph: aMorph
 	self showTransientToast: 'Smalltalk Mentor is reviewing method category ', category asString, ' of ', classOrMeta name, ' with ', reviewMentor provider name.
 	SmalltalkMentorMethodCategoryReview reviewCategory: category of: classOrMeta mentor: reviewMentor! !
 
-!SmalltalkMentor methodsFor: 'reviewing' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
+!SmalltalkMentor methodsFor: 'reviewing' stamp: 'HAW 19/Aug/2026, 2:35:41 pm (UTC)'!
 reviewSource: source class: aClass selector: aSelector category: category toast: aToast
 
 	"Fork the first network call (on this snapshot mentor's provider) so the UI is never
@@ -784,7 +792,7 @@ reviewSource: source class: aClass selector: aSelector category: category toast:
 	arrives. aToast (may be nil) is removed once the reply arrives or on error."
 
 	[ [ | messages answer proposal |
-	   messages := OrderedCollection with: (self userMessage: (self promptFor: source)).
+	   messages := OrderedCollection with: (self userMessage: (self promptFor: source isTestMethod: (self isTestMethodInClass: aClass selector: aSelector))).
 	   answer := self provider completionForMessages: messages.
 	   messages add: (self assistantMessage: answer).
 	   proposal := self parseProposalFrom: answer.
@@ -820,12 +828,21 @@ parseProposalFrom: aString
 	json := aString copyFrom: start to: stop.
 	^Json readFrom: json readStream! !
 
-!SmalltalkMentor methodsFor: 'llm - prompt' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!SmalltalkMentor methodsFor: 'llm - prompt' stamp: 'HAW 19/Aug/2026, 2:35:12 pm (UTC)'!
 promptFor: source
 
-	"Assemble the review prompt: intro, response language, mandatory project heuristics
-	(grouped under ## Category headings, each named with a [id]), JSON output contract,
-	and the method source. The suggestion is the improved version of THIS method only."
+	"Prompt for a stand-alone source with no method context (e.g. #askAbout:); the test-only
+	heuristics are left out."
+
+	^self promptFor: source isTestMethod: false! !
+
+!SmalltalkMentor methodsFor: 'llm - prompt' stamp: 'HAW 19/Aug/2026, 2:35:07 pm (UTC)'!
+promptFor: source isTestMethod: isTestMethod
+
+	"Assemble the review prompt: intro, response language, the applicable project heuristics
+	(grouped under ## Category headings, each named with a [id]) - the test-only categories
+	(## Testing) are included only when the reviewed method is a test - the JSON output
+	contract, and the method source. The suggestion is the improved version of THIS method only."
 
 	^'You are a Smalltalk expert reviewing a single method from a Cuis Smalltalk image.
 
@@ -833,7 +850,7 @@ Write the "rationale" field, and all of your conversational replies, in ', self 
 
 Enforce these project-specific review heuristics. They are grouped under "## Category" headings, and each heuristic begins with a short name in brackets like [assert-equals]. Treat them as mandatory: if the method violates any heuristic, set canImprove to true, make suggestedSource comply, and in the rationale cite the [name] of each violated heuristic. Also apply your general Smalltalk expertise for any other improvements.
 <heuristics>
-', self currentReviewHeuristics, '
+', (self reviewHeuristicsForTestMethod: isTestMethod), '
 </heuristics>
 
 Reply with ONLY a JSON object (no prose, no markdown fences) of the form:
@@ -945,6 +962,15 @@ toggleLanguage
 !SmalltalkMentor methodsFor: 'as yet unclassified' stamp: 'HAW 18/Aug/2026, 12:49:31 pm (UTC)'!
 smalltalkEditorMenuSpec ^Array new! !
 
+!SmalltalkMentor methodsFor: 'heuristics' stamp: 'HAW 19/Aug/2026, 2:34:33 pm (UTC)'!
+categoryOfHeuristic: aHeuristicId
+
+	"The '## Category' name whose section declares [aHeuristicId], or '' when none does."
+
+	^(self heuristicSections
+		detect: [ :section | self does: section value includeSubstring: '[', aHeuristicId, ']' ]
+		ifNone: [ '' -> '' ]) key! !
+
 !SmalltalkMentor methodsFor: 'heuristics' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 currentReviewHeuristics
 
@@ -981,12 +1007,65 @@ defaultReviewHeuristics
 - [valid-on-creation] Objects should be valid from the moment they are created: instance
   creation messages validate their arguments with assertions encapsulated on the class side.'! !
 
+!SmalltalkMentor methodsFor: 'heuristics' stamp: 'HAW 19/Aug/2026, 2:34:17 pm (UTC)'!
+heuristicSections
+
+	"Split the current heuristics text into sections, one per '## Category' heading, keeping
+	order. Answers a collection of associations categoryName -> sectionText, where sectionText
+	keeps the heading line and the section's trailing blank line so joining sections reproduces
+	the file. Any text before the first heading is kept under an empty category name."
+
+	| sections currentCategory currentLines flushSection |
+
+	sections := OrderedCollection new.
+	currentCategory := ''.
+	currentLines := OrderedCollection new.
+	flushSection := [
+		(currentLines anySatisfy: [ :eachLine | eachLine withBlanksTrimmed notEmpty ]) ifTrue: [
+			sections add: currentCategory -> (String streamContents: [ :stream |
+				currentLines do: [ :eachLine | stream nextPutAll: eachLine; nextPutAll: String newLineString ] ]) ] ].
+	self currentReviewHeuristics lines do: [ :eachLine | | trimmedLine |
+		trimmedLine := eachLine withBlanksTrimmed.
+		(trimmedLine beginsWith: '## ') ifTrue: [
+			flushSection value.
+			currentCategory := (trimmedLine allButFirst: 3) withBlanksTrimmed.
+			currentLines := OrderedCollection new ].
+		currentLines add: eachLine ].
+	flushSection value.
+	^sections! !
+
+!SmalltalkMentor methodsFor: 'heuristics' stamp: 'HAW 19/Aug/2026, 2:34:21 pm (UTC)'!
+isTestOnlyCategory: aCategoryName
+
+	"Whether a heuristic category applies only to test methods, so it is left out when reviewing
+	a non-test method. Add other test-only category names here if the need arises."
+
+	^aCategoryName = 'Testing'! !
+
+!SmalltalkMentor methodsFor: 'heuristics' stamp: 'HAW 19/Aug/2026, 2:34:37 pm (UTC)'!
+isTestOnlyHeuristic: aHeuristicId
+
+	"Whether [aHeuristicId] belongs to a test-only category (see #isTestOnlyCategory:)."
+
+	^self isTestOnlyCategory: (self categoryOfHeuristic: aHeuristicId)! !
+
 !SmalltalkMentor methodsFor: 'heuristics' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 reviewHeuristicsFilePath
 
 	"Where project-specific review heuristics live."
 
 	^'~/.smalltalk-mentor/heuristics.md'! !
+
+!SmalltalkMentor methodsFor: 'heuristics' stamp: 'HAW 19/Aug/2026, 2:34:28 pm (UTC)'!
+reviewHeuristicsForTestMethod: isTestMethod
+
+	"The heuristics text to enforce for the method under review: every section, minus the
+	test-only categories (e.g. ## Testing) when the reviewed method is not a test."
+
+	^String streamContents: [ :stream |
+		self heuristicSections do: [ :section |
+			((self isTestOnlyCategory: section key) and: [ isTestMethod not ])
+				ifFalse: [ stream nextPutAll: section value ] ] ]! !
 
 !SmalltalkMentor methodsFor: 'heuristics' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 writeDefaultReviewHeuristicsFile
@@ -1002,6 +1081,19 @@ writeDefaultReviewHeuristicsFile
 	OSProcess waitForCommand:
 		'sh -c ''mkdir -p "$HOME/.smalltalk-mentor"; F="$HOME/.smalltalk-mentor/heuristics.md"; [ -f "$F" ] || cp ', tmp, ' "$F"'''.
 	Transcript show: 'Seeded ', self reviewHeuristicsFilePath, ' (if it did not already exist)'; newLine! !
+
+!SmalltalkMentor methodsFor: 'private' stamp: 'HAW 19/Aug/2026, 2:34:45 pm (UTC)'!
+does: aString includeSubstring: aSubstring
+
+	"Whether aString contains aSubstring (case-sensitive)."
+
+	| substringSize |
+
+	substringSize := aSubstring size.
+	substringSize = 0 ifTrue: [ ^true ].
+	1 to: aString size - substringSize + 1 do: [ :startIndex |
+		(aString copyFrom: startIndex to: startIndex + substringSize - 1) = aSubstring ifTrue: [ ^true ] ].
+	^false! !
 
 !SmalltalkMentor class methodsFor: 'initialization' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 initialize
@@ -1562,7 +1654,7 @@ showText: aString
 
 	self renderDetail: (TextModelMorph withText: aString asText)! !
 
-!SmalltalkMentorClassReview methodsFor: 'reviewing' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
+!SmalltalkMentorClassReview methodsFor: 'reviewing' stamp: 'HAW 19/Aug/2026, 2:35:50 pm (UTC)'!
 buildReviewFor: aClassSelectorAssociation
 
 	"Do the LLM review for one method with its own frozen mentor (per-method language), and
@@ -1574,7 +1666,7 @@ buildReviewFor: aClassSelectorAssociation
 	reviewedSelector := aClassSelectorAssociation value.
 	source := reviewedClass sourceCodeAt: reviewedSelector.
 	methodMentor := mentor copy.
-	prompt := methodMentor promptFor: source.
+	prompt := methodMentor promptFor: source isTestMethod: (methodMentor isTestMethodInClass: reviewedClass selector: reviewedSelector).
 	answer := methodMentor provider completionForMessages: { methodMentor userMessage: prompt }.
 	proposal := methodMentor parseProposalFrom: answer.
 	conversationMessages := OrderedCollection new.

@@ -1,6 +1,6 @@
-'From Cuis7.9 [latest update: #8113] on 19 August 2026 at 8:27:31 am'!
+'From Cuis7.9 [latest update: #8113] on 19 August 2026 at 11:37:57 am'!
 'Description '!
-!provides: 'SmalltalkMentorTests' 1 7!
+!provides: 'SmalltalkMentorTests' 1 8!
 !requires: 'SmalltalkMentor' nil nil nil!
 SystemOrganization addCategory: #SmalltalkMentorTests!
 
@@ -182,28 +182,30 @@ testUnusedAndWriteOnlyTemporariesAreFlaggedButUsedAndCapturedAreNot
 	self deny: (findings anySatisfy: [ :finding | self includesSubstring: 'usedTemporary' in: finding title ]).
 	self deny: (findings anySatisfy: [ :finding | self includesSubstring: 'shared' in: finding title ])! !
 
-!SmalltalkMentorHeuristicTest methodsFor: 'support' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'support' stamp: 'HAW 19/Aug/2026, 2:36:18 pm (UTC)'!
 assertHeuristic: heuristicId caughtIn: methodSource fix: aFixBlock
 
 	"Best-of-3 (lenient): up to 3 Opus reviews of methodSource. A run counts if the suggested
 	code applies the heuristic (aFixBlock answers true for the suggestedSource) OR the rationale
 	cites the heuristic id. Passes if ANY of the 3 runs counts - robust to LLM non-determinism.
-	Stops early on the first success."
+	Stops early on the first success. A heuristic in a test-only category (## Testing) is only
+	sent for a test method, so its sample is reviewed as one."
 
-	| last caught |
+	| last caught reviewAsTestMethod |
 
+	reviewAsTestMethod := mentor isTestOnlyHeuristic: heuristicId.
 	caught := false.
-	1 to: 3 do: [ :i |
+	1 to: 3 do: [ :attemptNumber |
 		caught ifFalse: [ | proposal suggested rationale |
-			proposal := self reviewOf: methodSource.
+			proposal := self reviewOf: methodSource asTestMethod: reviewAsTestMethod.
 			last := proposal.
 			suggested := proposal at: 'suggestedSource' ifAbsent: [ '' ].
 			rationale := proposal at: 'rationale' ifAbsent: [ '' ].
 			caught := (aFixBlock value: suggested) or: [ self does: rationale include: heuristicId ] ] ].
 	self assert: caught description:
 		'Heuristic [', heuristicId, '] not caught in 3 Opus runs.', String newLineString,
-		'Last suggestion: ', (last ifNil: [ '' ] ifNotNil: [ :p | p at: 'suggestedSource' ifAbsent: [ '' ] ]), String newLineString,
-		'Last rationale: ', (last ifNil: [ '' ] ifNotNil: [ :p | p at: 'rationale' ifAbsent: [ '' ] ])! !
+		'Last suggestion: ', (last ifNil: [ '' ] ifNotNil: [ :proposal | proposal at: 'suggestedSource' ifAbsent: [ '' ] ]), String newLineString,
+		'Last rationale: ', (last ifNil: [ '' ] ifNotNil: [ :proposal | proposal at: 'rationale' ifAbsent: [ '' ] ])! !
 
 !SmalltalkMentorHeuristicTest methodsFor: 'support' stamp: 'HAW 18/Aug/2026, 6:56:15 pm (UTC)'!
 does: aString include: aSubstring
@@ -252,16 +254,17 @@ provider
 
 	^AnthropicProvider new model: 'claude-opus-4-8'; yourself! !
 
-!SmalltalkMentorHeuristicTest methodsFor: 'support' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
-reviewOf: methodSource
+!SmalltalkMentorHeuristicTest methodsFor: 'support' stamp: 'HAW 19/Aug/2026, 2:36:08 pm (UTC)'!
+reviewOf: methodSource asTestMethod: isTestMethod
 
-	"Ask Claude Opus to review methodSource against the current heuristics; answer the parsed
-	{canImprove, suggestedSource, rationale} proposal. Blocks on the network call."
+	"Ask Claude Opus to review methodSource against the applicable heuristics (treating it as a
+	test method when isTestMethod, so the test-only heuristics are actually sent), and answer
+	the parsed {canImprove, suggestedSource, rationale} proposal. Blocks on the network call."
 
 	| answer |
 
 	answer := self provider completionForMessages: {
-		mentor userMessage: (mentor promptFor: methodSource) }.
+		mentor userMessage: (mentor promptFor: methodSource isTestMethod: isTestMethod) }.
 	^mentor parseProposalFrom: answer! !
 
 !SmalltalkMentorHeuristicTest methodsFor: 'running' stamp: 'HAW 18/Aug/2026, 6:56:15 pm (UTC)'!
