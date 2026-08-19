@@ -1,6 +1,6 @@
-'From Cuis7.9 [latest update: #8113] on 19 August 2026 at 9:58:47 am'!
+'From Cuis7.9 [latest update: #8113] on 19 August 2026 at 10:02:40 am'!
 'Description Better menu definition'!
-!provides: 'SmalltalkMentor' 1 34!
+!provides: 'SmalltalkMentor' 1 35!
 !requires: 'JSON' 1 29 nil!
 !requires: 'OSProcess' 1 36 nil!
 SystemOrganization addCategory: #SmalltalkMentor!
@@ -1817,15 +1817,17 @@ initializeClass: aClass selector: aSelector category: aCategory current: current
 	mentor := aMentor.
 	busy := false! !
 
-!SmalltalkMentorReview methodsFor: 'ui' stamp: 'HAW 19/Aug/2026, 12:46:12 pm (UTC)'!
+!SmalltalkMentorReview methodsFor: 'ui' stamp: 'HAW 19/Aug/2026, 12:59:46 pm (UTC)'!
 buildContent
 
 	"Build (once) and answer the review's content morph: a provider/model label, transcript,
-	original | suggested panes, a labelled follow-up input, and buttons. The ORIGINAL pane is a
-	real browser code pane (method-mode highlighting, refactorings, editable/compilable). The
-	SUGGESTED pane is syntax-highlighted too but no-copy (students type the fix)."
+	original | suggested panes, and - below a drag adjuster - a labelled, resizable follow-up
+	input, then the buttons. The ORIGINAL pane is a real browser code pane (method-mode
+	highlighting, refactorings, editable/compilable). The SUGGESTED pane is syntax-highlighted
+	too but no-copy (students type the fix). Dragging the adjuster above the label grows or
+	shrinks the input field."
 
-	| contentColumn panesRow buttonsRow originalPaneMorph sendButton suggestedPaneText providerLabel originalBrowser suggestedModel conversationLabel |
+	| contentColumn panesRow buttonsRow originalPaneMorph sendButton suggestedPaneText providerLabel originalBrowser suggestedModel conversationLabel inputGroup |
 
 	contentMorph ifNotNil: [ ^contentMorph ].
 	contentColumn := LayoutMorph newColumn.
@@ -1849,6 +1851,9 @@ buildContent
 	inputMorph := EntryFieldMorph new.
 	inputMorph contents: ''.
 	inputMorph crAction: [ self sendFollowUp ].
+	inputGroup := LayoutMorph newColumn.
+	inputGroup addMorph: conversationLabel layoutSpec: (LayoutSpec proportionalWidth: 1.0 fixedHeight: 18).
+	inputGroup addMorph: inputMorph layoutSpec: (LayoutSpec proportionalWidth: 1.0 proportionalHeight: 1.0).
 	sendButton := PluggableButtonMorph model: self action: #sendFollowUp label: 'Send (Enter)'.
 	languageButton := PluggableButtonMorph model: self action: #switchLanguage label: 'Idioma: ', mentor language.
 	buttonsRow := LayoutMorph newRow.
@@ -1856,9 +1861,8 @@ buildContent
 	buttonsRow addMorph: languageButton layoutSpec: (LayoutSpec proportionalWidth: 0.4 proportionalHeight: 1.0).
 	contentColumn addMorph: providerLabel layoutSpec: (LayoutSpec proportionalWidth: 1.0 fixedHeight: 20).
 	contentColumn addMorph: transcriptMorph layoutSpec: (LayoutSpec proportionalWidth: 1.0 proportionalHeight: 0.28).
-	contentColumn addAdjusterAndMorph: panesRow proportionalHeight: 0.72.
-	contentColumn addMorph: conversationLabel layoutSpec: (LayoutSpec proportionalWidth: 1.0 fixedHeight: 18).
-	contentColumn addMorph: inputMorph layoutSpec: (LayoutSpec proportionalWidth: 1.0 fixedHeight: 30).
+	contentColumn addAdjusterAndMorph: panesRow proportionalHeight: 0.57.
+	contentColumn addAdjusterAndMorph: inputGroup proportionalHeight: 0.15.
 	contentColumn addMorph: buttonsRow layoutSpec: (LayoutSpec proportionalWidth: 1.0 fixedHeight: 34).
 	contentMorph := contentColumn.
 	^contentMorph! !
