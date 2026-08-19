@@ -1,6 +1,6 @@
-'From Cuis7.9 [latest update: #8113] on 19 August 2026 at 2:25:35 pm'!
+'From Cuis7.9 [latest update: #8113] on 19 August 2026 at 3:01:14 pm'!
 'Description Better menu definition'!
-!provides: 'SmalltalkMentor' 1 40!
+!provides: 'SmalltalkMentor' 1 41!
 !requires: 'JSON' 1 29 nil!
 !requires: 'OSProcess' 1 36 nil!
 SystemOrganization addCategory: #SmalltalkMentor!
@@ -108,7 +108,7 @@ SmalltalkMentor class
 
 !classDefinition: #SmalltalkMentorClassReview category: #SmalltalkMentor!
 Object subclass: #SmalltalkMentorClassReview
-	instanceVariableNames: 'mentor targetClass window treeMorph detailHolder treeRoots methodReviewCache providerButton thinkingToast selectedIndex'
+	instanceVariableNames: 'mentor targetClass window treeMorph detailHolder treeRoots methodReviewCache providerButton thinkingToast selectedIndex effortButton'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'SmalltalkMentor'!
@@ -148,7 +148,7 @@ SmalltalkMentorFinding class
 
 !classDefinition: #SmalltalkMentorReview category: #SmalltalkMentor!
 Object subclass: #SmalltalkMentorReview
-	instanceVariableNames: 'targetClass selector category currentSource suggestedSource rationale window suggestedMorph messages transcriptMorph inputMorph busy languageButton mentor contentMorph providerLabel'
+	instanceVariableNames: 'targetClass selector category currentSource suggestedSource rationale window suggestedMorph messages transcriptMorph inputMorph busy languageButton mentor contentMorph providerLabel effortButton'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'SmalltalkMentor'!
@@ -296,6 +296,14 @@ model: aString
 name
 
 	^name! !
+
+!LLMProvider methodsFor: 'printing' stamp: 'HAW 19/Aug/2026, 5:47:44 pm (UTC)'!
+effortButtonLabel
+
+	"Label for the effort button in the review windows: the current effort, or that this
+	provider has no effort concept."
+
+	^'Effort: ', (self supportsEffort ifTrue: [ self effort ] ifFalse: [ 'n/a' ])! !
 
 !LLMProvider methodsFor: 'printing' stamp: 'HAW 19/Aug/2026, 1:50:08 pm (UTC)'!
 labelDescription
@@ -898,39 +906,54 @@ chooseEffort
 
 	self pickEffort ifTrue: [ self showTransientToast: 'Effort: ', self provider effort ]! !
 
-!SmalltalkMentor methodsFor: 'ui' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
+!SmalltalkMentor methodsFor: 'ui' stamp: 'HAW 19/Aug/2026, 5:47:49 pm (UTC)'!
+chooseFrom: valueArray caption: aCaption current: currentValue
+
+	"Pop a single-choice menu over valueArray, marking currentValue with a ' (current)' suffix
+	so the reader can see which one is active, and answer the chosen value (nil when cancelled).
+	Cuis's PopUpMenu always highlights its first item on pop-up, so the current value is shown by
+	the suffix rather than by the selection cursor."
+
+	| displayLabels chosenIndex |
+
+	displayLabels := valueArray collect: [ :eachValue |
+		eachValue = currentValue ifTrue: [ eachValue, ' (current)' ] ifFalse: [ eachValue ] ].
+	chosenIndex := PopUpMenu withCaption: aCaption chooseFrom: displayLabels.
+	chosenIndex = 0 ifTrue: [ ^nil ].
+	^valueArray at: chosenIndex! !
+
+!SmalltalkMentor methodsFor: 'ui' stamp: 'HAW 19/Aug/2026, 5:47:54 pm (UTC)'!
 chooseProvider
 
-	"Menu action: pick the active provider from a list, then its model id. Runs on the UI
-	process."
+	"Menu action: pick the active provider from a list (marking the current one), then its model
+	id. Runs on the UI process."
 
-	| providerNames chosenIndex chosenProvider modelAnswer |
+	| chosenName chosenProvider modelAnswer |
 
-	providerNames := (self providers collect: [ :eachProvider | eachProvider name ]) asArray.
-	chosenIndex := PopUpMenu withCaption: 'Choose LLM provider' chooseFrom: providerNames.
-	chosenIndex = 0 ifTrue: [ ^self ].
-	chosenProvider := self providers at: chosenIndex.
+	chosenName := self chooseFrom: (self providers collect: [ :eachProvider | eachProvider name ]) asArray caption: 'Choose LLM provider' current: self provider name.
+	chosenName ifNil: [ ^self ].
+	chosenProvider := self providers detect: [ :eachProvider | eachProvider name = chosenName ].
 	modelAnswer := self request: 'Model id for ', chosenProvider name initialAnswer: chosenProvider model.
 	(modelAnswer notNil and: [ modelAnswer withBlanksTrimmed notEmpty ])
 		ifTrue: [ chosenProvider model: modelAnswer withBlanksTrimmed ].
 	self provider: chosenProvider.
 	self showTransientToast: 'Provider: ', chosenProvider name, ' (', chosenProvider model, ')'! !
 
-!SmalltalkMentor methodsFor: 'ui' stamp: 'HAW 19/Aug/2026, 5:22:23 pm (UTC)'!
+!SmalltalkMentor methodsFor: 'ui' stamp: 'HAW 19/Aug/2026, 5:47:51 pm (UTC)'!
 pickEffort
 
-	"Pop the effort chooser and, when the user picks a level and the current provider supports
-	effort, set it on that provider. Answers whether the effort actually changed. Runs on the UI
-	process."
+	"Pop the effort chooser (marking the current level) and, when the user picks a level and the
+	current provider supports effort, set it on that provider. Answers whether the effort
+	actually changed. Runs on the UI process."
 
-	| chosenIndex |
+	| chosenEffort |
 
 	self provider supportsEffort ifFalse: [
 		self showTransientToast: self provider name, ' has no effort setting'.
 		^false ].
-	chosenIndex := PopUpMenu withCaption: 'Choose model effort' chooseFrom: LLMProvider effortLevels.
-	chosenIndex = 0 ifTrue: [ ^false ].
-	self provider effort: (LLMProvider effortLevels at: chosenIndex).
+	chosenEffort := self chooseFrom: LLMProvider effortLevels caption: 'Choose model effort' current: self provider effort.
+	chosenEffort ifNil: [ ^false ].
+	self provider effort: chosenEffort.
 	^true! !
 
 !SmalltalkMentor methodsFor: 'ui' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
@@ -1737,31 +1760,32 @@ browseNode: aNode
 		^BrowserWindow fullOnClass: aNode payload selector: nil ].
 	^BrowserWindow fullOnClass: targetClass selector: nil! !
 
-!SmalltalkMentorClassReview methodsFor: 'menu actions' stamp: 'HAW 19/Aug/2026, 5:22:37 pm (UTC)'!
+!SmalltalkMentorClassReview methodsFor: 'menu actions' stamp: 'HAW 19/Aug/2026, 5:48:09 pm (UTC)'!
 changeEffort
 
 	"Effort button below the tree: pick the reasoning-effort level for this review's provider
-	(used by the future lazy per-method reviews), then refresh the provider label."
+	(used by the future lazy per-method reviews), then refresh the effort button label."
 
 	mentor pickEffort ifTrue: [
-		providerButton ifNotNil: [ providerButton label: 'LLM: ', mentor provider labelDescription ] ]! !
+		effortButton ifNotNil: [ effortButton label: mentor provider effortButtonLabel ] ]! !
 
-!SmalltalkMentorClassReview methodsFor: 'menu actions' stamp: 'HAW 19/Aug/2026, 1:52:27 pm (UTC)'!
+!SmalltalkMentorClassReview methodsFor: 'menu actions' stamp: 'HAW 19/Aug/2026, 5:48:14 pm (UTC)'!
 changeProvider
 
-	"Button below the tree: pick the LLM provider (and model) for this class review's future
-	lazy reviews. Uses a copy so model changes stay local to this window."
+	"Provider button below the tree: pick the LLM provider (marking the current one) and its
+	model for this review's future lazy reviews. Uses a copy so changes stay local to this
+	window. Refreshes the provider and effort buttons."
 
-	| providerNames chosenIndex chosenProvider modelAnswer |
+	| chosenName chosenProvider modelAnswer |
 
-	providerNames := (mentor providers collect: [ :eachProvider | eachProvider name ]) asArray.
-	chosenIndex := PopUpMenu withCaption: 'Choose LLM provider' chooseFrom: providerNames.
-	chosenIndex = 0 ifTrue: [ ^self ].
-	chosenProvider := (mentor providers at: chosenIndex) copy.
+	chosenName := mentor chooseFrom: (mentor providers collect: [ :eachProvider | eachProvider name ]) asArray caption: 'Choose LLM provider' current: mentor provider name.
+	chosenName ifNil: [ ^self ].
+	chosenProvider := (mentor providers detect: [ :eachProvider | eachProvider name = chosenName ]) copy.
 	modelAnswer := mentor request: 'Model id for ', chosenProvider name initialAnswer: chosenProvider model.
 	(modelAnswer notNil and: [ modelAnswer withBlanksTrimmed notEmpty ]) ifTrue: [ chosenProvider model: modelAnswer withBlanksTrimmed ].
 	mentor provider: chosenProvider.
-	providerButton ifNotNil: [ providerButton label: 'LLM: ', mentor provider labelDescription ]! !
+	providerButton ifNotNil: [ providerButton label: 'LLM: ', mentor provider printString ].
+	effortButton ifNotNil: [ effortButton label: mentor provider effortButtonLabel ]! !
 
 !SmalltalkMentorClassReview methodsFor: 'menu actions' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 runAgainNode: aNode
@@ -1775,16 +1799,16 @@ runAgainNode: aNode
 	treeRoots := nil.
 	self changed: #rootNodes! !
 
-!SmalltalkMentorClassReview methodsFor: 'ui' stamp: 'HAW 19/Aug/2026, 5:22:43 pm (UTC)'!
+!SmalltalkMentorClassReview methodsFor: 'ui' stamp: 'HAW 19/Aug/2026, 5:48:21 pm (UTC)'!
 openWindow
 
 	"Master-detail window built the same way as the system browser (a LinearLayoutMorph row
 	inside the window's own layoutMorph, with a drag adjuster between the panes) and themed with
-	the browser tool color: left = tree (with right-click menu) + a provider button and an effort
-	button; right = detail. The provider is NOT in the title (it can differ per method review);
-	it is shown inside each method review panel and on the button below the tree."
+	the browser tool color: left = tree (with right-click menu) + a provider button (name and
+	model) and an effort button (current effort); right = detail. The provider/model with its
+	effort is shown inside each method review panel."
 
-	| leftCol row providerRow effortButton |
+	| leftCol row providerRow |
 
 	window := SmalltalkMentorReviewWindow new.
 	window setLabel: 'Smalltalk Mentor - ', self windowLabel.
@@ -1793,12 +1817,12 @@ openWindow
 		listGetter: #rootNodes
 		indexGetter: #selectedIndex
 		indexSetter: #selectedIndex:.
-	providerButton := PluggableButtonMorph model: self action: #changeProvider label: 'LLM: ', mentor provider labelDescription.
-	effortButton := PluggableButtonMorph model: self action: #changeEffort label: 'Effort...'.
+	providerButton := PluggableButtonMorph model: self action: #changeProvider label: 'LLM: ', mentor provider printString.
+	effortButton := PluggableButtonMorph model: self action: #changeEffort label: mentor provider effortButtonLabel.
 	providerRow := LinearLayoutMorph newRow.
 	providerRow
-		addMorph: providerButton proportionalWidth: 0.7;
-		addMorph: effortButton proportionalWidth: 0.3.
+		addMorph: providerButton proportionalWidth: 0.6;
+		addMorph: effortButton proportionalWidth: 0.4.
 	leftCol := LinearLayoutMorph newColumn.
 	leftCol
 		addMorph: treeMorph proportionalHeight: 1.0;
@@ -2100,18 +2124,17 @@ initializeClass: aClass selector: aSelector category: aCategory current: current
 	mentor := aMentor.
 	busy := false! !
 
-!SmalltalkMentorReview methodsFor: 'ui' stamp: 'HAW 19/Aug/2026, 5:23:14 pm (UTC)'!
+!SmalltalkMentorReview methodsFor: 'ui' stamp: 'HAW 19/Aug/2026, 5:48:59 pm (UTC)'!
 buildContent
 
-	"Build (once) and answer the review's content morph: a provider/model label, transcript,
-	original | suggested panes, and - below a drag adjuster - a labelled, resizable multi-line
-	follow-up input, then the buttons (Send, Effort, Idioma). The ORIGINAL pane is a real browser
-	code pane (method-mode highlighting, refactorings, editable/compilable). The SUGGESTED pane
-	is syntax-highlighted too but no-copy (students type the fix). Enter inserts a newline in the
-	input; cmd+Enter (or the button) sends it. Dragging the adjuster above the label grows or
-	shrinks the input."
+	"Build (once) and answer the review's content morph: a provider/model/effort label,
+	transcript, original | suggested panes, and - below a drag adjuster - a labelled, resizable
+	multi-line follow-up input, then the buttons (Send, Effort, Idioma). The ORIGINAL pane is a
+	real browser code pane; the SUGGESTED pane is syntax-highlighted but no-copy. Enter inserts a
+	newline in the input; cmd+Enter (or the button) sends it. The drag adjuster above the label
+	grows or shrinks the input."
 
-	| contentColumn panesRow buttonsRow originalPaneMorph sendButton suggestedPaneText originalBrowser suggestedModel conversationLabel inputGroup inputModel effortButton |
+	| contentColumn panesRow buttonsRow originalPaneMorph sendButton suggestedPaneText originalBrowser suggestedModel conversationLabel inputGroup inputModel |
 
 	contentMorph ifNotNil: [ ^contentMorph ].
 	contentColumn := LayoutMorph newColumn.
@@ -2139,11 +2162,11 @@ buildContent
 	inputGroup addMorph: conversationLabel layoutSpec: (LayoutSpec proportionalWidth: 1.0 fixedHeight: 18).
 	inputGroup addMorph: inputMorph layoutSpec: (LayoutSpec proportionalWidth: 1.0 proportionalHeight: 1.0).
 	sendButton := PluggableButtonMorph model: self action: #sendFollowUp label: 'Send (cmd+Enter)'.
-	effortButton := PluggableButtonMorph model: self action: #changeEffort label: 'Effort...'.
+	effortButton := PluggableButtonMorph model: self action: #changeEffort label: mentor provider effortButtonLabel.
 	languageButton := PluggableButtonMorph model: self action: #switchLanguage label: 'Idioma: ', mentor language.
 	buttonsRow := LayoutMorph newRow.
-	buttonsRow addMorph: sendButton layoutSpec: (LayoutSpec proportionalWidth: 0.5 proportionalHeight: 1.0).
-	buttonsRow addMorph: effortButton layoutSpec: (LayoutSpec proportionalWidth: 0.2 proportionalHeight: 1.0).
+	buttonsRow addMorph: sendButton layoutSpec: (LayoutSpec proportionalWidth: 0.45 proportionalHeight: 1.0).
+	buttonsRow addMorph: effortButton layoutSpec: (LayoutSpec proportionalWidth: 0.25 proportionalHeight: 1.0).
 	buttonsRow addMorph: languageButton layoutSpec: (LayoutSpec proportionalWidth: 0.3 proportionalHeight: 1.0).
 	contentColumn addMorph: providerLabel layoutSpec: (LayoutSpec proportionalWidth: 1.0 fixedHeight: 20).
 	contentColumn addMorph: transcriptMorph layoutSpec: (LayoutSpec proportionalWidth: 1.0 proportionalHeight: 0.28).
@@ -2205,14 +2228,16 @@ appendTranscript: aString
 	[ transcriptMorph editor selectFrom: end + 1 to: end.
 	  transcriptMorph scrollSelectionIntoView ] on: Error do: [ :e | ]! !
 
-!SmalltalkMentorReview methodsFor: 'conversation' stamp: 'HAW 19/Aug/2026, 5:22:59 pm (UTC)'!
+!SmalltalkMentorReview methodsFor: 'conversation' stamp: 'HAW 19/Aug/2026, 5:48:44 pm (UTC)'!
 changeEffort
 
 	"Effort button: pick the reasoning-effort level for this review's provider (it affects the
-	follow-up messages you send), then refresh the LLM label."
+	follow-up messages you send), then refresh the LLM label (which keeps the effort) and the
+	effort button label."
 
 	mentor pickEffort ifTrue: [
-		providerLabel ifNotNil: [ providerLabel contents: 'LLM: ', mentor provider labelDescription ] ]! !
+		providerLabel ifNotNil: [ providerLabel contents: 'LLM: ', mentor provider labelDescription ].
+		effortButton ifNotNil: [ effortButton label: mentor provider effortButtonLabel ] ]! !
 
 !SmalltalkMentorReview methodsFor: 'conversation' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 postUserContent: contentString transcriptLabel: aLabel
