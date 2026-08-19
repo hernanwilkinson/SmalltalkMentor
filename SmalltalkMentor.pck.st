@@ -1,10 +1,20 @@
-'From Cuis7.9 [latest update: #8113] on 19 August 2026 at 10:02:40 am'!
+'From Cuis7.9 [latest update: #8113] on 19 August 2026 at 10:18:06 am'!
 'Description Better menu definition'!
-!provides: 'SmalltalkMentor' 1 35!
+!provides: 'SmalltalkMentor' 1 36!
 !requires: 'JSON' 1 29 nil!
 !requires: 'OSProcess' 1 36 nil!
 SystemOrganization addCategory: #SmalltalkMentor!
 
+
+!classDefinition: #SmalltalkMentorConversationTextModel category: #SmalltalkMentor!
+TextModel subclass: #SmalltalkMentorConversationTextModel
+	instanceVariableNames: 'review'
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'SmalltalkMentor'!
+!classDefinition: 'SmalltalkMentorConversationTextModel class' category: #SmalltalkMentor!
+SmalltalkMentorConversationTextModel class
+	instanceVariableNames: ''!
 
 !classDefinition: #SmalltalkMentorNoCopyTextModel category: #SmalltalkMentor!
 TextModel subclass: #SmalltalkMentorNoCopyTextModel
@@ -136,6 +146,16 @@ Object subclass: #SmalltalkMentorReview
 SmalltalkMentorReview class
 	instanceVariableNames: ''!
 
+!classDefinition: #SmalltalkMentorConversationEditor category: #SmalltalkMentor!
+TextEditor subclass: #SmalltalkMentorConversationEditor
+	instanceVariableNames: ''
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'SmalltalkMentor'!
+!classDefinition: 'SmalltalkMentorConversationEditor class' category: #SmalltalkMentor!
+SmalltalkMentorConversationEditor class
+	instanceVariableNames: ''!
+
 !classDefinition: #SmalltalkMentorNoCopyEditor category: #SmalltalkMentor!
 TextEditor subclass: #SmalltalkMentorNoCopyEditor
 	instanceVariableNames: ''
@@ -156,6 +176,23 @@ ListItemWrapper subclass: #SmalltalkMentorNode
 SmalltalkMentorNode class
 	instanceVariableNames: ''!
 
+
+!SmalltalkMentorConversationTextModel methodsFor: 'accessing' stamp: 'HAW 19/Aug/2026, 1:14:41 pm (UTC)'!
+editorClass
+
+	"Use the editor that maps cmd+Enter to sending the message to the mentor."
+
+	^SmalltalkMentorConversationEditor! !
+
+!SmalltalkMentorConversationTextModel methodsFor: 'accessing' stamp: 'HAW 19/Aug/2026, 1:14:36 pm (UTC)'!
+review
+
+	^review! !
+
+!SmalltalkMentorConversationTextModel methodsFor: 'accessing' stamp: 'HAW 19/Aug/2026, 1:14:39 pm (UTC)'!
+review: aReview
+
+	review := aReview! !
 
 !SmalltalkMentorNoCopyTextModel methodsFor: 'accessing' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 styleClass: aClassOrMetaClass
@@ -1817,17 +1854,17 @@ initializeClass: aClass selector: aSelector category: aCategory current: current
 	mentor := aMentor.
 	busy := false! !
 
-!SmalltalkMentorReview methodsFor: 'ui' stamp: 'HAW 19/Aug/2026, 12:59:46 pm (UTC)'!
+!SmalltalkMentorReview methodsFor: 'ui' stamp: 'HAW 19/Aug/2026, 1:15:34 pm (UTC)'!
 buildContent
 
 	"Build (once) and answer the review's content morph: a provider/model label, transcript,
-	original | suggested panes, and - below a drag adjuster - a labelled, resizable follow-up
-	input, then the buttons. The ORIGINAL pane is a real browser code pane (method-mode
+	original | suggested panes, and - below a drag adjuster - a labelled, resizable multi-line
+	follow-up input, then the buttons. The ORIGINAL pane is a real browser code pane (method-mode
 	highlighting, refactorings, editable/compilable). The SUGGESTED pane is syntax-highlighted
-	too but no-copy (students type the fix). Dragging the adjuster above the label grows or
-	shrinks the input field."
+	too but no-copy (students type the fix). Enter inserts a newline in the input; cmd+Enter (or
+	the button) sends it. Dragging the adjuster above the label grows or shrinks the input."
 
-	| contentColumn panesRow buttonsRow originalPaneMorph sendButton suggestedPaneText providerLabel originalBrowser suggestedModel conversationLabel inputGroup |
+	| contentColumn panesRow buttonsRow originalPaneMorph sendButton suggestedPaneText providerLabel originalBrowser suggestedModel conversationLabel inputGroup inputModel |
 
 	contentMorph ifNotNil: [ ^contentMorph ].
 	contentColumn := LayoutMorph newColumn.
@@ -1847,14 +1884,14 @@ buildContent
 	panesRow := LayoutMorph newRow.
 	panesRow addMorph: originalPaneMorph layoutSpec: (LayoutSpec proportionalWidth: 0.5 proportionalHeight: 1.0).
 	panesRow addAdjusterAndMorph: suggestedMorph proportionalWidth: 0.5.
-	conversationLabel := LabelMorph contents: 'Tell the mentor (ask a follow-up or push back, then press Enter):'.
-	inputMorph := EntryFieldMorph new.
-	inputMorph contents: ''.
-	inputMorph crAction: [ self sendFollowUp ].
+	conversationLabel := LabelMorph contents: 'Tell the mentor (ask a follow-up or push back, then press cmd+Enter):'.
+	inputModel := SmalltalkMentorConversationTextModel withText: '' asText.
+	inputModel review: self.
+	inputMorph := TextModelMorph withModel: inputModel.
 	inputGroup := LayoutMorph newColumn.
 	inputGroup addMorph: conversationLabel layoutSpec: (LayoutSpec proportionalWidth: 1.0 fixedHeight: 18).
 	inputGroup addMorph: inputMorph layoutSpec: (LayoutSpec proportionalWidth: 1.0 proportionalHeight: 1.0).
-	sendButton := PluggableButtonMorph model: self action: #sendFollowUp label: 'Send (Enter)'.
+	sendButton := PluggableButtonMorph model: self action: #sendFollowUp label: 'Send (cmd+Enter)'.
 	languageButton := PluggableButtonMorph model: self action: #switchLanguage label: 'Idioma: ', mentor language.
 	buttonsRow := LayoutMorph newRow.
 	buttonsRow addMorph: sendButton layoutSpec: (LayoutSpec proportionalWidth: 0.6 proportionalHeight: 1.0).
@@ -1946,22 +1983,25 @@ postUserContent: contentString transcriptLabel: aLabel
 				self appendTranscript: 'Error: ', e messageText.
 				busy := false ] ] ] fork! !
 
-!SmalltalkMentorReview methodsFor: 'conversation' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
+!SmalltalkMentorReview methodsFor: 'conversation' stamp: 'HAW 19/Aug/2026, 1:15:37 pm (UTC)'!
 sendFollowUp
 
 	"Send the typed follow-up (plus the current suggestion-pane code) to the provider, keeping
-	the conversation. Triggered by the Send button or by pressing Enter in the input field."
+	the conversation. Triggered by the Send button or by cmd+Enter in the input field. The input
+	is a multi-line pane whose editor edits the model in place, so its text is read live."
 
 	| note content |
 
 	busy == true ifTrue: [ ^self ].
-	note := inputMorph contents withBlanksTrimmed.
+	note := inputMorph text asString withBlanksTrimmed.
 	note isEmpty ifTrue: [ ^self ].
 	content := note, String newLineString, String newLineString,
 		'For reference, the current version of the method I am looking at is:', String newLineString,
 		suggestedMorph text asString, String newLineString, String newLineString,
 		'Reply again with ONLY the same JSON object {canImprove, suggestedSource, rationale}.'.
-	inputMorph contents: ''.
+	UISupervisor whenUIinSafeState: [
+		inputMorph model actualContents: '' asText.
+		inputMorph updateActualContents ].
 	self postUserContent: content transcriptLabel: 'You: ', note! !
 
 !SmalltalkMentorReview methodsFor: 'conversation' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
@@ -2013,6 +2053,17 @@ openFor: aClass selector: aSelector category: aCategory current: currentSrc sugg
 		rationale: aRationale
 		messages: aMessagesCollection
 		mentor: aMentor) open! !
+
+!SmalltalkMentorConversationEditor methodsFor: 'typing/selecting keys' stamp: 'HAW 19/Aug/2026, 1:14:44 pm (UTC)'!
+returnKey: aKeyboardEvent
+
+	"cmd+Enter sends the typed message to the mentor; a plain Enter inserts a newline (this is a
+	multi-line input)."
+
+	(aKeyboardEvent commandAltKeyPressed and: [ model isKindOf: SmalltalkMentorConversationTextModel ]) ifTrue: [
+		model review ifNotNil: [ :conversationReview | conversationReview sendFollowUp ].
+		^true ].
+	^super returnKey: aKeyboardEvent! !
 
 !SmalltalkMentorNoCopyEditor methodsFor: 'clipboard' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 clipboardTextPut: aText
