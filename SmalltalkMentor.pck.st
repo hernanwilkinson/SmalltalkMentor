@@ -1,6 +1,6 @@
-'From Cuis7.9 [latest update: #8113] on 19 August 2026 at 3:01:14 pm'!
+'From Cuis7.9 [latest update: #8113] on 19 August 2026 at 4:52:52 pm'!
 'Description Better menu definition'!
-!provides: 'SmalltalkMentor' 1 41!
+!provides: 'SmalltalkMentor' 1 42!
 !requires: 'JSON' 1 29 nil!
 !requires: 'OSProcess' 1 36 nil!
 SystemOrganization addCategory: #SmalltalkMentor!
@@ -1220,18 +1220,18 @@ browserWindowMenuSpecs
 		{ #systemCatListMenuSpec. self classCategoryReviewMenuSpecSend }.
 		{ #SmalltalkEditor. self smalltalkEditorMenuSpecSend }}! !
 
-!SmalltalkMentor class methodsFor: 'menues' stamp: 'HAW 19/Aug/2026, 1:51:34 pm (UTC)'!
+!SmalltalkMentor class methodsFor: 'menues' stamp: 'HAW 19/Aug/2026, 7:49:30 pm (UTC)'!
 classCategoryReviewMenuSpec
 
 	"A 'Smalltalk Mentor' submenu for the class-category (system category) list pane: review
-	every class of the selected category, toggle the language, or choose the provider/model/effort."
+	every class of the selected category, choose the provider/model/effort, or toggle the language."
 
 	^{
 		{ 12000. 'Smalltalk Mentor'. nil. nil. 12000. #helpIcon }.
-		{ 12010. 'Review this class category (0)'. $0. self current. #reviewClassCategoryFromMorph:. #helpIcon }.
-		{ 12020. 'Toggle response language (Spanish/English)'. nil. self current. #toggleLanguage. #helpIcon }.
-		{ 12025. 'Choose model effort...'. nil. self current. #chooseEffort. #helpIcon }.
-		{ 12030. 'Choose LLM provider and model...'. nil. self current. #chooseProvider. #helpIcon }
+		{ 12010. 'Review this class category (0)'. $0. self current. #reviewClassCategoryFromMorph:. #findIcon }.
+		{ 12020. 'Choose LLM provider and model...'. nil. self current. #chooseProvider. #chatIcon }.
+		{ 12030. 'Choose model effort...'. nil. self current. #chooseEffort. #systemMonitorIcon }.
+		{ 12040. 'Toggle response language (Spanish/English)'. nil. self current. #toggleLanguage. #preferencesDesktopFontIcon }
 	}! !
 
 !SmalltalkMentor class methodsFor: 'menues' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
@@ -1239,18 +1239,18 @@ classCategoryReviewMenuSpecSend
 
 	^MessageSend receiver: self selector: #classCategoryReviewMenuSpec! !
 
-!SmalltalkMentor class methodsFor: 'menues' stamp: 'HAW 19/Aug/2026, 1:51:26 pm (UTC)'!
+!SmalltalkMentor class methodsFor: 'menues' stamp: 'HAW 19/Aug/2026, 7:49:21 pm (UTC)'!
 classReviewMenuSpec
 
-	"A 'Smalltalk Mentor' submenu for the class-list pane: review the class, toggle the response
-	language, or choose the provider/model/effort (all act on the current instance)."
+	"A 'Smalltalk Mentor' submenu for the class-list pane: review the class, choose the
+	provider/model/effort, or toggle the response language (all act on the current instance)."
 
 	^{
 		{ 12000. 'Smalltalk Mentor'. nil. nil. 12000. #helpIcon }.
-		{ 12010. 'Review this class (0)'. $0. self current. #reviewClassFromMorph:. #helpIcon }.
-		{ 12020. 'Toggle response language (Spanish/English)'. nil. self current. #toggleLanguage. #helpIcon }.
-		{ 12025. 'Choose model effort...'. nil. self current. #chooseEffort. #helpIcon }.
-		{ 12030. 'Choose LLM provider and model...'. nil. self current. #chooseProvider. #helpIcon }
+		{ 12010. 'Review this class (0)'. $0. self current. #reviewClassFromMorph:. #findIcon }.
+		{ 12020. 'Choose LLM provider and model...'. nil. self current. #chooseProvider. #chatIcon }.
+		{ 12030. 'Choose model effort...'. nil. self current. #chooseEffort. #systemMonitorIcon }.
+		{ 12040. 'Toggle response language (Spanish/English)'. nil. self current. #toggleLanguage. #preferencesDesktopFontIcon }
 	}! !
 
 !SmalltalkMentor class methodsFor: 'menues' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
@@ -1280,18 +1280,18 @@ messageListMenuSpecSend
 
 	^ MessageSend receiver: self selector: #messageListMenuSpec! !
 
-!SmalltalkMentor class methodsFor: 'menues' stamp: 'HAW 19/Aug/2026, 1:51:32 pm (UTC)'!
+!SmalltalkMentor class methodsFor: 'menues' stamp: 'HAW 19/Aug/2026, 7:49:27 pm (UTC)'!
 methodCategoryReviewMenuSpec
 
 	"A 'Smalltalk Mentor' submenu for the method-category (protocol) list pane: review every
-	method of the selected category, toggle the language, or choose the provider/model/effort."
+	method of the selected category, choose the provider/model/effort, or toggle the language."
 
 	^{
 		{ 12000. 'Smalltalk Mentor'. nil. nil. 12000. #helpIcon }.
-		{ 12010. 'Review this method category (0)'. $0. self current. #reviewMethodCategoryFromMorph:. #helpIcon }.
-		{ 12020. 'Toggle response language (Spanish/English)'. nil. self current. #toggleLanguage. #helpIcon }.
-		{ 12025. 'Choose model effort...'. nil. self current. #chooseEffort. #helpIcon }.
-		{ 12030. 'Choose LLM provider and model...'. nil. self current. #chooseProvider. #helpIcon }
+		{ 12010. 'Review this method category (0)'. $0. self current. #reviewMethodCategoryFromMorph:. #findIcon }.
+		{ 12020. 'Choose LLM provider and model...'. nil. self current. #chooseProvider. #chatIcon }.
+		{ 12030. 'Choose model effort...'. nil. self current. #chooseEffort. #systemMonitorIcon }.
+		{ 12040. 'Toggle response language (Spanish/English)'. nil. self current. #toggleLanguage. #preferencesDesktopFontIcon }
 	}! !
 
 !SmalltalkMentor class methodsFor: 'menues' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
@@ -1305,7 +1305,7 @@ methodSetWindowMenuSpecs
 	^ { { #messageListMenuSpec. self messageListMenuSpecSend }.
 		{ #SmalltalkEditor. self smalltalkEditorMenuSpecSend }}! !
 
-!SmalltalkMentor class methodsFor: 'menues' stamp: 'HAW 19/Aug/2026, 1:51:29 pm (UTC)'!
+!SmalltalkMentor class methodsFor: 'menues' stamp: 'HAW 19/Aug/2026, 7:49:25 pm (UTC)'!
 smalltalkEditorMenuSpec
 
 	"A 'Smalltalk Mentor' submenu in the code pane. Actions target the current instance.
@@ -1313,10 +1313,10 @@ smalltalkEditorMenuSpec
 
 	^{
 		{ 12000. 'Smalltalk Mentor'. nil. nil. 12000. #helpIcon }.
-		{ 12010. 'Ask for a better version (0)'. $0. self current. #reviewFromMorph:. #helpIcon }.
-		{ 12020. 'Toggle response language (Spanish/English)'. nil. self current. #toggleLanguage. #helpIcon }.
-		{ 12025. 'Choose model effort...'. nil. self current. #chooseEffort. #helpIcon }.
-		{ 12030. 'Choose LLM provider and model...'. nil. self current. #chooseProvider. #helpIcon }
+		{ 12010. 'Ask for a better version (0)'. $0. self current. #reviewFromMorph:. #findIcon }.
+		{ 12020. 'Choose LLM provider and model...'. nil. self current. #chooseProvider. #chatIcon }.
+		{ 12030. 'Choose model effort...'. nil. self current. #chooseEffort. #systemMonitorIcon }.
+		{ 12040. 'Toggle response language (Spanish/English)'. nil. self current. #toggleLanguage. #preferencesDesktopFontIcon }
 	}! !
 
 !SmalltalkMentor class methodsFor: 'menues' stamp: 'HAW 18/Aug/2026, 10:52:18 am (UTC)'!
