@@ -1,17 +1,17 @@
 # Smalltalk Mentor
 
 An AI-assisted code reviewer for **Cuis Smalltalk**. It reviews a method (or a whole
-class) against a set of opinionated, project-specific design rules that *you* control,
+class) against a set of opinionated, project-specific design heuristics that *you* control,
 suggests improvements, and lets you discuss them with a Large Language Model — all from
 inside the image, right where you write code.
 
 It is designed for teaching good Smalltalk/OO design: the mentor points out where code
-breaks your rules and proposes a fix, and the student applies the refactoring themselves.
+breaks your heuristics and proposes a fix, and the student applies the refactoring themselves.
 
 ## Features
 
 - **Review a method** — press `cmd+0` on a method (in the code pane *or* the message
-  list) and the mentor reviews it against your rules, showing the original next to a
+  list) and the mentor reviews it against your heuristics, showing the original next to a
   suggested version, with a conversation you can continue.
 - **Review a whole class** — press `cmd+0` on a class and get a window that combines:
   - **Static checks** (pure Smalltalk, no LLM, instant): unread/unwritten instance and
@@ -27,7 +27,7 @@ breaks your rules and proposes a fix, and the student applies the refactoring th
 - **Multiple LLM providers** — Claude, ChatGPT, Deepseek, Nvidia NIM, Gemini.
 - **Looks like the browser** — the review windows use the system-browser theme, so the
   lists, buttons and code panes match the tools you already use.
-- **Your own rules** — a plain Markdown file; edits take effect on the next review, no
+- **Your own heuristics** — a plain Markdown file; edits take effect on the next review, no
   recompile.
 - **Answers in Spanish or English**, per conversation.
 - **Real browser code panes** — the code you edit inside the mentor behaves like the
@@ -46,8 +46,8 @@ The project is split into two Cuis packages (both `.pck.st` files live in this r
 
 - **`SmalltalkMentor`** — the tool itself: the model, the LLM providers and the UI. This is
   all you need to *use* the mentor.
-- **`SmalltalkMentorTests`** — the test suite (`SmalltalkMentorRuleTest`, one live test per
-  rule). It **requires** `SmalltalkMentor` (declared as a prerequisite in the package), so
+- **`SmalltalkMentorTests`** — the test suite (`SmalltalkMentorHeuristicTest`, one live test per
+  heuristic). It **requires** `SmalltalkMentor` (declared as a prerequisite in the package), so
   `SmalltalkMentor` must be loaded first. It is optional — load it only to run the tests.
 
 Keeping the tests in a separate package means the model has no dependency on the test code.
@@ -100,12 +100,12 @@ mkdir -p ~/.smalltalk-mentor && printf '%s' 'sk-ant-...' > ~/.smalltalk-mentor/a
 You get keys from each vendor's console (e.g. Anthropic Console, OpenAI Platform,
 Google AI Studio, Deepseek, Nvidia NIM). Billing must be enabled on the account.
 
-## The rules file
+## The heuristics file
 
-The rules the mentor enforces live in a Markdown file, looked up in this order:
+The heuristics the mentor enforces live in a Markdown file, looked up in this order:
 
-1. `<image directory>/smalltalk-mentor-rules.md`  — per-image rules, checked first
-2. `~/.smalltalk-mentor/rules.md`                  — per-user rules
+1. `<image directory>/smalltalk-mentor-heuristics.md`  — per-image heuristics, checked first
+2. `~/.smalltalk-mentor/heuristics.md`                  — per-user heuristics
 3. a small built-in default
 
 Edit the file and the change takes effect on the **next** review — no recompile, no image
@@ -113,7 +113,7 @@ save.
 
 ### Format
 
-Rules are grouped under `## Category` headings, and each rule starts with a short
+Heuristics are grouped under `## Category` headings, and each heuristic starts with a short
 `[id]` name:
 
 ```markdown
@@ -126,8 +126,8 @@ Rules are grouped under `## Category` headings, and each rule starts with a shor
 - [replace-if-with-polymorphism] When possible, replace if with polymorphism.
 ```
 
-When the mentor flags a violation it cites the rule's `[id]` in its explanation. You can
-add, remove, or reword rules freely, and add new categories (e.g. `## Collection`,
+When the mentor flags a violation it cites the heuristic's `[id]` in its explanation. You can
+add, remove, or reword heuristics freely, and add new categories (e.g. `## Collection`,
 `## Numbers`). The `[id]`s are also what the test suite targets (see *Tests*).
 
 ## Using it from the Smalltalk UI
@@ -155,7 +155,7 @@ window opens with:
 Select a class in the class list and press `cmd+0` (or *Review this class*). A window
 opens with a tree on the left and a detail pane on the right:
 
-- **Static rule roots** — one per built-in check, each expanding to the elements that
+- **Static heuristic roots** — one per built-in check, each expanding to the elements that
   fail it. Selecting a failing element opens the relevant code in an editable browser
   pane (the method, or the class definition with the offending variable selected) so you
   can fix it in place.
@@ -177,7 +177,7 @@ The virtual `-- all --` category reviews every method of the class.
 Select a system category in the **class-category list** (the first browser column) and
 press `cmd+0` (or *Review this class category*). The tree's top level is the classes of
 that category, **sorted alphabetically**; expanding a class shows exactly the same subtree
-as a class review (its static rule roots and its methods), so each class behaves as a full
+as a class review (its static heuristic roots and its methods), so each class behaves as a full
 class review in place.
 
 ### The built-in (non-LLM) checks
@@ -219,18 +219,18 @@ review the same method with two different providers side by side.
 The **`SmalltalkMentorTests`** package (load it after `SmalltalkMentor`) has two test
 classes:
 
-- **`SmalltalkMentorRuleTest`** — one live test per *LLM* rule. Each asks Claude Opus to
-  review a method that violates the rule and checks the fix is applied (or the rule id is
+- **`SmalltalkMentorHeuristicTest`** — one live test per *LLM* heuristic. Each asks Claude Opus to
+  review a method that violates the heuristic and checks the fix is applied (or the heuristic id is
   cited), best-of-3 to absorb the model's non-determinism. Running it makes real API calls,
   so it needs a valid Anthropic key.
-- **`SmalltalkMentorFixedRuleTest`** — one test per *built-in (non-LLM)* check. These are
+- **`SmalltalkMentorFixedHeuristicTest`** — one test per *built-in (non-LLM)* check. These are
   deterministic and need no API key: each builds a throwaway fixture class that violates a
-  rule and asserts the corresponding static check flags it.
+  heuristic and asserts the corresponding static check flags it.
 
 ```smalltalk
-SmalltalkMentorFixedRuleTest run: #testClassMustBeReferenced.   "one static rule, no key"
-SmalltalkMentorRuleTest run: #testAndOrTakeBlocks.              "one LLM rule, needs a key"
-[ Transcript showln: (SmalltalkMentorRuleTest suite run) printString ] fork.  "all — off the UI process"
+SmalltalkMentorFixedHeuristicTest run: #testClassMustBeReferenced.   "one static heuristic, no key"
+SmalltalkMentorHeuristicTest run: #testAndOrTakeBlocks.              "one LLM heuristic, needs a key"
+[ Transcript showln: (SmalltalkMentorHeuristicTest suite run) printString ] fork.  "all — off the UI process"
 ```
 
 ## Architecture (brief)

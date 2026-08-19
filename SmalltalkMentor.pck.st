@@ -1,6 +1,6 @@
-'From Cuis7.9 [latest update: #8113] on 18 August 2026 at 3:56:40 pm'!
+'From Cuis7.9 [latest update: #8113] on 18 August 2026 at 9:39:03 pm'!
 'Description Better menu definition'!
-!provides: 'SmalltalkMentor' 1 29!
+!provides: 'SmalltalkMentor' 1 30!
 !requires: 'JSON' 1 29 nil!
 !requires: 'OSProcess' 1 36 nil!
 SystemOrganization addCategory: #SmalltalkMentor!
@@ -547,32 +547,32 @@ providers
 
 	^SmalltalkMentor providers! !
 
-!SmalltalkMentor methodsFor: 'rules' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
-currentReviewRules
+!SmalltalkMentor methodsFor: 'rules' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+currentReviewHeuristics
 
-	"The rules to enforce, looked up in order:
-	 1. <imageDirectory>/smalltalk-mentor-rules.md  (per-image rules, checked first)
-	 2. ~/.smalltalk-mentor/rules.md                (per-user rules)
-	 3. the built-in #defaultReviewRules
+	"The heuristics to enforce, looked up in order:
+	 1. <imageDirectory>/smalltalk-mentor-heuristics.md  (per-image heuristics, checked first)
+	 2. ~/.smalltalk-mentor/heuristics.md                (per-user heuristics)
+	 3. the built-in #defaultReviewHeuristics
 	Files are read via the shell (avoids resolving $HOME in the image), mirroring the key
 	handling."
 
 	| tmp raw |
 
-	tmp := '/tmp/smalltalk-mentor-rules.txt'.
+	tmp := '/tmp/smalltalk-mentor-heuristics.txt'.
 	OSProcess waitForCommand:
-		'sh -c ''I="', (Smalltalk imagePath ), '/smalltalk-mentor-rules.md"; H="$HOME/.smalltalk-mentor/rules.md"; if [ -s "$I" ]; then cat "$I"; elif [ -s "$H" ]; then cat "$H"; fi > ', tmp, ' 2>/dev/null || : > ', tmp, ''''.
+		'sh -c ''I="', (Smalltalk imagePath ), '/smalltalk-mentor-heuristics.md"; H="$HOME/.smalltalk-mentor/heuristics.md"; if [ -s "$I" ]; then cat "$I"; elif [ -s "$H" ]; then cat "$H"; fi > ', tmp, ' 2>/dev/null || : > ', tmp, ''''.
 	raw := [ tmp asFileEntry fileContents asString ] on: Error do: [ :e | '' ].
 	raw := raw withBlanksTrimmed.
-	^raw isEmpty ifTrue: [ self defaultReviewRules ] ifFalse: [ raw ]! !
+	^raw isEmpty ifTrue: [ self defaultReviewHeuristics ] ifFalse: [ raw ]! !
 
-!SmalltalkMentor methodsFor: 'rules' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
-defaultReviewRules
+!SmalltalkMentor methodsFor: 'rules' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+defaultReviewHeuristics
 
-	"Built-in project rules, used when ~/.smalltalk-mentor/rules.md is absent or blank.
-	Grouped under ## Category headings; each rule is prefixed with a short [id] name so the
-	mentor can cite it. Edit here, or override by creating that file (see #reviewRulesFilePath
-	/ #writeDefaultReviewRulesFile)."
+	"Built-in project heuristics, used when ~/.smalltalk-mentor/heuristics.md is absent or blank.
+	Grouped under ## Category headings; each heuristic is prefixed with a short [id] name so the
+	mentor can cite it. Edit here, or override by creating that file (see #reviewHeuristicsFilePath
+	/ #writeDefaultReviewHeuristicsFile)."
 
 	^'## Testing
 - [assert-equals] Prefer `assert: expected equals: actual` over `assert: expected = actual`
@@ -583,27 +583,27 @@ defaultReviewRules
 - [valid-on-creation] Objects should be valid from the moment they are created: instance
   creation messages validate their arguments with assertions encapsulated on the class side.'! !
 
-!SmalltalkMentor methodsFor: 'rules' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
-reviewRulesFilePath
+!SmalltalkMentor methodsFor: 'rules' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+reviewHeuristicsFilePath
 
-	"Where project-specific review rules live."
+	"Where project-specific review heuristics live."
 
-	^'~/.smalltalk-mentor/rules.md'! !
+	^'~/.smalltalk-mentor/heuristics.md'! !
 
-!SmalltalkMentor methodsFor: 'rules' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
-writeDefaultReviewRulesFile
+!SmalltalkMentor methodsFor: 'rules' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+writeDefaultReviewHeuristicsFile
 
-	"Create ~/.smalltalk-mentor/rules.md seeded with the built-in defaults, only if it does
+	"Create ~/.smalltalk-mentor/heuristics.md seeded with the built-in defaults, only if it does
 	not already exist. Gives you a file to start editing.
-	Evaluate:  SmalltalkMentor current writeDefaultReviewRulesFile"
+	Evaluate:  SmalltalkMentor current writeDefaultReviewHeuristicsFile"
 
 	| tmp |
 
-	tmp := '/tmp/smalltalk-mentor-rules-seed.txt'.
-	tmp asFileEntry fileContents: self defaultReviewRules.
+	tmp := '/tmp/smalltalk-mentor-heuristics-seed.txt'.
+	tmp asFileEntry fileContents: self defaultReviewHeuristics.
 	OSProcess waitForCommand:
-		'sh -c ''mkdir -p "$HOME/.smalltalk-mentor"; F="$HOME/.smalltalk-mentor/rules.md"; [ -f "$F" ] || cp ', tmp, ' "$F"'''.
-	Transcript show: 'Seeded ', self reviewRulesFilePath, ' (if it did not already exist)'; newLine! !
+		'sh -c ''mkdir -p "$HOME/.smalltalk-mentor"; F="$HOME/.smalltalk-mentor/heuristics.md"; [ -f "$F" ] || cp ', tmp, ' "$F"'''.
+	Transcript show: 'Seeded ', self reviewHeuristicsFilePath, ' (if it did not already exist)'; newLine! !
 
 !SmalltalkMentor methodsFor: 'reviewing' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 askAbout: source
@@ -737,10 +737,10 @@ parseProposalFrom: aString
 	json := aString copyFrom: start to: stop.
 	^Json readFrom: json readStream! !
 
-!SmalltalkMentor methodsFor: 'llm - prompt' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
+!SmalltalkMentor methodsFor: 'llm - prompt' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 promptFor: source
 
-	"Assemble the review prompt: intro, response language, mandatory project rules
+	"Assemble the review prompt: intro, response language, mandatory project heuristics
 	(grouped under ## Category headings, each named with a [id]), JSON output contract,
 	and the method source. The suggestion is the improved version of THIS method only."
 
@@ -748,10 +748,10 @@ promptFor: source
 
 Write the "rationale" field, and all of your conversational replies, in ', self language, '. Do NOT translate Smalltalk code, selectors, or identifiers - "suggestedSource" must remain valid Smalltalk.
 
-Enforce these project-specific review rules. They are grouped under "## Category" headings, and each rule begins with a short name in brackets like [assert-equals]. Treat them as mandatory: if the method violates any rule, set canImprove to true, make suggestedSource comply, and in the rationale cite the [name] of each violated rule. Also apply your general Smalltalk expertise for any other improvements.
-<rules>
-', self currentReviewRules, '
-</rules>
+Enforce these project-specific review heuristics. They are grouped under "## Category" headings, and each heuristic begins with a short name in brackets like [assert-equals]. Treat them as mandatory: if the method violates any heuristic, set canImprove to true, make suggestedSource comply, and in the rationale cite the [name] of each violated heuristic. Also apply your general Smalltalk expertise for any other improvements.
+<heuristics>
+', self currentReviewHeuristics, '
+</heuristics>
 
 Reply with ONLY a JSON object (no prose, no markdown fences) of the form:
 {"canImprove": true or false, "suggestedSource": "<a complete, compilable method with the SAME selector, or an empty string if it is already good>", "rationale": "<one or two sentences>"}
@@ -1046,10 +1046,10 @@ initializeClass: aClass mentor: aMentor
 	mentor := aMentor.
 	methodReviewCache := Dictionary new! !
 
-!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
+!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 classReferencedFindingsFor: aClass
 
-	"Rule 7: the class should be referenced. Flags a class that no other class mentions and
+	"Heuristic 7: the class should be referenced. Flags a class that no other class mentions and
 	that has no subclasses - i.e. dead code. References from the class's own methods do not
 	count."
 
@@ -1066,31 +1066,31 @@ classReferencedFindingsFor: aClass
 			editTarget: nil) ].
 	^result! !
 
-!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
+!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 classReviewRootNodesFor: aClass
 
-	"The class-review subtree for aClass: one root per static rule (children = its failing
+	"The class-review subtree for aClass: one root per static heuristic (children = its failing
 	elements), then 'Instance methods' and 'Class methods' grouped by category. Reused both as
 	the roots of a class review and, lazily, under each class of a class-category review."
 
 	| roots |
 
 	roots := OrderedCollection new.
-	(self ruleGroupsFor: aClass) do: [ :group |
+	(self heuristicGroupsFor: aClass) do: [ :group |
 		| children |
 		children := group value collect: [ :finding |
 			SmalltalkMentorNode label: finding title kind: #finding payload: finding children: #() model: self ].
 		roots add: (SmalltalkMentorNode
 			label: group key, ' (', children size printString, ')'
-			kind: #ruleRoot payload: nil children: children model: self) ].
+			kind: #heuristicRoot payload: nil children: children model: self) ].
 	roots add: (self methodsSideNodeFor: aClass label: 'Instance methods').
 	roots add: (self methodsSideNodeFor: aClass class label: 'Class methods').
 	^roots! !
 
-!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
+!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 classVariableFindingsFor: aClass
 
-	"Rule 4: every class variable should be both read and written (instance or class side)."
+	"Heuristic 4: every class variable should be both read and written (instance or class side)."
 
 	| findings |
 
@@ -1116,10 +1116,10 @@ classVariableFindingsFor: aClass
 				editTarget: (aClass -> classVariableName)) ] ].
 	^findings! !
 
-!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
+!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 commonLeafSubclassProtocolFindingsFor: rootClass
 
-	"Rule 8: when rootClass has more than one leaf subclass, every message that instances of ALL
+	"Heuristic 8: when rootClass has more than one leaf subclass, every message that instances of ALL
 	those leaf subclasses answer - restricted to protocol introduced within rootClass's own
 	hierarchy - should be implemented in rootClass itself, concretely or as subclassResponsibility,
 	so the shared protocol is declared in one place. Flags each such message rootClass omits."
@@ -1135,10 +1135,27 @@ commonLeafSubclassProtocolFindingsFor: rootClass
 			findings add: (self missingRootProtocolFindingFor: sharedSelector root: rootClass) ] ].
 	^findings! !
 
-!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 18/Aug/2026, 6:55:49 pm (UTC)'!
+!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+heuristicGroupsFor: aClass
+
+	"The static (Smalltalk) verifications for aClass, as title -> (collection of findings)
+	associations. Each becomes a heuristic root in the tree."
+
+	^OrderedCollection new
+		add: 'Instance variables read & written' -> (self instanceVariableFindingsFor: aClass);
+		add: 'Class variables read & written' -> (self classVariableFindingsFor: aClass);
+		add: 'Methods have senders' -> (self methodsWithoutSendersFindingsFor: aClass);
+		add: 'Messages have implementers' -> (self messagesWithoutImplementersFindingsFor: aClass);
+		add: 'Methods are categorized' -> (self uncategorizedMethodsFindingsFor: aClass);
+		add: 'No unused or write-only temporaries' -> (self unusedTemporariesFindingsFor: aClass);
+		add: 'Class is referenced' -> (self classReferencedFindingsFor: aClass);
+		add: 'Shared leaf-subclass protocol in root' -> (self commonLeafSubclassProtocolFindingsFor: aClass);
+		yourself! !
+
+!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 instanceVariableFindingsFor: aClass
 
-	"Rule 1: every instance variable should be both read and written in the instance-side
+	"Heuristic 1: every instance variable should be both read and written in the instance-side
 	methods."
 
 	| findings |
@@ -1161,10 +1178,10 @@ instanceVariableFindingsFor: aClass
 				editTarget: (aClass -> instanceVariableName)) ] ].
 	^findings! !
 
-!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
+!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 messagesWithoutImplementersFindingsFor: aClass
 
-	"Rule 3: every message sent by this class's methods should have an implementer."
+	"Heuristic 3: every message sent by this class's methods should have an implementer."
 
 	| findings seenMessages |
 
@@ -1183,10 +1200,10 @@ messagesWithoutImplementersFindingsFor: aClass
 							editTarget: (classOrMetaclass -> eachSelector)) ] ] ] ] ].
 	^findings! !
 
-!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
+!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 methodsWithoutSendersFindingsFor: aClass
 
-	"Rule 2: every implemented message should have a sender. Excludes methods that override an
+	"Heuristic 2: every implemented message should have a sender. Excludes methods that override an
 	inherited implementation and test methods (run by metaprogramming)."
 
 	| findings |
@@ -1204,27 +1221,10 @@ methodsWithoutSendersFindingsFor: aClass
 					editTarget: (classOrMetaclass -> eachSelector)) ] ] ].
 	^findings! !
 
-!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
-ruleGroupsFor: aClass
-
-	"The static (Smalltalk) verifications for aClass, as title -> (collection of findings)
-	associations. Each becomes a rule root in the tree."
-
-	^OrderedCollection new
-		add: 'Instance variables read & written' -> (self instanceVariableFindingsFor: aClass);
-		add: 'Class variables read & written' -> (self classVariableFindingsFor: aClass);
-		add: 'Methods have senders' -> (self methodsWithoutSendersFindingsFor: aClass);
-		add: 'Messages have implementers' -> (self messagesWithoutImplementersFindingsFor: aClass);
-		add: 'Methods are categorized' -> (self uncategorizedMethodsFindingsFor: aClass);
-		add: 'No unused or write-only temporaries' -> (self unusedTemporariesFindingsFor: aClass);
-		add: 'Class is referenced' -> (self classReferencedFindingsFor: aClass);
-		add: 'Shared leaf-subclass protocol in root' -> (self commonLeafSubclassProtocolFindingsFor: aClass);
-		yourself! !
-
-!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
+!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 uncategorizedMethodsFindingsFor: aClass
 
-	"Rule 5: every method should be in a meaningful protocol (not 'as yet unclassified')."
+	"Heuristic 5: every method should be in a meaningful protocol (not 'as yet unclassified')."
 
 	| findings |
 
@@ -1241,10 +1241,10 @@ uncategorizedMethodsFindingsFor: aClass
 					editTarget: (classOrMetaclass -> eachSelector)) ] ] ].
 	^findings! !
 
-!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
+!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 unusedTemporariesFindingsFor: aClass
 
-	"Rule 6: no method should declare a temporary variable that is never read - an unreferenced
+	"Heuristic 6: no method should declare a temporary variable that is never read - an unreferenced
 	temporary, or one that is only written."
 
 	| findings |
@@ -1291,10 +1291,10 @@ nodeSelected: aNode
 	aNode kind = #finding ifTrue: [ ^self showFinding: aNode payload ].
 	self clearDetail! !
 
-!SmalltalkMentorClassReview methodsFor: 'tree' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
+!SmalltalkMentorClassReview methodsFor: 'tree' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 rootNodes
 
-	"Tree roots (cached): one per static rule (children = its failing elements), then
+	"Tree roots (cached): one per static heuristic (children = its failing elements), then
 	'Instance methods' and 'Class methods' grouped by category."
 
 	^treeRoots ifNil: [ treeRoots := self buildRootNodes ]! !
@@ -1694,11 +1694,11 @@ classesInCategory
 		collect: [ :nameSym | Smalltalk at: nameSym ifAbsent: [ nil ] ])
 		select: [ :each | each isBehavior ]! !
 
-!SmalltalkMentorClassCategoryReview methodsFor: 'tree' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
+!SmalltalkMentorClassCategoryReview methodsFor: 'tree' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 buildRootNodes
 
 	"One top node per class of the system category, sorted alphabetically. Each class expands
-	lazily into the very same subtree a class review shows for it (static rule roots + method
+	lazily into the very same subtree a class review shows for it (static heuristic roots + method
 	categories), so opening a class here behaves like reviewing that class."
 
 	| sortedClasses |

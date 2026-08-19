@@ -1,32 +1,32 @@
-'From Cuis7.9 [latest update: #8113] on 18 August 2026 at 3:56:40 pm'!
+'From Cuis7.9 [latest update: #8113] on 18 August 2026 at 9:39:03 pm'!
 'Description '!
-!provides: 'SmalltalkMentorTests' 1 5!
+!provides: 'SmalltalkMentorTests' 1 6!
 !requires: 'SmalltalkMentor' nil nil nil!
 SystemOrganization addCategory: #SmalltalkMentorTests!
 
 
-!classDefinition: #SmalltalkMentorFixedRuleTest category: #SmalltalkMentorTests!
-TestCase subclass: #SmalltalkMentorFixedRuleTest
+!classDefinition: #SmalltalkMentorFixedHeuristicTest category: #SmalltalkMentorTests!
+TestCase subclass: #SmalltalkMentorFixedHeuristicTest
 	instanceVariableNames: 'review fixtures'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'SmalltalkMentorTests'!
-!classDefinition: 'SmalltalkMentorFixedRuleTest class' category: #SmalltalkMentorTests!
-SmalltalkMentorFixedRuleTest class
+!classDefinition: 'SmalltalkMentorFixedHeuristicTest class' category: #SmalltalkMentorTests!
+SmalltalkMentorFixedHeuristicTest class
 	instanceVariableNames: ''!
 
-!classDefinition: #SmalltalkMentorRuleTest category: #SmalltalkMentorTests!
-TestCase subclass: #SmalltalkMentorRuleTest
+!classDefinition: #SmalltalkMentorHeuristicTest category: #SmalltalkMentorTests!
+TestCase subclass: #SmalltalkMentorHeuristicTest
 	instanceVariableNames: 'mentor'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'SmalltalkMentorTests'!
-!classDefinition: 'SmalltalkMentorRuleTest class' category: #SmalltalkMentorTests!
-SmalltalkMentorRuleTest class
+!classDefinition: 'SmalltalkMentorHeuristicTest class' category: #SmalltalkMentorTests!
+SmalltalkMentorHeuristicTest class
 	instanceVariableNames: ''!
 
 
-!SmalltalkMentorFixedRuleTest methodsFor: 'running' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
+!SmalltalkMentorFixedHeuristicTest methodsFor: 'running' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 setUp
 
 	"The static verifications are pure (they take the class to check as an argument), so a bare
@@ -35,18 +35,18 @@ setUp
 	review := SmalltalkMentorClassReview new.
 	fixtures := OrderedCollection new! !
 
-!SmalltalkMentorFixedRuleTest methodsFor: 'running' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
+!SmalltalkMentorFixedHeuristicTest methodsFor: 'running' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 tearDown
 
 	fixtures reverse do: [ :eachFixtureClass | eachFixtureClass removeFromSystem ].
 	fixtures := OrderedCollection new! !
 
-!SmalltalkMentorFixedRuleTest methodsFor: 'support' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
+!SmalltalkMentorFixedHeuristicTest methodsFor: 'support' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 includesSubstring: aSubstring in: aString
 
 	^(review firstIndexOf: aSubstring in: aString) > 0! !
 
-!SmalltalkMentorFixedRuleTest methodsFor: 'support' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
+!SmalltalkMentorFixedHeuristicTest methodsFor: 'support' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 newFixtureClassNamed: aClassNameSymbol superclass: aSuperclass
 
 	"A throwaway class (removed in tearDown) used to build small hierarchies. Its category is
@@ -62,10 +62,10 @@ newFixtureClassNamed: aClassNameSymbol superclass: aSuperclass
 	fixtures add: createdClass.
 	^createdClass! !
 
-!SmalltalkMentorFixedRuleTest methodsFor: 'support' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
+!SmalltalkMentorFixedHeuristicTest methodsFor: 'support' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 newFixtureInstanceVariableNames: instanceNames classVariableNames: classNames
 
-	"A throwaway class (removed in tearDown) used to exercise one static rule. Its category is
+	"A throwaway class (removed in tearDown) used to exercise one static heuristic. Its category is
 	outside every SmalltalkMentor package so no package ever claims it."
 
 	| createdClass |
@@ -78,7 +78,7 @@ newFixtureInstanceVariableNames: instanceNames classVariableNames: classNames
 	fixtures add: createdClass.
 	^createdClass! !
 
-!SmalltalkMentorFixedRuleTest methodsFor: 'tests' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
+!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 testClassMustBeReferenced
 
 	| classToVerify findings |
@@ -89,7 +89,7 @@ testClassMustBeReferenced
 	"a class that other classes reference is not flagged"
 	self assert: (review classReferencedFindingsFor: SmalltalkMentorFinding) isEmpty! !
 
-!SmalltalkMentorFixedRuleTest methodsFor: 'tests' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
+!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 testClassVariableMustBeReadAndWritten
 
 	| classToVerify findings |
@@ -98,7 +98,7 @@ testClassVariableMustBeReadAndWritten
 	findings := review classVariableFindingsFor: classToVerify.
 	self assert: (findings anySatisfy: [ :finding | finding editKind = #variable and: [ finding editTarget value = 'UnusedClassVariable' ] ])! !
 
-!SmalltalkMentorFixedRuleTest methodsFor: 'tests' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
+!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 testInstanceVariableMustBeReadAndWritten
 
 	| classToVerify findings |
@@ -107,7 +107,7 @@ testInstanceVariableMustBeReadAndWritten
 	findings := review instanceVariableFindingsFor: classToVerify.
 	self assert: (findings anySatisfy: [ :finding | finding editKind = #variable and: [ finding editTarget value = 'unusedInstanceVariable' ] ])! !
 
-!SmalltalkMentorFixedRuleTest methodsFor: 'tests' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
+!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 testMethodMustBeCategorized
 
 	| classToVerify findings |
@@ -117,7 +117,7 @@ testMethodMustBeCategorized
 	findings := review uncategorizedMethodsFindingsFor: classToVerify.
 	self assert: (findings anySatisfy: [ :finding | finding editTarget value asString = 'looseMethod' ])! !
 
-!SmalltalkMentorFixedRuleTest methodsFor: 'tests' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
+!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 testMethodMustHaveSenders
 
 	| classToVerify findings |
@@ -126,10 +126,10 @@ testMethodMustHaveSenders
 	classToVerify compile: 'orphanMethodXyz ^42' classified: 'accessing'.
 	findings := review methodsWithoutSendersFindingsFor: classToVerify.
 	"Compare by asString, not the #orphanMethodXyz literal: a Symbol literal here would itself
-	count as a sender and defeat the rule."
+	count as a sender and defeat the heuristic."
 	self assert: (findings anySatisfy: [ :finding | finding editTarget value asString = 'orphanMethodXyz' ])! !
 
-!SmalltalkMentorFixedRuleTest methodsFor: 'tests' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
+!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 testSentMessageMustHaveImplementer
 
 	| classToVerify findings |
@@ -139,7 +139,7 @@ testSentMessageMustHaveImplementer
 	findings := review messagesWithoutImplementersFindingsFor: classToVerify.
 	self assert: (findings anySatisfy: [ :finding | self includesSubstring: 'zzzNoSuchSelectorXyz' in: finding title ])! !
 
-!SmalltalkMentorFixedRuleTest methodsFor: 'tests' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
+!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 testSharedLeafSubclassProtocolMustBeInRoot
 
 	| rootClass firstLeaf secondLeaf findings |
@@ -160,7 +160,7 @@ testSharedLeafSubclassProtocolMustBeInRoot
 	findings := review commonLeafSubclassProtocolFindingsFor: rootClass.
 	self deny: (findings anySatisfy: [ :finding | self includesSubstring: 'sharedOperation' in: finding title ])! !
 
-!SmalltalkMentorFixedRuleTest methodsFor: 'tests' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
+!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 testUnusedAndWriteOnlyTemporariesAreFlaggedButUsedAndCapturedAreNot
 
 	| classToVerify findings |
@@ -182,12 +182,12 @@ testUnusedAndWriteOnlyTemporariesAreFlaggedButUsedAndCapturedAreNot
 	self deny: (findings anySatisfy: [ :finding | self includesSubstring: 'usedTemporary' in: finding title ]).
 	self deny: (findings anySatisfy: [ :finding | self includesSubstring: 'shared' in: finding title ])! !
 
-!SmalltalkMentorRuleTest methodsFor: 'support' stamp: 'HAW 18/Aug/2026, 6:56:15 pm (UTC)'!
-assertRule: ruleId caughtIn: methodSource fix: aFixBlock
+!SmalltalkMentorHeuristicTest methodsFor: 'support' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+assertHeuristic: heuristicId caughtIn: methodSource fix: aFixBlock
 
 	"Best-of-3 (lenient): up to 3 Opus reviews of methodSource. A run counts if the suggested
-	code applies the rule (aFixBlock answers true for the suggestedSource) OR the rationale
-	cites the rule id. Passes if ANY of the 3 runs counts - robust to LLM non-determinism.
+	code applies the heuristic (aFixBlock answers true for the suggestedSource) OR the rationale
+	cites the heuristic id. Passes if ANY of the 3 runs counts - robust to LLM non-determinism.
 	Stops early on the first success."
 
 	| last caught |
@@ -199,13 +199,13 @@ assertRule: ruleId caughtIn: methodSource fix: aFixBlock
 			last := proposal.
 			suggested := proposal at: 'suggestedSource' ifAbsent: [ '' ].
 			rationale := proposal at: 'rationale' ifAbsent: [ '' ].
-			caught := (aFixBlock value: suggested) or: [ self does: rationale include: ruleId ] ] ].
+			caught := (aFixBlock value: suggested) or: [ self does: rationale include: heuristicId ] ] ].
 	self assert: caught description:
-		'Rule [', ruleId, '] not caught in 3 Opus runs.', String newLineString,
+		'Heuristic [', heuristicId, '] not caught in 3 Opus runs.', String newLineString,
 		'Last suggestion: ', (last ifNil: [ '' ] ifNotNil: [ :p | p at: 'suggestedSource' ifAbsent: [ '' ] ]), String newLineString,
 		'Last rationale: ', (last ifNil: [ '' ] ifNotNil: [ :p | p at: 'rationale' ifAbsent: [ '' ] ])! !
 
-!SmalltalkMentorRuleTest methodsFor: 'support' stamp: 'HAW 18/Aug/2026, 6:56:15 pm (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'support' stamp: 'HAW 18/Aug/2026, 6:56:15 pm (UTC)'!
 does: aString include: aSubstring
 
 	"Case-insensitive substring test."
@@ -220,7 +220,7 @@ does: aString include: aSubstring
 		(lowercaseString copyFrom: scanIndex to: scanIndex + lowercaseSubstring size - 1) = lowercaseSubstring ifTrue: [ ^true ] ].
 	^false! !
 
-!SmalltalkMentorRuleTest methodsFor: 'support' stamp: 'HAW 18/Aug/2026, 6:56:15 pm (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'support' stamp: 'HAW 18/Aug/2026, 6:56:15 pm (UTC)'!
 firstIndexOf: aSubstring in: aString
 
 	"First 1-based index of aSubstring in aString (case-insensitive), or 0 if absent."
@@ -234,7 +234,7 @@ firstIndexOf: aSubstring in: aString
 		(lowercaseString copyFrom: scanIndex to: scanIndex + lowercaseSubstring size - 1) = lowercaseSubstring ifTrue: [ ^scanIndex ] ].
 	^0! !
 
-!SmalltalkMentorRuleTest methodsFor: 'support' stamp: 'HAW 18/Aug/2026, 6:56:15 pm (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'support' stamp: 'HAW 18/Aug/2026, 6:56:15 pm (UTC)'!
 firstLineOf: aString
 
 	"The first non-blank line of aString, trimmed - useful for reading a suggested method's
@@ -245,17 +245,17 @@ firstLineOf: aString
 	lines := aString lines select: [ :l | l withBlanksTrimmed notEmpty ].
 	^lines isEmpty ifTrue: [ '' ] ifFalse: [ lines first withBlanksTrimmed ]! !
 
-!SmalltalkMentorRuleTest methodsFor: 'support' stamp: 'HAW 18/Aug/2026, 6:56:15 pm (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'support' stamp: 'HAW 18/Aug/2026, 6:56:15 pm (UTC)'!
 provider
 
 	"These tests pin Claude Opus, independent of the globally selected provider."
 
 	^AnthropicProvider new model: 'claude-opus-4-8'; yourself! !
 
-!SmalltalkMentorRuleTest methodsFor: 'support' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'support' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 reviewOf: methodSource
 
-	"Ask Claude Opus to review methodSource against the current rules; answer the parsed
+	"Ask Claude Opus to review methodSource against the current heuristics; answer the parsed
 	{canImprove, suggestedSource, rationale} proposal. Blocks on the network call."
 
 	| answer |
@@ -264,39 +264,39 @@ reviewOf: methodSource
 		mentor userMessage: (mentor promptFor: methodSource) }.
 	^mentor parseProposalFrom: answer! !
 
-!SmalltalkMentorRuleTest methodsFor: 'object design rules tests' stamp: 'HAW 18/Aug/2026, 6:56:15 pm (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'object design rules tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 testAvoidBreakingEncapsulation
 
 	self
-		assertRule: 'avoid-breaking-encapsulation'
+		assertHeuristic: 'avoid-breaking-encapsulation'
 		caughtIn: 'canWithdraw: anAmount from: anAccount
 	^anAccount balance >= anAmount'
 		fix: [ :s | false ]! !
 
-!SmalltalkMentorRuleTest methodsFor: 'object design rules tests' stamp: 'HAW 18/Aug/2026, 6:56:15 pm (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'object design rules tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 testAvoidNil
 
 	self
-		assertRule: 'avoid-nil'
+		assertHeuristic: 'avoid-nil'
 		caughtIn: 'ownerName
 	owner isNil ifTrue: [ ^nil ].
 	^owner name'
 		fix: [ :s | false ]! !
 
-!SmalltalkMentorRuleTest methodsFor: 'object design rules tests' stamp: 'HAW 18/Aug/2026, 6:56:15 pm (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'object design rules tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 testAvoidSettersUseSyncWith
 
 	self
-		assertRule: 'avoid-setters-use-syncWith'
+		assertHeuristic: 'avoid-setters-use-syncWith'
 		caughtIn: 'name: aName
 	name := aName'
 		fix: [ :s | self does: s include: 'syncWith:' ]! !
 
-!SmalltalkMentorRuleTest methodsFor: 'object design rules tests' stamp: 'HAW 18/Aug/2026, 6:56:15 pm (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'object design rules tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 testCompleteObjects
 
 	self
-		assertRule: 'complete-objects'
+		assertHeuristic: 'complete-objects'
 		caughtIn: 'createAccount
 	| account |
 	account := Account new.
@@ -304,30 +304,30 @@ testCompleteObjects
 	^account'
 		fix: [ :s | false ]! !
 
-!SmalltalkMentorRuleTest methodsFor: 'object design rules tests' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'object design rules tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 testErrorMessagesAsClassMethods
 
 	self
-		assertRule: 'error-messages-as-class-methods'
+		assertHeuristic: 'error-messages-as-class-methods'
 		caughtIn: 'withdraw: anAmount
 	anAmount > balance ifTrue: [ ^self error: ''Insufficient funds'' ].
 	balance := balance - anAmount'
 		fix: [ :s | false ]! !
 
-!SmalltalkMentorRuleTest methodsFor: 'object design rules tests' stamp: 'HAW 18/Aug/2026, 6:56:15 pm (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'object design rules tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 testGetterReturnsCopy
 
 	self
-		assertRule: 'getter-returns-copy'
+		assertHeuristic: 'getter-returns-copy'
 		caughtIn: 'movements
 	^movements'
 		fix: [ :s | self does: s include: 'copy' ]! !
 
-!SmalltalkMentorRuleTest methodsFor: 'object design rules tests' stamp: 'HAW 18/Aug/2026, 6:56:15 pm (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'object design rules tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 testInstanceCreationFormat
 
 	self
-		assertRule: 'instance-creation-format'
+		assertHeuristic: 'instance-creation-format'
 		caughtIn: 'withOwner: anOwner balance: aBalance
 	| account |
 	account := self new.
@@ -335,67 +335,67 @@ testInstanceCreationFormat
 	^account'
 		fix: [ :s | false ]! !
 
-!SmalltalkMentorRuleTest methodsFor: 'object design rules tests' stamp: 'HAW 18/Aug/2026, 6:56:15 pm (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'object design rules tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 testPreferImmutable
 
 	self
-		assertRule: 'prefer-immutable'
+		assertHeuristic: 'prefer-immutable'
 		caughtIn: 'balance: aBalance
 	balance := aBalance'
 		fix: [ :s | false ]! !
 
-!SmalltalkMentorRuleTest methodsFor: 'object design rules tests' stamp: 'HAW 18/Aug/2026, 6:56:15 pm (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'object design rules tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 testReplaceIfWithPolymorphism
 
 	self
-		assertRule: 'replace-if-with-polymorphism'
+		assertHeuristic: 'replace-if-with-polymorphism'
 		caughtIn: 'describe
 	type = #savings ifTrue: [ ^''Savings account'' ] ifFalse: [ ^''Checking account'' ]'
 		fix: [ :s | false ]! !
 
-!SmalltalkMentorRuleTest methodsFor: 'object design rules tests' stamp: 'HAW 18/Aug/2026, 6:56:15 pm (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'object design rules tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 testValidObjects
 
 	self
-		assertRule: 'valid-objects'
+		assertHeuristic: 'valid-objects'
 		caughtIn: 'withBalance: aBalance
 	^self new initializeWithBalance: aBalance'
 		fix: [ :s | self does: s include: 'assert' ]! !
 
-!SmalltalkMentorRuleTest methodsFor: 'testing rules tests' stamp: 'HAW 18/Aug/2026, 6:56:15 pm (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'testing rules tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 testDenyOverAssertNot
 
 	self
-		assertRule: 'deny-over-assert-not'
+		assertHeuristic: 'deny-over-assert-not'
 		caughtIn: 'testNewAccountHasNoMovements
 	self assert: account hasMovements not'
 		fix: [ :s | self does: s include: 'deny:' ]! !
 
-!SmalltalkMentorRuleTest methodsFor: 'testing rules tests' stamp: 'HAW 18/Aug/2026, 6:56:15 pm (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'testing rules tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 testExceptionBlockShouldNotHaveAssignment
 
 	self
-		assertRule: 'exception-block-should-not-have-assignment'
+		assertHeuristic: 'exception-block-should-not-have-assignment'
 		caughtIn: 'testWithdrawSignalsError
 	| result |
 	result := [ account withdraw: 1000 ] on: Error do: [ :e | e ].
 	self assert: result isNil'
 		fix: [ :s | false ]! !
 
-!SmalltalkMentorRuleTest methodsFor: 'testing rules tests' stamp: 'HAW 18/Aug/2026, 6:56:15 pm (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'testing rules tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 testExceptionBlockSingleSend
 
 	self
-		assertRule: 'exception-block-single-send'
+		assertHeuristic: 'exception-block-single-send'
 		caughtIn: 'testWithdrawMoreThanBalance
 	self should: [ | amount | amount := account balance + 1. account withdraw: amount ] raise: Error withMessageText: ''Insufficient funds'''
 		fix: [ :s | false ]! !
 
-!SmalltalkMentorRuleTest methodsFor: 'testing rules tests' stamp: 'HAW 18/Aug/2026, 6:56:15 pm (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'testing rules tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 testOneThingPerTest
 
 	self
-		assertRule: 'one-thing-per-test'
+		assertHeuristic: 'one-thing-per-test'
 		caughtIn: 'testAccount
 	| account |
 	account := Account withBalance: 100.
@@ -405,64 +405,64 @@ testOneThingPerTest
 	self deny: account isBlocked'
 		fix: [ :s | false ]! !
 
-!SmalltalkMentorRuleTest methodsFor: 'testing rules tests' stamp: 'HAW 18/Aug/2026, 6:56:15 pm (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'testing rules tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 testTestNPrefixPreserved
 
 	self
-		assertRule: 'testN-prefix-preserved'
+		assertHeuristic: 'testN-prefix-preserved'
 		caughtIn: 'test1
 	| account |
 	account := Account withBalance: 100.
 	self assert: account balance equals: 100'
 		fix: [ :s | ((self firstLineOf: s) beginsWith: 'test1') and: [ (self firstLineOf: s) size > 5 ] ]! !
 
-!SmalltalkMentorRuleTest methodsFor: 'testing rules tests' stamp: 'HAW 18/Aug/2026, 6:56:15 pm (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'testing rules tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 testTestNameConvention
 
 	self
-		assertRule: 'test-name-convention'
+		assertHeuristic: 'test-name-convention'
 		caughtIn: 'testBalance
 	| account |
 	account := Account withBalance: 100.
 	self assert: account balance equals: 100'
 		fix: [ :s | false ]! !
 
-!SmalltalkMentorRuleTest methodsFor: 'testing rules tests' stamp: 'HAW 18/Aug/2026, 6:56:15 pm (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'testing rules tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 testTestingForEquality
 
 	self
-		assertRule: 'testing-for-equality'
+		assertHeuristic: 'testing-for-equality'
 		caughtIn: 'testAddition
 	self assert: 3 = (1 + 2)'
 		fix: [ :s | self does: s include: 'equals:' ]! !
 
-!SmalltalkMentorRuleTest methodsFor: 'testing rules tests' stamp: 'HAW 18/Aug/2026, 6:56:15 pm (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'testing rules tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 testTestingForExceptionWithSideEffect
 
 	self
-		assertRule: 'testing-for-exception-with-side-effect'
+		assertHeuristic: 'testing-for-exception-with-side-effect'
 		caughtIn: 'testWithdrawMoreThanBalance
 	self should: [ account withdraw: 1000 ] raise: Error'
 		fix: [ :s | self does: s include: 'withExceptionDo:' ]! !
 
-!SmalltalkMentorRuleTest methodsFor: 'testing rules tests' stamp: 'HAW 18/Aug/2026, 6:56:15 pm (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'testing rules tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 testTestingForExceptionWithoutSideEffect
 
 	self
-		assertRule: 'testing-for-exception-without-side-effect'
+		assertHeuristic: 'testing-for-exception-without-side-effect'
 		caughtIn: 'testCannotCreateWithNegativeBalance
 	[ Account withBalance: -100 ] on: Error do: [ :e | self assert: e messageText = ''Balance must be positive'' ]'
 		fix: [ :s | self does: s include: 'withMessageText:' ]! !
 
-!SmalltalkMentorRuleTest methodsFor: 'naming rules tests' stamp: 'HAW 18/Aug/2026, 6:56:15 pm (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'naming rules tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 testDoNotUseAbbreviatedName
 
-	"The names reveal their roles, so this targets the abbreviation rule specifically rather
+	"The names reveal their roles, so this targets the abbreviation heuristic specifically rather
 	than [variable-name-reveals-role]: calc (calculate), aColl (a collection), tot (total),
 	elem (element)."
 
 	self
-		assertRule: 'do-not-use-abbreviated-name'
+		assertHeuristic: 'do-not-use-abbreviated-name'
 		caughtIn: 'calcTotalFor: aColl
 	| tot |
 	tot := 0.
@@ -470,96 +470,96 @@ testDoNotUseAbbreviatedName
 	^tot'
 		fix: [ :suggestedSource | false ]! !
 
-!SmalltalkMentorRuleTest methodsFor: 'naming rules tests' stamp: 'HAW 18/Aug/2026, 6:56:15 pm (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'naming rules tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 testMessageKeywordsNames
 
 	self
-		assertRule: 'message-keywords-names'
+		assertHeuristic: 'message-keywords-names'
 		caughtIn: 'DepositAmount: anAmount
 	balance := balance + anAmount'
 		fix: [ :s | false ]! !
 
-!SmalltalkMentorRuleTest methodsFor: 'naming rules tests' stamp: 'HAW 18/Aug/2026, 6:56:15 pm (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'naming rules tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 testMessageNames
 
 	self
-		assertRule: 'message-names'
+		assertHeuristic: 'message-names'
 		caughtIn: 'calc: anAmount
 	^balance + anAmount'
 		fix: [ :s | false ]! !
 
-!SmalltalkMentorRuleTest methodsFor: 'naming rules tests' stamp: 'HAW 18/Aug/2026, 6:56:15 pm (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'naming rules tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 testNoSetGet
 
 	self
-		assertRule: 'no-set-get'
+		assertHeuristic: 'no-set-get'
 		caughtIn: 'getBalance
 	^balance'
 		fix: [ :s | (self firstLineOf: s) notEmpty and: [ ((self firstLineOf: s) asLowercase beginsWith: 'get') not ] ]! !
 
-!SmalltalkMentorRuleTest methodsFor: 'naming rules tests' stamp: 'HAW 18/Aug/2026, 6:56:15 pm (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'naming rules tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 testParameterPrefix
 
 	self
-		assertRule: 'parameter-prefix'
+		assertHeuristic: 'parameter-prefix'
 		caughtIn: 'withBalance: balance
 	^self new initializeWithBalance: balance'
 		fix: [ :s | self does: s include: 'aBalance' ]! !
 
-!SmalltalkMentorRuleTest methodsFor: 'naming rules tests' stamp: 'HAW 18/Aug/2026, 6:56:15 pm (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'naming rules tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 testVariableNameRevealsRole
 
 	self
-		assertRule: 'variable-name-reveals-role'
+		assertHeuristic: 'variable-name-reveals-role'
 		caughtIn: 'total
 	| aCollection |
 	aCollection := self movements.
 	^aCollection inject: 0 into: [ :acc :each | acc + each amount ]'
 		fix: [ :s | false ]! !
 
-!SmalltalkMentorRuleTest methodsFor: 'boolean rules tests' stamp: 'HAW 18/Aug/2026, 6:56:15 pm (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'boolean rules tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 testAndOrOverBooleanOperators
 
 	self
-		assertRule: 'and-or-over-&&-||'
+		assertHeuristic: 'and-or-over-&&-||'
 		caughtIn: 'isValid
 	^(balance > 0) && (owner notNil)'
 		fix: [ :s | self does: s include: 'and:' ]! !
 
-!SmalltalkMentorRuleTest methodsFor: 'boolean rules tests' stamp: 'HAW 18/Aug/2026, 6:56:15 pm (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'boolean rules tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 testAndOrTakeBlocks
 
 	self
-		assertRule: 'and-or-take-blocks'
+		assertHeuristic: 'and-or-take-blocks'
 		caughtIn: 'isValid
 	^balance > 0 and: owner notNil'
 		fix: [ :s | self does: s include: 'and: [' ]! !
 
-!SmalltalkMentorRuleTest methodsFor: 'boolean rules tests' stamp: 'HAW 18/Aug/2026, 6:56:15 pm (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'boolean rules tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 testIfEmptyOverIsEmptyIfTrue
 
 	self
-		assertRule: 'ifEmpty-over-isEmpty-ifTrue'
+		assertHeuristic: 'ifEmpty-over-isEmpty-ifTrue'
 		caughtIn: 'firstMovementOrDefault
 	movements isEmpty ifTrue: [ ^self defaultMovement ].
 	^movements first'
 		fix: [ :s | self does: s include: 'ifEmpty:' ]! !
 
-!SmalltalkMentorRuleTest methodsFor: 'boolean rules tests' stamp: 'HAW 18/Aug/2026, 6:56:15 pm (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'boolean rules tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 testIfNilOverIsNilIfTrue
 
 	self
-		assertRule: 'ifNil-over-isNil-ifTrue'
+		assertHeuristic: 'ifNil-over-isNil-ifTrue'
 		caughtIn: 'ownerName
 	owner isNil ifTrue: [ ^self defaultName ].
 	^owner name'
 		fix: [ :s | self does: s include: 'ifNil:' ]! !
 
-!SmalltalkMentorRuleTest methodsFor: 'boolean rules tests' stamp: 'HAW 18/Aug/2026, 6:56:15 pm (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'boolean rules tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 testIfTrueIfFalse
 
 	self
-		assertRule: 'ifTrue-ifFalse'
+		assertHeuristic: 'ifTrue-ifFalse'
 		caughtIn: 'label
 	^self isBlocked ifFalse: [ ''Active'' ] ifTrue: [ ''Blocked'' ]'
 		fix: [ :s | | t f |
@@ -567,64 +567,64 @@ testIfTrueIfFalse
 			f := self firstIndexOf: 'ifFalse:' in: s.
 			t > 0 and: [ f = 0 or: [ t < f ] ] ]! !
 
-!SmalltalkMentorRuleTest methodsFor: 'boolean rules tests' stamp: 'HAW 18/Aug/2026, 6:56:15 pm (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'boolean rules tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 testIsNilOverEqualNil
 
 	self
-		assertRule: 'isNil-over-equal-nil'
+		assertHeuristic: 'isNil-over-equal-nil'
 		caughtIn: 'hasNoOwner
 	^owner = nil'
 		fix: [ :s | self does: s include: 'isNil' ]! !
 
-!SmalltalkMentorRuleTest methodsFor: 'boolean rules tests' stamp: 'HAW 18/Aug/2026, 6:56:15 pm (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'boolean rules tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 testPreferEqualOverIdentity
 
 	self
-		assertRule: 'prefer-equal-over-identity'
+		assertHeuristic: 'prefer-equal-over-identity'
 		caughtIn: 'hasSameNameAs: anAccount
 	^name == anAccount name'
 		fix: [ :s | false ]! !
 
-!SmalltalkMentorRuleTest methodsFor: 'boolean rules tests' stamp: 'HAW 18/Aug/2026, 6:56:15 pm (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'boolean rules tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 testRedundantIfTrueCondition
 
 	self
-		assertRule: 'redundant-ifTrue-condition'
+		assertHeuristic: 'redundant-ifTrue-condition'
 		caughtIn: 'currentBalance
 	self isActive = true ifTrue: [ ^self balance ].
 	^0'
 		fix: [ :s | false ]! !
 
-!SmalltalkMentorRuleTest methodsFor: 'syntax rules tests' stamp: 'HAW 18/Aug/2026, 6:56:15 pm (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'syntax rules tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 testNoExtraParenthesis
 
 	self
-		assertRule: 'no-extra-parenthesis'
+		assertHeuristic: 'no-extra-parenthesis'
 		caughtIn: 'negatedBalance
 	^(self balance) negated'
 		fix: [ :s | false ]! !
 
-!SmalltalkMentorRuleTest methodsFor: 'running' stamp: 'HAW 18/Aug/2026, 6:56:15 pm (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'running' stamp: 'HAW 18/Aug/2026, 6:56:15 pm (UTC)'!
 setUp
 
 	"A fresh mentor per test, used to build the prompt and parse replies."
 
 	mentor := SmalltalkMentor new! !
 
-!SmalltalkMentorRuleTest methodsFor: 'collection rules tests' stamp: 'HAW 18/Aug/2026, 6:56:15 pm (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'collection rules tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 testIsEmptyOverSizeEqualZero
 
 	self
-		assertRule: 'isEmpty-over-size-equal-zero'
+		assertHeuristic: 'isEmpty-over-size-equal-zero'
 		caughtIn: 'hasNoMovements
 	^movements size = 0'
 		fix: [ :s | self does: s include: 'isEmpty' ]! !
 
-!SmalltalkMentorRuleTest methodsFor: 'aconcagua rules tests' stamp: 'HAW 18/Aug/2026, 6:56:15 pm (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'aconcagua rules tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 testDoNotUseAmount
 
 	self
-		assertRule: 'do-not-use-amount'
+		assertHeuristic: 'do-not-use-amount'
 		caughtIn: 'isPositiveBalance
 	^balance amount strictlyPositive'
 		fix: [ :s | false ]! !
