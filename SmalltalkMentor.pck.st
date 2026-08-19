@@ -1,6 +1,6 @@
-'From Cuis7.9 [latest update: #8113] on 19 August 2026 at 10:18:06 am'!
+'From Cuis7.9 [latest update: #8113] on 19 August 2026 at 10:30:25 am'!
 'Description Better menu definition'!
-!provides: 'SmalltalkMentor' 1 36!
+!provides: 'SmalltalkMentor' 1 37!
 !requires: 'JSON' 1 29 nil!
 !requires: 'OSProcess' 1 36 nil!
 SystemOrganization addCategory: #SmalltalkMentor!
@@ -34,6 +34,16 @@ HierarchicalListMorph subclass: #SmalltalkMentorTreeMorph
 	category: 'SmalltalkMentor'!
 !classDefinition: 'SmalltalkMentorTreeMorph class' category: #SmalltalkMentor!
 SmalltalkMentorTreeMorph class
+	instanceVariableNames: ''!
+
+!classDefinition: #SmalltalkMentorConversationTextMorph category: #SmalltalkMentor!
+TextModelMorph subclass: #SmalltalkMentorConversationTextMorph
+	instanceVariableNames: ''
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'SmalltalkMentor'!
+!classDefinition: 'SmalltalkMentorConversationTextMorph class' category: #SmalltalkMentor!
+SmalltalkMentorConversationTextMorph class
 	instanceVariableNames: ''!
 
 !classDefinition: #SmalltalkMentorReviewWindow category: #SmalltalkMentor!
@@ -240,6 +250,16 @@ mouseButton2Down: aMouseButtonEvent localPosition: localEventPosition
 	menu add: 'Run again' target: model action: #runAgainNode: argumentList: { node }.
 	menu add: 'Browse' target: model action: #browseNode: argumentList: { node }.
 	menu popUpInWorld! !
+
+!SmalltalkMentorConversationTextMorph methodsFor: 'model access' stamp: 'HAW 19/Aug/2026, 1:29:20 pm (UTC)'!
+canDiscardEdits
+
+	"Only unsent, non-blank text in the follow-up input should block closing the window. An
+	empty or whitespace-only field has nothing to lose, so the window can close without the
+	'changes have not been saved' question; any other content (typed but not yet sent) keeps
+	the question."
+
+	^self text asString withBlanksTrimmed isEmpty! !
 
 !SmalltalkMentorReviewWindow methodsFor: 'as yet unclassified' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 windowColor
@@ -1854,7 +1874,7 @@ initializeClass: aClass selector: aSelector category: aCategory current: current
 	mentor := aMentor.
 	busy := false! !
 
-!SmalltalkMentorReview methodsFor: 'ui' stamp: 'HAW 19/Aug/2026, 1:15:34 pm (UTC)'!
+!SmalltalkMentorReview methodsFor: 'ui' stamp: 'HAW 19/Aug/2026, 1:29:42 pm (UTC)'!
 buildContent
 
 	"Build (once) and answer the review's content morph: a provider/model label, transcript,
@@ -1887,7 +1907,7 @@ buildContent
 	conversationLabel := LabelMorph contents: 'Tell the mentor (ask a follow-up or push back, then press cmd+Enter):'.
 	inputModel := SmalltalkMentorConversationTextModel withText: '' asText.
 	inputModel review: self.
-	inputMorph := TextModelMorph withModel: inputModel.
+	inputMorph := SmalltalkMentorConversationTextMorph withModel: inputModel.
 	inputGroup := LayoutMorph newColumn.
 	inputGroup addMorph: conversationLabel layoutSpec: (LayoutSpec proportionalWidth: 1.0 fixedHeight: 18).
 	inputGroup addMorph: inputMorph layoutSpec: (LayoutSpec proportionalWidth: 1.0 proportionalHeight: 1.0).
