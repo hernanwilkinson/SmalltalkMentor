@@ -1,6 +1,6 @@
-'From Cuis7.9 [latest update: #8113] on 19 August 2026 at 10:30:25 am'!
+'From Cuis7.9 [latest update: #8113] on 19 August 2026 at 10:53:55 am'!
 'Description Better menu definition'!
-!provides: 'SmalltalkMentor' 1 37!
+!provides: 'SmalltalkMentor' 1 38!
 !requires: 'JSON' 1 29 nil!
 !requires: 'OSProcess' 1 36 nil!
 SystemOrganization addCategory: #SmalltalkMentor!
@@ -58,7 +58,7 @@ SmalltalkMentorReviewWindow class
 
 !classDefinition: #LLMProvider category: #SmalltalkMentor!
 Object subclass: #LLMProvider
-	instanceVariableNames: 'name model'
+	instanceVariableNames: 'name model effort'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'SmalltalkMentor'!
@@ -269,6 +269,19 @@ windowColor
 
 	^Theme current browser! !
 
+!LLMProvider methodsFor: 'accessing' stamp: 'HAW 19/Aug/2026, 1:49:58 pm (UTC)'!
+effort
+
+	"The reasoning-effort level for this provider's model, e.g. 'low', 'medium', 'high'.
+	Defaults to 'medium' when never set."
+
+	^effort ifNil: [ 'medium' ]! !
+
+!LLMProvider methodsFor: 'accessing' stamp: 'HAW 19/Aug/2026, 1:50:00 pm (UTC)'!
+effort: aString
+
+	effort := aString! !
+
 !LLMProvider methodsFor: 'accessing' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 model
 
@@ -283,6 +296,16 @@ model: aString
 name
 
 	^name! !
+
+!LLMProvider methodsFor: 'printing' stamp: 'HAW 19/Aug/2026, 1:50:08 pm (UTC)'!
+labelDescription
+
+	"A short label for the UI: provider name, model and, only when this provider actually
+	supports it, the configured effort level - e.g. 'Claude (claude-opus-4-8 - effort: medium)'
+	or, when unsupported, just 'Gemini (gemini-2.0-flash)'."
+
+	^(name ifNil: [ self class name ]), ' (', (model ifNil: [ '?' ]),
+		(self supportsEffort ifTrue: [ ' - effort: ', self effort ] ifFalse: [ '' ]), ')'! !
 
 !LLMProvider methodsFor: 'printing' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 printOn: aStream
@@ -307,6 +330,15 @@ completionForMessages: neutralMessages
 		' -o ', respPath.
 	OSProcess waitForCommand: curl.
 	^self extractTextFrom: respPath asFileEntry fileContents! !
+
+!LLMProvider methodsFor: 'private' stamp: 'HAW 19/Aug/2026, 1:50:04 pm (UTC)'!
+addEffortTo: aJsonObject
+
+	"Add this provider's effort-level parameter (if any) to the request body JSON object, in
+	whatever shape this provider's API expects. Subclasses answer this; providers without an
+	effort/thinking-level concept should just answer self (a no-op)."
+
+	^self subclassResponsibility! !
 
 !LLMProvider methodsFor: 'private' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 authCurlArgs
@@ -369,11 +401,28 @@ keyLookupShellCommand
 
 	^'cat "', self imageKeyPath, '" 2>/dev/null || cat "', self homeKeyPath, '" 2>/dev/null'! !
 
+!LLMProvider methodsFor: 'private' stamp: 'HAW 19/Aug/2026, 1:50:06 pm (UTC)'!
+supportsEffort
+
+	"Whether #addEffortTo: actually uses the effort level (vs. being a no-op because this
+	provider's API has no such concept). Subclasses without one (e.g. Gemini) override to
+	false. Used by the UI to decide whether to display the configured effort."
+
+	^true! !
+
 !AnthropicProvider methodsFor: 'initialization' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 initialize
 
 	name := 'Claude'.
 	model := 'claude-opus-4-8'! !
+
+!AnthropicProvider methodsFor: 'private' stamp: 'HAW 19/Aug/2026, 1:50:21 pm (UTC)'!
+addEffortTo: aJsonObject
+
+	"Anthropic Messages API: output_config.effort, one of low/medium/high/xhigh/max (GA, no
+	beta header needed)."
+
+	aJsonObject at: 'output_config' put: (JsonObject new at: 'effort' put: self effort; yourself)! !
 
 !AnthropicProvider methodsFor: 'private' stamp: 'HAW 18/Aug/2026, 6:55:35 pm (UTC)'!
 authCurlArgs
@@ -383,17 +432,21 @@ authCurlArgs
 
 	^'-H "anthropic-version: 2023-06-01" -H "x-api-key: $(', self keyLookupShellCommand, ' || printf %s "$ANTHROPIC_API_KEY")"'! !
 
-!AnthropicProvider methodsFor: 'private' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
+!AnthropicProvider methodsFor: 'private' stamp: 'HAW 19/Aug/2026, 1:50:23 pm (UTC)'!
 bodyForMessages: neutralMessages
 
 	"Anthropic Messages API: {model, max_tokens, messages:[{role, content}]} - the neutral
-	messages are already in this shape."
+	messages are already in this shape. #addEffortTo: adds output_config.effort."
 
-	^Json render: (JsonObject new
+	| body |
+
+	body := JsonObject new
 		at: 'model' put: model;
 		at: 'max_tokens' put: 2000;
 		at: 'messages' put: neutralMessages asArray;
-		yourself)! !
+		yourself.
+	self addEffortTo: body.
+	^Json render: body! !
 
 !AnthropicProvider methodsFor: 'private' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 endpoint
@@ -428,6 +481,15 @@ initialize
 	name := 'Gemini'.
 	model := 'gemini-2.0-flash'! !
 
+!GeminiProvider methodsFor: 'private' stamp: 'HAW 19/Aug/2026, 1:50:30 pm (UTC)'!
+addEffortTo: aJsonObject
+
+	"Gemini has no low/medium/high effort knob - it uses a token-based 'thinking budget'
+	instead, a different concept. No-op for now; a future version could translate self effort
+	into generationConfig.thinkingConfig.thinkingBudget."
+
+	^self! !
+
 !GeminiProvider methodsFor: 'private' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 authCurlArgs
 
@@ -436,23 +498,25 @@ authCurlArgs
 
 	^'-H "x-goog-api-key: $(', self keyLookupShellCommand, ')"'! !
 
-!GeminiProvider methodsFor: 'private' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
+!GeminiProvider methodsFor: 'private' stamp: 'HAW 19/Aug/2026, 1:50:34 pm (UTC)'!
 bodyForMessages: neutralMessages
 
-	"Gemini generateContent: {contents:[{role, parts:[{text}]}], generationConfig}. Roles
-	are 'user' and 'model' (assistant -> model)."
+	"Gemini generateContent: {contents:[{role, parts:[{text}]}], generationConfig}. Roles are
+	'user' and 'model' (assistant -> model). #addEffortTo: is a no-op for this provider."
 
-	| contents |
+	| contents body |
 
-	contents := neutralMessages collect: [ :m |
+	contents := neutralMessages collect: [ :eachMessage |
 		JsonObject new
-			at: 'role' put: ((m at: 'role') = 'assistant' ifTrue: [ 'model' ] ifFalse: [ 'user' ]);
-			at: 'parts' put: { JsonObject new at: 'text' put: (m at: 'content'); yourself };
+			at: 'role' put: ((eachMessage at: 'role') = 'assistant' ifTrue: [ 'model' ] ifFalse: [ 'user' ]);
+			at: 'parts' put: { JsonObject new at: 'text' put: (eachMessage at: 'content'); yourself };
 			yourself ].
-	^Json render: (JsonObject new
+	body := JsonObject new
 		at: 'contents' put: contents asArray;
 		at: 'generationConfig' put: (JsonObject new at: 'maxOutputTokens' put: 2000; yourself);
-		yourself)! !
+		yourself.
+	self addEffortTo: body.
+	^Json render: body! !
 
 !GeminiProvider methodsFor: 'private' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 endpoint
@@ -482,10 +546,26 @@ keyImageBasename
 
 	^'gemini.key'! !
 
+!GeminiProvider methodsFor: 'private' stamp: 'HAW 19/Aug/2026, 1:50:32 pm (UTC)'!
+supportsEffort
+
+	"Gemini has no low/medium/high effort knob (see #addEffortTo:) - don't show one in the UI."
+
+	^false! !
+
 !OpenAICompatibleProvider methodsFor: 'accessing' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 endpoint
 
 	^endpoint! !
+
+!OpenAICompatibleProvider methodsFor: 'private' stamp: 'HAW 19/Aug/2026, 1:50:25 pm (UTC)'!
+addEffortTo: aJsonObject
+
+	"OpenAI-compatible reasoning models (o-series, gpt-5, etc.) accept a top-level
+	'reasoning_effort' of low/medium/high. Non-reasoning backends are expected to ignore
+	unknown fields; if some endpoint turns out to reject it, override this to a no-op there."
+
+	aJsonObject at: 'reasoning_effort' put: self effort! !
 
 !OpenAICompatibleProvider methodsFor: 'private' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 authCurlArgs
@@ -495,17 +575,21 @@ authCurlArgs
 
 	^'-H "authorization: Bearer $(', self keyLookupShellCommand, ')"'! !
 
-!OpenAICompatibleProvider methodsFor: 'private' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
+!OpenAICompatibleProvider methodsFor: 'private' stamp: 'HAW 19/Aug/2026, 1:50:28 pm (UTC)'!
 bodyForMessages: neutralMessages
 
 	"OpenAI chat/completions: {model, messages:[{role, content}], max_tokens} - the neutral
-	messages are already in this shape."
+	messages are already in this shape. #addEffortTo: adds reasoning_effort."
 
-	^Json render: (JsonObject new
+	| body |
+
+	body := JsonObject new
 		at: 'model' put: model;
 		at: 'messages' put: neutralMessages asArray;
 		at: 'max_tokens' put: 2000;
-		yourself)! !
+		yourself.
+	self addEffortTo: body.
+	^Json render: body! !
 
 !OpenAICompatibleProvider methodsFor: 'private' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 extractTextFrom: jsonString
@@ -782,6 +866,21 @@ userMessage: aString
 		at: 'content' put: aString;
 		yourself! !
 
+!SmalltalkMentor methodsFor: 'ui' stamp: 'HAW 19/Aug/2026, 1:50:50 pm (UTC)'!
+chooseEffort
+
+	"Menu action: pick the reasoning-effort level for the current provider's model from a list.
+	Runs on the UI process. Meaning and support vary by provider (see each provider's
+	#addEffortTo:); 'medium' is the default."
+
+	| effortLevels chosenIndex |
+
+	effortLevels := #('low' 'medium' 'high' 'xhigh' 'max').
+	chosenIndex := PopUpMenu withCaption: 'Choose model effort' chooseFrom: effortLevels.
+	chosenIndex = 0 ifTrue: [ ^self ].
+	self provider effort: (effortLevels at: chosenIndex).
+	self showTransientToast: 'Effort: ', self provider effort! !
+
 !SmalltalkMentor methodsFor: 'ui' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 chooseProvider
 
@@ -989,16 +1088,17 @@ browserWindowMenuSpecs
 		{ #systemCatListMenuSpec. self classCategoryReviewMenuSpecSend }.
 		{ #SmalltalkEditor. self smalltalkEditorMenuSpecSend }}! !
 
-!SmalltalkMentor class methodsFor: 'menues' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
+!SmalltalkMentor class methodsFor: 'menues' stamp: 'HAW 19/Aug/2026, 1:51:34 pm (UTC)'!
 classCategoryReviewMenuSpec
 
 	"A 'Smalltalk Mentor' submenu for the class-category (system category) list pane: review
-	every class of the selected category, toggle the language, or choose the provider/model."
+	every class of the selected category, toggle the language, or choose the provider/model/effort."
 
 	^{
 		{ 12000. 'Smalltalk Mentor'. nil. nil. 12000. #helpIcon }.
 		{ 12010. 'Review this class category (0)'. $0. self current. #reviewClassCategoryFromMorph:. #helpIcon }.
 		{ 12020. 'Toggle response language (Spanish/English)'. nil. self current. #toggleLanguage. #helpIcon }.
+		{ 12025. 'Choose model effort...'. nil. self current. #chooseEffort. #helpIcon }.
 		{ 12030. 'Choose LLM provider and model...'. nil. self current. #chooseProvider. #helpIcon }
 	}! !
 
@@ -1007,16 +1107,17 @@ classCategoryReviewMenuSpecSend
 
 	^MessageSend receiver: self selector: #classCategoryReviewMenuSpec! !
 
-!SmalltalkMentor class methodsFor: 'menues' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
+!SmalltalkMentor class methodsFor: 'menues' stamp: 'HAW 19/Aug/2026, 1:51:26 pm (UTC)'!
 classReviewMenuSpec
 
-	"A 'Smalltalk Mentor' submenu for the class-list pane: review the class, toggle the
-	response language, or choose the provider/model (all act on the current instance)."
+	"A 'Smalltalk Mentor' submenu for the class-list pane: review the class, toggle the response
+	language, or choose the provider/model/effort (all act on the current instance)."
 
 	^{
 		{ 12000. 'Smalltalk Mentor'. nil. nil. 12000. #helpIcon }.
 		{ 12010. 'Review this class (0)'. $0. self current. #reviewClassFromMorph:. #helpIcon }.
 		{ 12020. 'Toggle response language (Spanish/English)'. nil. self current. #toggleLanguage. #helpIcon }.
+		{ 12025. 'Choose model effort...'. nil. self current. #chooseEffort. #helpIcon }.
 		{ 12030. 'Choose LLM provider and model...'. nil. self current. #chooseProvider. #helpIcon }
 	}! !
 
@@ -1047,16 +1148,17 @@ messageListMenuSpecSend
 
 	^ MessageSend receiver: self selector: #messageListMenuSpec! !
 
-!SmalltalkMentor class methodsFor: 'menues' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
+!SmalltalkMentor class methodsFor: 'menues' stamp: 'HAW 19/Aug/2026, 1:51:32 pm (UTC)'!
 methodCategoryReviewMenuSpec
 
 	"A 'Smalltalk Mentor' submenu for the method-category (protocol) list pane: review every
-	method of the selected category, toggle the language, or choose the provider/model."
+	method of the selected category, toggle the language, or choose the provider/model/effort."
 
 	^{
 		{ 12000. 'Smalltalk Mentor'. nil. nil. 12000. #helpIcon }.
 		{ 12010. 'Review this method category (0)'. $0. self current. #reviewMethodCategoryFromMorph:. #helpIcon }.
 		{ 12020. 'Toggle response language (Spanish/English)'. nil. self current. #toggleLanguage. #helpIcon }.
+		{ 12025. 'Choose model effort...'. nil. self current. #chooseEffort. #helpIcon }.
 		{ 12030. 'Choose LLM provider and model...'. nil. self current. #chooseProvider. #helpIcon }
 	}! !
 
@@ -1071,16 +1173,17 @@ methodSetWindowMenuSpecs
 	^ { { #messageListMenuSpec. self messageListMenuSpecSend }.
 		{ #SmalltalkEditor. self smalltalkEditorMenuSpecSend }}! !
 
-!SmalltalkMentor class methodsFor: 'menues' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
+!SmalltalkMentor class methodsFor: 'menues' stamp: 'HAW 19/Aug/2026, 1:51:29 pm (UTC)'!
 smalltalkEditorMenuSpec
 
-	"A 'Smalltalk Mentor' submenu in the code pane. Actions target this instance (self).
+	"A 'Smalltalk Mentor' submenu in the code pane. Actions target the current instance.
 	Fields: id, label, shortcutChar, target, selector, icon."
 
 	^{
 		{ 12000. 'Smalltalk Mentor'. nil. nil. 12000. #helpIcon }.
 		{ 12010. 'Ask for a better version (0)'. $0. self current. #reviewFromMorph:. #helpIcon }.
 		{ 12020. 'Toggle response language (Spanish/English)'. nil. self current. #toggleLanguage. #helpIcon }.
+		{ 12025. 'Choose model effort...'. nil. self current. #chooseEffort. #helpIcon }.
 		{ 12030. 'Choose LLM provider and model...'. nil. self current. #chooseProvider. #helpIcon }
 	}! !
 
@@ -1525,7 +1628,7 @@ browseNode: aNode
 		^BrowserWindow fullOnClass: aNode payload selector: nil ].
 	^BrowserWindow fullOnClass: targetClass selector: nil! !
 
-!SmalltalkMentorClassReview methodsFor: 'menu actions' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
+!SmalltalkMentorClassReview methodsFor: 'menu actions' stamp: 'HAW 19/Aug/2026, 1:52:27 pm (UTC)'!
 changeProvider
 
 	"Button below the tree: pick the LLM provider (and model) for this class review's future
@@ -1540,7 +1643,7 @@ changeProvider
 	modelAnswer := mentor request: 'Model id for ', chosenProvider name initialAnswer: chosenProvider model.
 	(modelAnswer notNil and: [ modelAnswer withBlanksTrimmed notEmpty ]) ifTrue: [ chosenProvider model: modelAnswer withBlanksTrimmed ].
 	mentor provider: chosenProvider.
-	providerButton ifNotNil: [ providerButton label: 'LLM: ', mentor provider printString ]! !
+	providerButton ifNotNil: [ providerButton label: 'LLM: ', mentor provider labelDescription ]! !
 
 !SmalltalkMentorClassReview methodsFor: 'menu actions' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 runAgainNode: aNode
@@ -1554,7 +1657,7 @@ runAgainNode: aNode
 	treeRoots := nil.
 	self changed: #rootNodes! !
 
-!SmalltalkMentorClassReview methodsFor: 'ui' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
+!SmalltalkMentorClassReview methodsFor: 'ui' stamp: 'HAW 19/Aug/2026, 1:52:23 pm (UTC)'!
 openWindow
 
 	"Master-detail window built the same way as the system browser (a LinearLayoutMorph row
@@ -1572,7 +1675,7 @@ openWindow
 		listGetter: #rootNodes
 		indexGetter: #selectedIndex
 		indexSetter: #selectedIndex:.
-	providerButton := PluggableButtonMorph model: self action: #changeProvider label: 'LLM: ', mentor provider printString.
+	providerButton := PluggableButtonMorph model: self action: #changeProvider label: 'LLM: ', mentor provider labelDescription.
 	leftCol := LinearLayoutMorph newColumn.
 	leftCol
 		addMorph: treeMorph proportionalHeight: 1.0;
@@ -1874,7 +1977,7 @@ initializeClass: aClass selector: aSelector category: aCategory current: current
 	mentor := aMentor.
 	busy := false! !
 
-!SmalltalkMentorReview methodsFor: 'ui' stamp: 'HAW 19/Aug/2026, 1:29:42 pm (UTC)'!
+!SmalltalkMentorReview methodsFor: 'ui' stamp: 'HAW 19/Aug/2026, 1:52:18 pm (UTC)'!
 buildContent
 
 	"Build (once) and answer the review's content morph: a provider/model label, transcript,
@@ -1888,7 +1991,7 @@ buildContent
 
 	contentMorph ifNotNil: [ ^contentMorph ].
 	contentColumn := LayoutMorph newColumn.
-	providerLabel := LabelMorph contents: 'LLM: ', mentor provider printString.
+	providerLabel := LabelMorph contents: 'LLM: ', mentor provider labelDescription.
 	transcriptMorph := TextModelMorph withText: ('Smalltalk Mentor: ', rationale, String newLineString) asText.
 	suggestedPaneText := suggestedSource isEmpty ifTrue: [ currentSource ] ifFalse: [ suggestedSource ].
 	originalBrowser := Browser new.
