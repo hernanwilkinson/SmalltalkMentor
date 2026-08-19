@@ -1,6 +1,6 @@
-'From Cuis7.9 [latest update: #8113] on 19 August 2026 at 9:47:48 am'!
+'From Cuis7.9 [latest update: #8113] on 19 August 2026 at 9:58:47 am'!
 'Description Better menu definition'!
-!provides: 'SmalltalkMentor' 1 33!
+!provides: 'SmalltalkMentor' 1 34!
 !requires: 'JSON' 1 29 nil!
 !requires: 'OSProcess' 1 36 nil!
 SystemOrganization addCategory: #SmalltalkMentor!
@@ -907,12 +907,12 @@ gemini
 
 	^ GeminiProvider new! !
 
-!SmalltalkMentor class methodsFor: 'providers' stamp: 'HAW 19/Aug/2026, 12:43:32 pm (UTC)'!
+!SmalltalkMentor class methodsFor: 'providers' stamp: 'HAW 19/Aug/2026, 12:58:38 pm (UTC)'!
 nvidiaNIM
 
 	^ OpenAICompatibleProvider name: 'Nvidia NIM'
 		endpoint: 'https://integrate.api.nvidia.com/v1/chat/completions'
-		model: 'meta/llama-3.1-70b-instruct'
+		model: 'meta/llama-3.1-8b-instruct'
 		imageKeyBasename: 'nvidia.key'! !
 
 !SmalltalkMentor class methodsFor: 'providers' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
