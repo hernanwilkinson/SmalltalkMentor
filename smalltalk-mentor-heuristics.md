@@ -29,6 +29,8 @@
 - [avoid-breaking-encapsulation] Avoid breaking encapsulation, do not ask, tell
 - [avoid-nil] The use of `nil` should be avoided
 - [replace-if-with-polymorphism] When possible, replace if with polymorphism 
+- [method-complexity] Methods should not have more than 10 message sends or so.
+- [method-declarativity] Methods should be declarative and not imperative. Complex expressions should be extracted to methods whose names should represent the meaning of the expression
 - [instance-creation-format] Instance creation messages should have the following format:
 `keyword1: p1 keyword2: p2 ...
 

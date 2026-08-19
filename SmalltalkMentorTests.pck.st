@@ -1,6 +1,6 @@
-'From Cuis7.9 [latest update: #8113] on 18 August 2026 at 9:39:03 pm'!
+'From Cuis7.9 [latest update: #8113] on 19 August 2026 at 8:27:31 am'!
 'Description '!
-!provides: 'SmalltalkMentorTests' 1 6!
+!provides: 'SmalltalkMentorTests' 1 7!
 !requires: 'SmalltalkMentor' nil nil nil!
 SystemOrganization addCategory: #SmalltalkMentorTests!
 
@@ -264,7 +264,14 @@ reviewOf: methodSource
 		mentor userMessage: (mentor promptFor: methodSource) }.
 	^mentor parseProposalFrom: answer! !
 
-!SmalltalkMentorHeuristicTest methodsFor: 'object design rules tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'running' stamp: 'HAW 18/Aug/2026, 6:56:15 pm (UTC)'!
+setUp
+
+	"A fresh mentor per test, used to build the prompt and parse replies."
+
+	mentor := SmalltalkMentor new! !
+
+!SmalltalkMentorHeuristicTest methodsFor: 'object design heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 testAvoidBreakingEncapsulation
 
 	self
@@ -273,7 +280,7 @@ testAvoidBreakingEncapsulation
 	^anAccount balance >= anAmount'
 		fix: [ :s | false ]! !
 
-!SmalltalkMentorHeuristicTest methodsFor: 'object design rules tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'object design heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 testAvoidNil
 
 	self
@@ -283,7 +290,7 @@ testAvoidNil
 	^owner name'
 		fix: [ :s | false ]! !
 
-!SmalltalkMentorHeuristicTest methodsFor: 'object design rules tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'object design heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 testAvoidSettersUseSyncWith
 
 	self
@@ -292,7 +299,7 @@ testAvoidSettersUseSyncWith
 	name := aName'
 		fix: [ :s | self does: s include: 'syncWith:' ]! !
 
-!SmalltalkMentorHeuristicTest methodsFor: 'object design rules tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'object design heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 testCompleteObjects
 
 	self
@@ -304,7 +311,7 @@ testCompleteObjects
 	^account'
 		fix: [ :s | false ]! !
 
-!SmalltalkMentorHeuristicTest methodsFor: 'object design rules tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'object design heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 testErrorMessagesAsClassMethods
 
 	self
@@ -314,7 +321,7 @@ testErrorMessagesAsClassMethods
 	balance := balance - anAmount'
 		fix: [ :s | false ]! !
 
-!SmalltalkMentorHeuristicTest methodsFor: 'object design rules tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'object design heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 testGetterReturnsCopy
 
 	self
@@ -323,7 +330,7 @@ testGetterReturnsCopy
 	^movements'
 		fix: [ :s | self does: s include: 'copy' ]! !
 
-!SmalltalkMentorHeuristicTest methodsFor: 'object design rules tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'object design heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 testInstanceCreationFormat
 
 	self
@@ -335,7 +342,32 @@ testInstanceCreationFormat
 	^account'
 		fix: [ :s | false ]! !
 
-!SmalltalkMentorHeuristicTest methodsFor: 'object design rules tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'object design heuristics tests' stamp: 'HAW 19/Aug/2026, 11:24:57 am (UTC)'!
+testMethodComplexity
+
+	self
+		assertHeuristic: 'method-complexity'
+		caughtIn: 'printReport
+	| report |
+	report := WriteStream on: String new.
+	report nextPutAll: self title; nextPut: Character lf.
+	report nextPutAll: self author name; nextPut: Character lf.
+	report nextPutAll: self date printString; nextPut: Character lf.
+	report nextPutAll: self body trimmed; nextPut: Character lf.
+	report nextPutAll: self footer name asUppercase.
+	^report contents'
+		fix: [ :suggestedSource | false ]! !
+
+!SmalltalkMentorHeuristicTest methodsFor: 'object design heuristics tests' stamp: 'HAW 19/Aug/2026, 11:25:04 am (UTC)'!
+testMethodDeclarativity
+
+	self
+		assertHeuristic: 'method-declarativity'
+		caughtIn: 'netPrice
+	^(self basePrice * self quantity) - ((self basePrice * self quantity) * self discountRate)'
+		fix: [ :suggestedSource | false ]! !
+
+!SmalltalkMentorHeuristicTest methodsFor: 'object design heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 testPreferImmutable
 
 	self
@@ -344,7 +376,7 @@ testPreferImmutable
 	balance := aBalance'
 		fix: [ :s | false ]! !
 
-!SmalltalkMentorHeuristicTest methodsFor: 'object design rules tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'object design heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 testReplaceIfWithPolymorphism
 
 	self
@@ -353,7 +385,7 @@ testReplaceIfWithPolymorphism
 	type = #savings ifTrue: [ ^''Savings account'' ] ifFalse: [ ^''Checking account'' ]'
 		fix: [ :s | false ]! !
 
-!SmalltalkMentorHeuristicTest methodsFor: 'object design rules tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'object design heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 testValidObjects
 
 	self
@@ -362,7 +394,7 @@ testValidObjects
 	^self new initializeWithBalance: aBalance'
 		fix: [ :s | self does: s include: 'assert' ]! !
 
-!SmalltalkMentorHeuristicTest methodsFor: 'testing rules tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'testing heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 testDenyOverAssertNot
 
 	self
@@ -371,7 +403,7 @@ testDenyOverAssertNot
 	self assert: account hasMovements not'
 		fix: [ :s | self does: s include: 'deny:' ]! !
 
-!SmalltalkMentorHeuristicTest methodsFor: 'testing rules tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'testing heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 testExceptionBlockShouldNotHaveAssignment
 
 	self
@@ -382,7 +414,7 @@ testExceptionBlockShouldNotHaveAssignment
 	self assert: result isNil'
 		fix: [ :s | false ]! !
 
-!SmalltalkMentorHeuristicTest methodsFor: 'testing rules tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'testing heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 testExceptionBlockSingleSend
 
 	self
@@ -391,7 +423,7 @@ testExceptionBlockSingleSend
 	self should: [ | amount | amount := account balance + 1. account withdraw: amount ] raise: Error withMessageText: ''Insufficient funds'''
 		fix: [ :s | false ]! !
 
-!SmalltalkMentorHeuristicTest methodsFor: 'testing rules tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'testing heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 testOneThingPerTest
 
 	self
@@ -405,7 +437,7 @@ testOneThingPerTest
 	self deny: account isBlocked'
 		fix: [ :s | false ]! !
 
-!SmalltalkMentorHeuristicTest methodsFor: 'testing rules tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'testing heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 testTestNPrefixPreserved
 
 	self
@@ -416,7 +448,7 @@ testTestNPrefixPreserved
 	self assert: account balance equals: 100'
 		fix: [ :s | ((self firstLineOf: s) beginsWith: 'test1') and: [ (self firstLineOf: s) size > 5 ] ]! !
 
-!SmalltalkMentorHeuristicTest methodsFor: 'testing rules tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'testing heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 testTestNameConvention
 
 	self
@@ -427,7 +459,7 @@ testTestNameConvention
 	self assert: account balance equals: 100'
 		fix: [ :s | false ]! !
 
-!SmalltalkMentorHeuristicTest methodsFor: 'testing rules tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'testing heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 testTestingForEquality
 
 	self
@@ -436,7 +468,7 @@ testTestingForEquality
 	self assert: 3 = (1 + 2)'
 		fix: [ :s | self does: s include: 'equals:' ]! !
 
-!SmalltalkMentorHeuristicTest methodsFor: 'testing rules tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'testing heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 testTestingForExceptionWithSideEffect
 
 	self
@@ -445,7 +477,7 @@ testTestingForExceptionWithSideEffect
 	self should: [ account withdraw: 1000 ] raise: Error'
 		fix: [ :s | self does: s include: 'withExceptionDo:' ]! !
 
-!SmalltalkMentorHeuristicTest methodsFor: 'testing rules tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'testing heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 testTestingForExceptionWithoutSideEffect
 
 	self
@@ -454,7 +486,7 @@ testTestingForExceptionWithoutSideEffect
 	[ Account withBalance: -100 ] on: Error do: [ :e | self assert: e messageText = ''Balance must be positive'' ]'
 		fix: [ :s | self does: s include: 'withMessageText:' ]! !
 
-!SmalltalkMentorHeuristicTest methodsFor: 'naming rules tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'naming heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 testDoNotUseAbbreviatedName
 
 	"The names reveal their roles, so this targets the abbreviation heuristic specifically rather
@@ -470,7 +502,7 @@ testDoNotUseAbbreviatedName
 	^tot'
 		fix: [ :suggestedSource | false ]! !
 
-!SmalltalkMentorHeuristicTest methodsFor: 'naming rules tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'naming heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 testMessageKeywordsNames
 
 	self
@@ -479,7 +511,7 @@ testMessageKeywordsNames
 	balance := balance + anAmount'
 		fix: [ :s | false ]! !
 
-!SmalltalkMentorHeuristicTest methodsFor: 'naming rules tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'naming heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 testMessageNames
 
 	self
@@ -488,7 +520,7 @@ testMessageNames
 	^balance + anAmount'
 		fix: [ :s | false ]! !
 
-!SmalltalkMentorHeuristicTest methodsFor: 'naming rules tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'naming heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 testNoSetGet
 
 	self
@@ -497,7 +529,7 @@ testNoSetGet
 	^balance'
 		fix: [ :s | (self firstLineOf: s) notEmpty and: [ ((self firstLineOf: s) asLowercase beginsWith: 'get') not ] ]! !
 
-!SmalltalkMentorHeuristicTest methodsFor: 'naming rules tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'naming heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 testParameterPrefix
 
 	self
@@ -506,7 +538,7 @@ testParameterPrefix
 	^self new initializeWithBalance: balance'
 		fix: [ :s | self does: s include: 'aBalance' ]! !
 
-!SmalltalkMentorHeuristicTest methodsFor: 'naming rules tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'naming heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 testVariableNameRevealsRole
 
 	self
@@ -517,7 +549,7 @@ testVariableNameRevealsRole
 	^aCollection inject: 0 into: [ :acc :each | acc + each amount ]'
 		fix: [ :s | false ]! !
 
-!SmalltalkMentorHeuristicTest methodsFor: 'boolean rules tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'boolean heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 testAndOrOverBooleanOperators
 
 	self
@@ -526,7 +558,7 @@ testAndOrOverBooleanOperators
 	^(balance > 0) && (owner notNil)'
 		fix: [ :s | self does: s include: 'and:' ]! !
 
-!SmalltalkMentorHeuristicTest methodsFor: 'boolean rules tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'boolean heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 testAndOrTakeBlocks
 
 	self
@@ -535,7 +567,7 @@ testAndOrTakeBlocks
 	^balance > 0 and: owner notNil'
 		fix: [ :s | self does: s include: 'and: [' ]! !
 
-!SmalltalkMentorHeuristicTest methodsFor: 'boolean rules tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'boolean heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 testIfEmptyOverIsEmptyIfTrue
 
 	self
@@ -545,7 +577,7 @@ testIfEmptyOverIsEmptyIfTrue
 	^movements first'
 		fix: [ :s | self does: s include: 'ifEmpty:' ]! !
 
-!SmalltalkMentorHeuristicTest methodsFor: 'boolean rules tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'boolean heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 testIfNilOverIsNilIfTrue
 
 	self
@@ -555,7 +587,7 @@ testIfNilOverIsNilIfTrue
 	^owner name'
 		fix: [ :s | self does: s include: 'ifNil:' ]! !
 
-!SmalltalkMentorHeuristicTest methodsFor: 'boolean rules tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'boolean heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 testIfTrueIfFalse
 
 	self
@@ -567,7 +599,7 @@ testIfTrueIfFalse
 			f := self firstIndexOf: 'ifFalse:' in: s.
 			t > 0 and: [ f = 0 or: [ t < f ] ] ]! !
 
-!SmalltalkMentorHeuristicTest methodsFor: 'boolean rules tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'boolean heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 testIsNilOverEqualNil
 
 	self
@@ -576,7 +608,7 @@ testIsNilOverEqualNil
 	^owner = nil'
 		fix: [ :s | self does: s include: 'isNil' ]! !
 
-!SmalltalkMentorHeuristicTest methodsFor: 'boolean rules tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'boolean heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 testPreferEqualOverIdentity
 
 	self
@@ -585,7 +617,7 @@ testPreferEqualOverIdentity
 	^name == anAccount name'
 		fix: [ :s | false ]! !
 
-!SmalltalkMentorHeuristicTest methodsFor: 'boolean rules tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'boolean heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 testRedundantIfTrueCondition
 
 	self
@@ -595,7 +627,7 @@ testRedundantIfTrueCondition
 	^0'
 		fix: [ :s | false ]! !
 
-!SmalltalkMentorHeuristicTest methodsFor: 'syntax rules tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'syntax heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 testNoExtraParenthesis
 
 	self
@@ -604,14 +636,7 @@ testNoExtraParenthesis
 	^(self balance) negated'
 		fix: [ :s | false ]! !
 
-!SmalltalkMentorHeuristicTest methodsFor: 'running' stamp: 'HAW 18/Aug/2026, 6:56:15 pm (UTC)'!
-setUp
-
-	"A fresh mentor per test, used to build the prompt and parse replies."
-
-	mentor := SmalltalkMentor new! !
-
-!SmalltalkMentorHeuristicTest methodsFor: 'collection rules tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'collection heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 testIsEmptyOverSizeEqualZero
 
 	self
@@ -620,7 +645,7 @@ testIsEmptyOverSizeEqualZero
 	^movements size = 0'
 		fix: [ :s | self does: s include: 'isEmpty' ]! !
 
-!SmalltalkMentorHeuristicTest methodsFor: 'aconcagua rules tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'aconcagua heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 testDoNotUseAmount
 
 	self

@@ -1,6 +1,6 @@
-'From Cuis7.9 [latest update: #8113] on 18 August 2026 at 9:39:03 pm'!
+'From Cuis7.9 [latest update: #8113] on 19 August 2026 at 9:43:39 am'!
 'Description Better menu definition'!
-!provides: 'SmalltalkMentor' 1 30!
+!provides: 'SmalltalkMentor' 1 32!
 !requires: 'JSON' 1 29 nil!
 !requires: 'OSProcess' 1 36 nil!
 SystemOrganization addCategory: #SmalltalkMentor!
@@ -547,64 +547,6 @@ providers
 
 	^SmalltalkMentor providers! !
 
-!SmalltalkMentor methodsFor: 'rules' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
-currentReviewHeuristics
-
-	"The heuristics to enforce, looked up in order:
-	 1. <imageDirectory>/smalltalk-mentor-heuristics.md  (per-image heuristics, checked first)
-	 2. ~/.smalltalk-mentor/heuristics.md                (per-user heuristics)
-	 3. the built-in #defaultReviewHeuristics
-	Files are read via the shell (avoids resolving $HOME in the image), mirroring the key
-	handling."
-
-	| tmp raw |
-
-	tmp := '/tmp/smalltalk-mentor-heuristics.txt'.
-	OSProcess waitForCommand:
-		'sh -c ''I="', (Smalltalk imagePath ), '/smalltalk-mentor-heuristics.md"; H="$HOME/.smalltalk-mentor/heuristics.md"; if [ -s "$I" ]; then cat "$I"; elif [ -s "$H" ]; then cat "$H"; fi > ', tmp, ' 2>/dev/null || : > ', tmp, ''''.
-	raw := [ tmp asFileEntry fileContents asString ] on: Error do: [ :e | '' ].
-	raw := raw withBlanksTrimmed.
-	^raw isEmpty ifTrue: [ self defaultReviewHeuristics ] ifFalse: [ raw ]! !
-
-!SmalltalkMentor methodsFor: 'rules' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
-defaultReviewHeuristics
-
-	"Built-in project heuristics, used when ~/.smalltalk-mentor/heuristics.md is absent or blank.
-	Grouped under ## Category headings; each heuristic is prefixed with a short [id] name so the
-	mentor can cite it. Edit here, or override by creating that file (see #reviewHeuristicsFilePath
-	/ #writeDefaultReviewHeuristicsFile)."
-
-	^'## Testing
-- [assert-equals] Prefer `assert: expected equals: actual` over `assert: expected = actual`
-  (and over other `assert:`/`deny:` boolean-equality forms) so a failing test shows both
-  the expected and the actual value.
-
-## Object design
-- [valid-on-creation] Objects should be valid from the moment they are created: instance
-  creation messages validate their arguments with assertions encapsulated on the class side.'! !
-
-!SmalltalkMentor methodsFor: 'rules' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
-reviewHeuristicsFilePath
-
-	"Where project-specific review heuristics live."
-
-	^'~/.smalltalk-mentor/heuristics.md'! !
-
-!SmalltalkMentor methodsFor: 'rules' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
-writeDefaultReviewHeuristicsFile
-
-	"Create ~/.smalltalk-mentor/heuristics.md seeded with the built-in defaults, only if it does
-	not already exist. Gives you a file to start editing.
-	Evaluate:  SmalltalkMentor current writeDefaultReviewHeuristicsFile"
-
-	| tmp |
-
-	tmp := '/tmp/smalltalk-mentor-heuristics-seed.txt'.
-	tmp asFileEntry fileContents: self defaultReviewHeuristics.
-	OSProcess waitForCommand:
-		'sh -c ''mkdir -p "$HOME/.smalltalk-mentor"; F="$HOME/.smalltalk-mentor/heuristics.md"; [ -f "$F" ] || cp ', tmp, ' "$F"'''.
-	Transcript show: 'Seeded ', self reviewHeuristicsFilePath, ' (if it did not already exist)'; newLine! !
-
 !SmalltalkMentor methodsFor: 'reviewing' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 askAbout: source
 
@@ -847,6 +789,64 @@ toggleLanguage
 !SmalltalkMentor methodsFor: 'as yet unclassified' stamp: 'HAW 18/Aug/2026, 12:49:31 pm (UTC)'!
 smalltalkEditorMenuSpec ^Array new! !
 
+!SmalltalkMentor methodsFor: 'heuristics' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+currentReviewHeuristics
+
+	"The heuristics to enforce, looked up in order:
+	 1. <imageDirectory>/smalltalk-mentor-heuristics.md  (per-image heuristics, checked first)
+	 2. ~/.smalltalk-mentor/heuristics.md                (per-user heuristics)
+	 3. the built-in #defaultReviewHeuristics
+	Files are read via the shell (avoids resolving $HOME in the image), mirroring the key
+	handling."
+
+	| tmp raw |
+
+	tmp := '/tmp/smalltalk-mentor-heuristics.txt'.
+	OSProcess waitForCommand:
+		'sh -c ''I="', (Smalltalk imagePath ), '/smalltalk-mentor-heuristics.md"; H="$HOME/.smalltalk-mentor/heuristics.md"; if [ -s "$I" ]; then cat "$I"; elif [ -s "$H" ]; then cat "$H"; fi > ', tmp, ' 2>/dev/null || : > ', tmp, ''''.
+	raw := [ tmp asFileEntry fileContents asString ] on: Error do: [ :e | '' ].
+	raw := raw withBlanksTrimmed.
+	^raw isEmpty ifTrue: [ self defaultReviewHeuristics ] ifFalse: [ raw ]! !
+
+!SmalltalkMentor methodsFor: 'heuristics' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+defaultReviewHeuristics
+
+	"Built-in project heuristics, used when ~/.smalltalk-mentor/heuristics.md is absent or blank.
+	Grouped under ## Category headings; each heuristic is prefixed with a short [id] name so the
+	mentor can cite it. Edit here, or override by creating that file (see #reviewHeuristicsFilePath
+	/ #writeDefaultReviewHeuristicsFile)."
+
+	^'## Testing
+- [assert-equals] Prefer `assert: expected equals: actual` over `assert: expected = actual`
+  (and over other `assert:`/`deny:` boolean-equality forms) so a failing test shows both
+  the expected and the actual value.
+
+## Object design
+- [valid-on-creation] Objects should be valid from the moment they are created: instance
+  creation messages validate their arguments with assertions encapsulated on the class side.'! !
+
+!SmalltalkMentor methodsFor: 'heuristics' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+reviewHeuristicsFilePath
+
+	"Where project-specific review heuristics live."
+
+	^'~/.smalltalk-mentor/heuristics.md'! !
+
+!SmalltalkMentor methodsFor: 'heuristics' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+writeDefaultReviewHeuristicsFile
+
+	"Create ~/.smalltalk-mentor/heuristics.md seeded with the built-in defaults, only if it does
+	not already exist. Gives you a file to start editing.
+	Evaluate:  SmalltalkMentor current writeDefaultReviewHeuristicsFile"
+
+	| tmp |
+
+	tmp := '/tmp/smalltalk-mentor-heuristics-seed.txt'.
+	tmp asFileEntry fileContents: self defaultReviewHeuristics.
+	OSProcess waitForCommand:
+		'sh -c ''mkdir -p "$HOME/.smalltalk-mentor"; F="$HOME/.smalltalk-mentor/heuristics.md"; [ -f "$F" ] || cp ', tmp, ' "$F"'''.
+	Transcript show: 'Seeded ', self reviewHeuristicsFilePath, ' (if it did not already exist)'; newLine! !
+
 !SmalltalkMentor class methodsFor: 'initialization' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 initialize
 
@@ -907,7 +907,7 @@ gemini
 
 	^ GeminiProvider new! !
 
-!SmalltalkMentor class methodsFor: 'providers' stamp: 'HAW 18/Aug/2026, 1:45:44 pm (UTC)'!
+!SmalltalkMentor class methodsFor: 'providers' stamp: 'HAW 19/Aug/2026, 12:43:32 pm (UTC)'!
 nvidiaNIM
 
 	^ OpenAICompatibleProvider name: 'Nvidia NIM'

@@ -1,5 +1,63 @@
 # Smalltalk Mentor
 
+**Idioma / Language: [Español](#español) · [English](#english)**
+
+## Español
+
+Un revisor de código asistido por IA para **Cuis Smalltalk**: revisá un método (o una
+clase entera) contra tus heurísticas de diseño y conversá las mejoras con un modelo de
+lenguaje, todo dentro de la imagen.
+
+### Instalación
+
+1. Necesitás una imagen de **Cuis Smalltalk**.
+2. Necesitás el paquete **OSProcess** — el Mentor lo usa para llamar a `curl` (la imagen
+   no tiene TLS propio). Cloná o descargá <https://github.com/Cuis-Smalltalk/OSProcess> y
+   hacé *File In* de `OSProcess.pck.st` en tu imagen.
+3. Cargá **`SmalltalkMentor.pck.st`** (World ▸ Open ▸ Installed Packages ▸ install, o
+   *File In*). Al cargarse instala solo sus menús y el atajo `cmd+0`.
+4. Poné tu clave de API en `<directorio de la imagen>/anthropic.key` (o el proveedor que
+   uses; ver *Configuring the LLM keys* más abajo).
+
+### Uso
+
+- Seleccioná un método y apretá **`cmd+0`**: el Mentor lo revisa contra tus heurísticas y
+  te muestra el original al lado de una versión sugerida, con una conversación que podés
+  continuar.
+- También podés apretar `cmd+0` sobre una **clase**, una **categoría de métodos** o una
+  **categoría de clases**.
+- Las mismas opciones están en el submenú **Smalltalk Mentor** (botón derecho) de cada
+  panel del browser.
+
+## English
+
+An AI-assisted code reviewer for **Cuis Smalltalk**: review a method (or a whole class)
+against your design heuristics and discuss the improvements with a language model, all
+inside the image.
+
+### Installation
+
+1. You need a **Cuis Smalltalk** image.
+2. You need the **OSProcess** package — the Mentor uses it to shell out to `curl` (the
+   image has no TLS of its own). Clone or download
+   <https://github.com/Cuis-Smalltalk/OSProcess> and *File In* `OSProcess.pck.st` into
+   your image.
+3. Load **`SmalltalkMentor.pck.st`** (World ▸ Open ▸ Installed Packages ▸ install, or
+   *File In*). On load it self-installs its menus and the `cmd+0` shortcut.
+4. Put your API key in `<image directory>/anthropic.key` (or whichever provider you use;
+   see *Configuring the LLM keys* below).
+
+### Use
+
+- Select a method and press **`cmd+0`**: the Mentor reviews it against your heuristics and
+  shows the original next to a suggested version, with a conversation you can continue.
+- You can also press `cmd+0` on a **class**, a **method category**, or a **class
+  category**.
+- The same options live in the **Smalltalk Mentor** right-click submenu of each browser
+  pane.
+
+---
+
 An AI-assisted code reviewer for **Cuis Smalltalk**. It reviews a method (or a whole
 class) against a set of opinionated, project-specific design heuristics that *you* control,
 suggests improvements, and lets you discuss them with a Large Language Model — all from
