@@ -1,6 +1,6 @@
-'From Cuis7.9 [latest update: #8113] on 19 August 2026 at 9:43:39 am'!
+'From Cuis7.9 [latest update: #8113] on 19 August 2026 at 9:47:48 am'!
 'Description Better menu definition'!
-!provides: 'SmalltalkMentor' 1 32!
+!provides: 'SmalltalkMentor' 1 33!
 !requires: 'JSON' 1 29 nil!
 !requires: 'OSProcess' 1 36 nil!
 SystemOrganization addCategory: #SmalltalkMentor!
@@ -1817,15 +1817,15 @@ initializeClass: aClass selector: aSelector category: aCategory current: current
 	mentor := aMentor.
 	busy := false! !
 
-!SmalltalkMentorReview methodsFor: 'ui' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
+!SmalltalkMentorReview methodsFor: 'ui' stamp: 'HAW 19/Aug/2026, 12:46:12 pm (UTC)'!
 buildContent
 
 	"Build (once) and answer the review's content morph: a provider/model label, transcript,
-	original | suggested panes, follow-up input, and buttons. The ORIGINAL pane is a real
-	browser code pane (method-mode highlighting, refactorings, editable/compilable). The
+	original | suggested panes, a labelled follow-up input, and buttons. The ORIGINAL pane is a
+	real browser code pane (method-mode highlighting, refactorings, editable/compilable). The
 	SUGGESTED pane is syntax-highlighted too but no-copy (students type the fix)."
 
-	| contentColumn panesRow buttonsRow originalPaneMorph sendButton suggestedPaneText providerLabel originalBrowser suggestedModel |
+	| contentColumn panesRow buttonsRow originalPaneMorph sendButton suggestedPaneText providerLabel originalBrowser suggestedModel conversationLabel |
 
 	contentMorph ifNotNil: [ ^contentMorph ].
 	contentColumn := LayoutMorph newColumn.
@@ -1845,6 +1845,7 @@ buildContent
 	panesRow := LayoutMorph newRow.
 	panesRow addMorph: originalPaneMorph layoutSpec: (LayoutSpec proportionalWidth: 0.5 proportionalHeight: 1.0).
 	panesRow addAdjusterAndMorph: suggestedMorph proportionalWidth: 0.5.
+	conversationLabel := LabelMorph contents: 'Tell the mentor (ask a follow-up or push back, then press Enter):'.
 	inputMorph := EntryFieldMorph new.
 	inputMorph contents: ''.
 	inputMorph crAction: [ self sendFollowUp ].
@@ -1856,6 +1857,7 @@ buildContent
 	contentColumn addMorph: providerLabel layoutSpec: (LayoutSpec proportionalWidth: 1.0 fixedHeight: 20).
 	contentColumn addMorph: transcriptMorph layoutSpec: (LayoutSpec proportionalWidth: 1.0 proportionalHeight: 0.28).
 	contentColumn addAdjusterAndMorph: panesRow proportionalHeight: 0.72.
+	contentColumn addMorph: conversationLabel layoutSpec: (LayoutSpec proportionalWidth: 1.0 fixedHeight: 18).
 	contentColumn addMorph: inputMorph layoutSpec: (LayoutSpec proportionalWidth: 1.0 fixedHeight: 30).
 	contentColumn addMorph: buttonsRow layoutSpec: (LayoutSpec proportionalWidth: 1.0 fixedHeight: 34).
 	contentMorph := contentColumn.
