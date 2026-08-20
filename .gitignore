@@ -1,1 +1,7 @@
 .DS_Store
+
+# Local Claude Code session context (memory notes copied from the previous project); not for publishing
+memory/
+
+# Local MCP server config (machine-specific)
+.mcp.json
