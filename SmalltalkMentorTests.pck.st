@@ -1,6 +1,6 @@
-'From Cuis7.9 [latest update: #8113] on 19 August 2026 at 11:37:57 am'!
-'Description '!
-!provides: 'SmalltalkMentorTests' 1 8!
+'From Cuis7.9 [latest update: #8134] on 20 August 2026 at 7:09:42 pm'!
+'Description Add tests for the four new heuristics (preconditions, keyword-send format, avoid-comments)'!
+!provides: 'SmalltalkMentorTests' 1 9!
 !requires: 'SmalltalkMentor' nil nil nil!
 SystemOrganization addCategory: #SmalltalkMentorTests!
 
@@ -27,6 +27,7 @@ SmalltalkMentorHeuristicTest class
 
 
 !SmalltalkMentorFixedHeuristicTest methodsFor: 'running' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
+!methodProperties: {}!
 setUp
 
 	"The static verifications are pure (they take the class to check as an argument), so a bare
@@ -36,17 +37,20 @@ setUp
 	fixtures := OrderedCollection new! !
 
 !SmalltalkMentorFixedHeuristicTest methodsFor: 'running' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
+!methodProperties: {}!
 tearDown
 
 	fixtures reverse do: [ :eachFixtureClass | eachFixtureClass removeFromSystem ].
 	fixtures := OrderedCollection new! !
 
 !SmalltalkMentorFixedHeuristicTest methodsFor: 'support' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
+!methodProperties: {}!
 includesSubstring: aSubstring in: aString
 
 	^(review firstIndexOf: aSubstring in: aString) > 0! !
 
 !SmalltalkMentorFixedHeuristicTest methodsFor: 'support' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
+!methodProperties: {}!
 newFixtureClassNamed: aClassNameSymbol superclass: aSuperclass
 
 	"A throwaway class (removed in tearDown) used to build small hierarchies. Its category is
@@ -63,6 +67,7 @@ newFixtureClassNamed: aClassNameSymbol superclass: aSuperclass
 	^createdClass! !
 
 !SmalltalkMentorFixedHeuristicTest methodsFor: 'support' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!methodProperties: {}!
 newFixtureInstanceVariableNames: instanceNames classVariableNames: classNames
 
 	"A throwaway class (removed in tearDown) used to exercise one static heuristic. Its category is
@@ -79,6 +84,7 @@ newFixtureInstanceVariableNames: instanceNames classVariableNames: classNames
 	^createdClass! !
 
 !SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
+!methodProperties: {}!
 testClassMustBeReferenced
 
 	| classToVerify findings |
@@ -90,6 +96,7 @@ testClassMustBeReferenced
 	self assert: (review classReferencedFindingsFor: SmalltalkMentorFinding) isEmpty! !
 
 !SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
+!methodProperties: {}!
 testClassVariableMustBeReadAndWritten
 
 	| classToVerify findings |
@@ -99,6 +106,7 @@ testClassVariableMustBeReadAndWritten
 	self assert: (findings anySatisfy: [ :finding | finding editKind = #variable and: [ finding editTarget value = 'UnusedClassVariable' ] ])! !
 
 !SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
+!methodProperties: {}!
 testInstanceVariableMustBeReadAndWritten
 
 	| classToVerify findings |
@@ -108,6 +116,7 @@ testInstanceVariableMustBeReadAndWritten
 	self assert: (findings anySatisfy: [ :finding | finding editKind = #variable and: [ finding editTarget value = 'unusedInstanceVariable' ] ])! !
 
 !SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
+!methodProperties: {}!
 testMethodMustBeCategorized
 
 	| classToVerify findings |
@@ -118,6 +127,7 @@ testMethodMustBeCategorized
 	self assert: (findings anySatisfy: [ :finding | finding editTarget value asString = 'looseMethod' ])! !
 
 !SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!methodProperties: {}!
 testMethodMustHaveSenders
 
 	| classToVerify findings |
@@ -130,6 +140,7 @@ testMethodMustHaveSenders
 	self assert: (findings anySatisfy: [ :finding | finding editTarget value asString = 'orphanMethodXyz' ])! !
 
 !SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
+!methodProperties: {}!
 testSentMessageMustHaveImplementer
 
 	| classToVerify findings |
@@ -140,6 +151,7 @@ testSentMessageMustHaveImplementer
 	self assert: (findings anySatisfy: [ :finding | self includesSubstring: 'zzzNoSuchSelectorXyz' in: finding title ])! !
 
 !SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
+!methodProperties: {}!
 testSharedLeafSubclassProtocolMustBeInRoot
 
 	| rootClass firstLeaf secondLeaf findings |
@@ -161,6 +173,7 @@ testSharedLeafSubclassProtocolMustBeInRoot
 	self deny: (findings anySatisfy: [ :finding | self includesSubstring: 'sharedOperation' in: finding title ])! !
 
 !SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
+!methodProperties: {}!
 testUnusedAndWriteOnlyTemporariesAreFlaggedButUsedAndCapturedAreNot
 
 	| classToVerify findings |
@@ -183,6 +196,7 @@ testUnusedAndWriteOnlyTemporariesAreFlaggedButUsedAndCapturedAreNot
 	self deny: (findings anySatisfy: [ :finding | self includesSubstring: 'shared' in: finding title ])! !
 
 !SmalltalkMentorHeuristicTest methodsFor: 'support' stamp: 'HAW 19/Aug/2026, 2:36:18 pm (UTC)'!
+!methodProperties: {}!
 assertHeuristic: heuristicId caughtIn: methodSource fix: aFixBlock
 
 	"Best-of-3 (lenient): up to 3 Opus reviews of methodSource. A run counts if the suggested
@@ -208,6 +222,7 @@ assertHeuristic: heuristicId caughtIn: methodSource fix: aFixBlock
 		'Last rationale: ', (last ifNil: [ '' ] ifNotNil: [ :proposal | proposal at: 'rationale' ifAbsent: [ '' ] ])! !
 
 !SmalltalkMentorHeuristicTest methodsFor: 'support' stamp: 'HAW 18/Aug/2026, 6:56:15 pm (UTC)'!
+!methodProperties: {}!
 does: aString include: aSubstring
 
 	"Case-insensitive substring test."
@@ -223,6 +238,7 @@ does: aString include: aSubstring
 	^false! !
 
 !SmalltalkMentorHeuristicTest methodsFor: 'support' stamp: 'HAW 18/Aug/2026, 6:56:15 pm (UTC)'!
+!methodProperties: {}!
 firstIndexOf: aSubstring in: aString
 
 	"First 1-based index of aSubstring in aString (case-insensitive), or 0 if absent."
@@ -237,6 +253,7 @@ firstIndexOf: aSubstring in: aString
 	^0! !
 
 !SmalltalkMentorHeuristicTest methodsFor: 'support' stamp: 'HAW 18/Aug/2026, 6:56:15 pm (UTC)'!
+!methodProperties: {}!
 firstLineOf: aString
 
 	"The first non-blank line of aString, trimmed - useful for reading a suggested method's
@@ -248,6 +265,7 @@ firstLineOf: aString
 	^lines isEmpty ifTrue: [ '' ] ifFalse: [ lines first withBlanksTrimmed ]! !
 
 !SmalltalkMentorHeuristicTest methodsFor: 'support' stamp: 'HAW 18/Aug/2026, 6:56:15 pm (UTC)'!
+!methodProperties: {}!
 provider
 
 	"These tests pin Claude Opus, independent of the globally selected provider."
@@ -255,6 +273,7 @@ provider
 	^AnthropicProvider new model: 'claude-opus-4-8'; yourself! !
 
 !SmalltalkMentorHeuristicTest methodsFor: 'support' stamp: 'HAW 19/Aug/2026, 2:36:08 pm (UTC)'!
+!methodProperties: {}!
 reviewOf: methodSource asTestMethod: isTestMethod
 
 	"Ask Claude Opus to review methodSource against the applicable heuristics (treating it as a
@@ -268,6 +287,7 @@ reviewOf: methodSource asTestMethod: isTestMethod
 	^mentor parseProposalFrom: answer! !
 
 !SmalltalkMentorHeuristicTest methodsFor: 'running' stamp: 'HAW 18/Aug/2026, 6:56:15 pm (UTC)'!
+!methodProperties: {}!
 setUp
 
 	"A fresh mentor per test, used to build the prompt and parse replies."
@@ -275,6 +295,7 @@ setUp
 	mentor := SmalltalkMentor new! !
 
 !SmalltalkMentorHeuristicTest methodsFor: 'object design heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!methodProperties: {}!
 testAvoidBreakingEncapsulation
 
 	self
@@ -284,6 +305,7 @@ testAvoidBreakingEncapsulation
 		fix: [ :s | false ]! !
 
 !SmalltalkMentorHeuristicTest methodsFor: 'object design heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!methodProperties: {}!
 testAvoidNil
 
 	self
@@ -294,6 +316,7 @@ testAvoidNil
 		fix: [ :s | false ]! !
 
 !SmalltalkMentorHeuristicTest methodsFor: 'object design heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!methodProperties: {}!
 testAvoidSettersUseSyncWith
 
 	self
@@ -303,6 +326,7 @@ testAvoidSettersUseSyncWith
 		fix: [ :s | self does: s include: 'syncWith:' ]! !
 
 !SmalltalkMentorHeuristicTest methodsFor: 'object design heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!methodProperties: {}!
 testCompleteObjects
 
 	self
@@ -315,6 +339,7 @@ testCompleteObjects
 		fix: [ :s | false ]! !
 
 !SmalltalkMentorHeuristicTest methodsFor: 'object design heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!methodProperties: {}!
 testErrorMessagesAsClassMethods
 
 	self
@@ -325,6 +350,7 @@ testErrorMessagesAsClassMethods
 		fix: [ :s | false ]! !
 
 !SmalltalkMentorHeuristicTest methodsFor: 'object design heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!methodProperties: {}!
 testGetterReturnsCopy
 
 	self
@@ -334,6 +360,7 @@ testGetterReturnsCopy
 		fix: [ :s | self does: s include: 'copy' ]! !
 
 !SmalltalkMentorHeuristicTest methodsFor: 'object design heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!methodProperties: {}!
 testInstanceCreationFormat
 
 	self
@@ -346,6 +373,7 @@ testInstanceCreationFormat
 		fix: [ :s | false ]! !
 
 !SmalltalkMentorHeuristicTest methodsFor: 'object design heuristics tests' stamp: 'HAW 19/Aug/2026, 11:24:57 am (UTC)'!
+!methodProperties: {}!
 testMethodComplexity
 
 	self
@@ -362,6 +390,7 @@ testMethodComplexity
 		fix: [ :suggestedSource | false ]! !
 
 !SmalltalkMentorHeuristicTest methodsFor: 'object design heuristics tests' stamp: 'HAW 19/Aug/2026, 11:25:04 am (UTC)'!
+!methodProperties: {}!
 testMethodDeclarativity
 
 	self
@@ -370,7 +399,34 @@ testMethodDeclarativity
 	^(self basePrice * self quantity) - ((self basePrice * self quantity) * self discountRate)'
 		fix: [ :suggestedSource | false ]! !
 
+!SmalltalkMentorHeuristicTest methodsFor: 'object design heuristics tests' stamp: 'HAW 20/Aug/2026, 9:41:16 pm (UTC)'!
+!methodProperties: {}!
+testNoNilPrecondition
+
+	self
+		assertHeuristic: 'no-nil-precondition'
+		caughtIn: 'withBalance: aBalance
+
+	self assert: aBalance notNil.
+
+	^self new initializeWithBalance: aBalance'
+		fix: [ :suggestedSource | false ]! !
+
+!SmalltalkMentorHeuristicTest methodsFor: 'object design heuristics tests' stamp: 'HAW 20/Aug/2026, 9:41:23 pm (UTC)'!
+!methodProperties: {}!
+testNoTypePrecondition
+
+	self
+		assertHeuristic: 'no-type-precondition'
+		caughtIn: 'withBalance: aBalance
+
+	self assert: (aBalance isKindOf: Number).
+
+	^self new initializeWithBalance: aBalance'
+		fix: [ :suggestedSource | false ]! !
+
 !SmalltalkMentorHeuristicTest methodsFor: 'object design heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!methodProperties: {}!
 testPreferImmutable
 
 	self
@@ -380,6 +436,7 @@ testPreferImmutable
 		fix: [ :s | false ]! !
 
 !SmalltalkMentorHeuristicTest methodsFor: 'object design heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!methodProperties: {}!
 testReplaceIfWithPolymorphism
 
 	self
@@ -389,6 +446,7 @@ testReplaceIfWithPolymorphism
 		fix: [ :s | false ]! !
 
 !SmalltalkMentorHeuristicTest methodsFor: 'object design heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!methodProperties: {}!
 testValidObjects
 
 	self
@@ -398,6 +456,7 @@ testValidObjects
 		fix: [ :s | self does: s include: 'assert' ]! !
 
 !SmalltalkMentorHeuristicTest methodsFor: 'testing heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!methodProperties: {}!
 testDenyOverAssertNot
 
 	self
@@ -407,6 +466,7 @@ testDenyOverAssertNot
 		fix: [ :s | self does: s include: 'deny:' ]! !
 
 !SmalltalkMentorHeuristicTest methodsFor: 'testing heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!methodProperties: {}!
 testExceptionBlockShouldNotHaveAssignment
 
 	self
@@ -418,6 +478,7 @@ testExceptionBlockShouldNotHaveAssignment
 		fix: [ :s | false ]! !
 
 !SmalltalkMentorHeuristicTest methodsFor: 'testing heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!methodProperties: {}!
 testExceptionBlockSingleSend
 
 	self
@@ -427,6 +488,7 @@ testExceptionBlockSingleSend
 		fix: [ :s | false ]! !
 
 !SmalltalkMentorHeuristicTest methodsFor: 'testing heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!methodProperties: {}!
 testOneThingPerTest
 
 	self
@@ -441,6 +503,7 @@ testOneThingPerTest
 		fix: [ :s | false ]! !
 
 !SmalltalkMentorHeuristicTest methodsFor: 'testing heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!methodProperties: {}!
 testTestNPrefixPreserved
 
 	self
@@ -452,6 +515,7 @@ testTestNPrefixPreserved
 		fix: [ :s | ((self firstLineOf: s) beginsWith: 'test1') and: [ (self firstLineOf: s) size > 5 ] ]! !
 
 !SmalltalkMentorHeuristicTest methodsFor: 'testing heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!methodProperties: {}!
 testTestNameConvention
 
 	self
@@ -463,6 +527,7 @@ testTestNameConvention
 		fix: [ :s | false ]! !
 
 !SmalltalkMentorHeuristicTest methodsFor: 'testing heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!methodProperties: {}!
 testTestingForEquality
 
 	self
@@ -472,6 +537,7 @@ testTestingForEquality
 		fix: [ :s | self does: s include: 'equals:' ]! !
 
 !SmalltalkMentorHeuristicTest methodsFor: 'testing heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!methodProperties: {}!
 testTestingForExceptionWithSideEffect
 
 	self
@@ -481,6 +547,7 @@ testTestingForExceptionWithSideEffect
 		fix: [ :s | self does: s include: 'withExceptionDo:' ]! !
 
 !SmalltalkMentorHeuristicTest methodsFor: 'testing heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!methodProperties: {}!
 testTestingForExceptionWithoutSideEffect
 
 	self
@@ -490,6 +557,7 @@ testTestingForExceptionWithoutSideEffect
 		fix: [ :s | self does: s include: 'withMessageText:' ]! !
 
 !SmalltalkMentorHeuristicTest methodsFor: 'naming heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!methodProperties: {}!
 testDoNotUseAbbreviatedName
 
 	"The names reveal their roles, so this targets the abbreviation heuristic specifically rather
@@ -506,6 +574,7 @@ testDoNotUseAbbreviatedName
 		fix: [ :suggestedSource | false ]! !
 
 !SmalltalkMentorHeuristicTest methodsFor: 'naming heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!methodProperties: {}!
 testMessageKeywordsNames
 
 	self
@@ -515,6 +584,7 @@ testMessageKeywordsNames
 		fix: [ :s | false ]! !
 
 !SmalltalkMentorHeuristicTest methodsFor: 'naming heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!methodProperties: {}!
 testMessageNames
 
 	self
@@ -524,6 +594,7 @@ testMessageNames
 		fix: [ :s | false ]! !
 
 !SmalltalkMentorHeuristicTest methodsFor: 'naming heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!methodProperties: {}!
 testNoSetGet
 
 	self
@@ -533,6 +604,7 @@ testNoSetGet
 		fix: [ :s | (self firstLineOf: s) notEmpty and: [ ((self firstLineOf: s) asLowercase beginsWith: 'get') not ] ]! !
 
 !SmalltalkMentorHeuristicTest methodsFor: 'naming heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!methodProperties: {}!
 testParameterPrefix
 
 	self
@@ -542,6 +614,7 @@ testParameterPrefix
 		fix: [ :s | self does: s include: 'aBalance' ]! !
 
 !SmalltalkMentorHeuristicTest methodsFor: 'naming heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!methodProperties: {}!
 testVariableNameRevealsRole
 
 	self
@@ -553,6 +626,7 @@ testVariableNameRevealsRole
 		fix: [ :s | false ]! !
 
 !SmalltalkMentorHeuristicTest methodsFor: 'boolean heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!methodProperties: {}!
 testAndOrOverBooleanOperators
 
 	self
@@ -562,6 +636,7 @@ testAndOrOverBooleanOperators
 		fix: [ :s | self does: s include: 'and:' ]! !
 
 !SmalltalkMentorHeuristicTest methodsFor: 'boolean heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!methodProperties: {}!
 testAndOrTakeBlocks
 
 	self
@@ -571,6 +646,7 @@ testAndOrTakeBlocks
 		fix: [ :s | self does: s include: 'and: [' ]! !
 
 !SmalltalkMentorHeuristicTest methodsFor: 'boolean heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!methodProperties: {}!
 testIfEmptyOverIsEmptyIfTrue
 
 	self
@@ -581,6 +657,7 @@ testIfEmptyOverIsEmptyIfTrue
 		fix: [ :s | self does: s include: 'ifEmpty:' ]! !
 
 !SmalltalkMentorHeuristicTest methodsFor: 'boolean heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!methodProperties: {}!
 testIfNilOverIsNilIfTrue
 
 	self
@@ -591,6 +668,7 @@ testIfNilOverIsNilIfTrue
 		fix: [ :s | self does: s include: 'ifNil:' ]! !
 
 !SmalltalkMentorHeuristicTest methodsFor: 'boolean heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!methodProperties: {}!
 testIfTrueIfFalse
 
 	self
@@ -603,6 +681,7 @@ testIfTrueIfFalse
 			t > 0 and: [ f = 0 or: [ t < f ] ] ]! !
 
 !SmalltalkMentorHeuristicTest methodsFor: 'boolean heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!methodProperties: {}!
 testIsNilOverEqualNil
 
 	self
@@ -612,6 +691,7 @@ testIsNilOverEqualNil
 		fix: [ :s | self does: s include: 'isNil' ]! !
 
 !SmalltalkMentorHeuristicTest methodsFor: 'boolean heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!methodProperties: {}!
 testPreferEqualOverIdentity
 
 	self
@@ -621,6 +701,7 @@ testPreferEqualOverIdentity
 		fix: [ :s | false ]! !
 
 !SmalltalkMentorHeuristicTest methodsFor: 'boolean heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!methodProperties: {}!
 testRedundantIfTrueCondition
 
 	self
@@ -631,6 +712,7 @@ testRedundantIfTrueCondition
 		fix: [ :s | false ]! !
 
 !SmalltalkMentorHeuristicTest methodsFor: 'syntax heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!methodProperties: {}!
 testNoExtraParenthesis
 
 	self
@@ -640,6 +722,7 @@ testNoExtraParenthesis
 		fix: [ :s | false ]! !
 
 !SmalltalkMentorHeuristicTest methodsFor: 'collection heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!methodProperties: {}!
 testIsEmptyOverSizeEqualZero
 
 	self
@@ -649,6 +732,7 @@ testIsEmptyOverSizeEqualZero
 		fix: [ :s | self does: s include: 'isEmpty' ]! !
 
 !SmalltalkMentorHeuristicTest methodsFor: 'aconcagua heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!methodProperties: {}!
 testDoNotUseAmount
 
 	self
@@ -656,3 +740,27 @@ testDoNotUseAmount
 		caughtIn: 'isPositiveBalance
 	^balance amount strictlyPositive'
 		fix: [ :s | false ]! !
+
+!SmalltalkMentorHeuristicTest methodsFor: 'source code format heuristics tests' stamp: 'HAW 20/Aug/2026, 9:41:47 pm (UTC)'!
+!methodProperties: {}!
+testAvoidComments
+
+	self
+		assertHeuristic: 'avoid-comments'
+		caughtIn: 'fullName
+
+	"Answers the full name concatenating the first and the last name"
+
+	^firstName , '' '' , lastName'
+		fix: [ :suggestedSource | false ]! !
+
+!SmalltalkMentorHeuristicTest methodsFor: 'source code format heuristics tests' stamp: 'HAW 20/Aug/2026, 9:41:29 pm (UTC)'!
+!methodProperties: {}!
+testKeywordMessageSendFormat
+
+	self
+		assertHeuristic: 'keyword-message-send-format'
+		caughtIn: 'callDefineClass
+
+	^client callTool: ''smalltalk_define_class'' with: (self arguments: ''definition'' being: ''Object subclass: #Foo'')'
+		fix: [ :suggestedSource | false ]! !
