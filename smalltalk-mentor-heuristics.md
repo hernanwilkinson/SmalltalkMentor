@@ -16,6 +16,7 @@
 - [message-keywords-names] The keywords of a message name should always start with lowercase
 - [message-names] Message names should help reading the collaboration, that is when the message is sent to a receiver, as prose
 - [no-set-get] Message name should not start with get or set for getters or setters
+- [no-class-name-prefix] Message names and instance variable names should not have the class name as prefix. In `MCPToolProperty`, `propertyName` and `propertyDefinition` should be `name` and `definition`, because they are already read in the context of their class. The exception is a class side message whose name would shadow the `Class`/`Metaclass`/`Object` protocol (`name`, `definition`, `category`, `comment`, `className` are taken there): prefix only when the protocol says you must, and only on the class side
 
 ## Object design
 - [error-messages-as-class-methods] Error messages should be define as class methods and not as literal strings
@@ -31,6 +32,9 @@
 - [replace-if-with-polymorphism] When possible, replace if with polymorphism 
 - [method-complexity] Methods should not have more than 10 message sends or so.
 - [method-declarativity] Methods should be declarative and not imperative. Complex expressions should be extracted to methods whose names should represent the meaning of the expression
+- [one-initialize-message] A class should define only one `initialize` message, and it should do assignments and nothing else
+- [instance-creation-funnel] All instance creation messages should be written based on a single one that runs all the preconditions and sends the only `initialize` message. Only that one sends `self new`; the others supply defaults and delegate to it, so an object can not be created invalid through any of them. Follows [valid-objects] and [complete-objects]
+- [subclass-for-knowledge-not-implementation] Subclassing should be based on how knowledge is organized, not on sharing implementation. If a subclass `is not` a superclass, then it should not subclass it, even when they share instance variables or methods. For example `MCPMethodTool` is not a `MCPClassTool` although both know a class: knowing a class is something a method tool needs to find its method, not something it is. Repeating the shared instance variable or method in both classes is preferable to an inheritance that lies
 
 ## Source code format
 - [keyword-message-send-format] When a keyword message is sent and the text size is grather than 80 characters, it should be written with the receiver in the first line and then one tabbed line per keyword with its parameter. For example: 

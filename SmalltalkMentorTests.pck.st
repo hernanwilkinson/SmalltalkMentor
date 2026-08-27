@@ -1,6 +1,6 @@
-'From Cuis7.9 [latest update: #8134] on 20 August 2026 at 7:09:42 pm'!
+'From Cuis7.9 [latest update: #8134] on 27 August 2026 at 2:08:40 pm'!
 'Description Add tests for the four new heuristics (preconditions, keyword-send format, avoid-comments)'!
-!provides: 'SmalltalkMentorTests' 1 9!
+!provides: 'SmalltalkMentorTests' 1 10!
 !requires: 'SmalltalkMentor' nil nil nil!
 SystemOrganization addCategory: #SmalltalkMentorTests!
 
@@ -114,6 +114,17 @@ testInstanceVariableMustBeReadAndWritten
 	classToVerify := self newFixtureInstanceVariableNames: 'unusedInstanceVariable' classVariableNames: ''.
 	findings := review instanceVariableFindingsFor: classToVerify.
 	self assert: (findings anySatisfy: [ :finding | finding editKind = #variable and: [ finding editTarget value = 'unusedInstanceVariable' ] ])! !
+
+!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 20/Aug/2026, 10:12:23 pm (UTC)'!
+!methodProperties: {}!
+testMethodCategoryMustNotBeEmpty
+
+	| classToVerify findings |
+
+	classToVerify := self newFixtureInstanceVariableNames: '' classVariableNames: ''.
+	classToVerify organization addCategory: 'unused protocol'.
+	findings := review emptyMethodCategoryFindingsFor: classToVerify.
+	self assert: (findings anySatisfy: [ :finding | self includesSubstring: 'unused protocol' in: finding title ])! !
 
 !SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 !methodProperties: {}!
