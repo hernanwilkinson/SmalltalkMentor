@@ -1,6 +1,6 @@
-'From Cuis7.9 [latest update: #8158] on 7 September 2026 at 7:41:29 pm'!
-'Description Add no-class-name-prefix class heuristic'!
-!provides: 'SmalltalkMentorTests' 1 14!
+'From Cuis7.9 [latest update: #8158] on 7 September 2026 at 8:08:56 pm'!
+'Description Suggest self / self class over explicit class reference'!
+!provides: 'SmalltalkMentorTests' 1 15!
 !requires: 'SmalltalkMentor' nil nil nil!
 SystemOrganization addCategory: #SmalltalkMentorTests!
 
@@ -109,6 +109,20 @@ testClassVariableMustBeReadAndWritten
 	classToVerify := self newFixtureInstanceVariableNames: '' classVariableNames: 'UnusedClassVariable'.
 	findings := review classVariableFindingsFor: classToVerify.
 	self assert: (findings anySatisfy: [ :finding | finding editKind = #variable and: [ finding editTarget value = 'UnusedClassVariable' ] ])! !
+
+!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 7/Sep/2026, 10:47:49 pm (UTC)'!
+testExplicitClassReferenceIsFlaggedForSelfOrSelfClass
+
+	| classToVerify findings |
+
+	classToVerify := self newFixtureInstanceVariableNames: '' classVariableNames: ''.
+	classToVerify compile: 'makeAnother ^SMMentorFixture new' classified: 'instance creation'.
+	classToVerify compile: 'harmless ^42' classified: 'accessing'.
+	classToVerify class compile: 'create ^SMMentorFixture new' classified: 'instance creation'.
+	findings := review explicitClassReferenceFindingsFor: classToVerify.
+	self assert: (findings anySatisfy: [ :finding | (self includesSubstring: '>>makeAnother' in: finding title) and: [ self includesSubstring: '(may be self class)' in: finding title ] ]).
+	self assert: (findings anySatisfy: [ :finding | (self includesSubstring: 'class>>create' in: finding title) and: [ self includesSubstring: '(may be self)' in: finding title ] ]).
+	self deny: (findings anySatisfy: [ :finding | self includesSubstring: '>>harmless' in: finding title ])! !
 
 !SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 testInstanceVariableMustBeReadAndWritten

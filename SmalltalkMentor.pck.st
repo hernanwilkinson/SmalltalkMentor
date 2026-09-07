@@ -1,6 +1,6 @@
-'From Cuis7.9 [latest update: #8158] on 7 September 2026 at 7:41:21 pm'!
-'Description Add no-class-name-prefix class heuristic'!
-!provides: 'SmalltalkMentor' 1 45!
+'From Cuis7.9 [latest update: #8158] on 7 September 2026 at 8:08:48 pm'!
+'Description Suggest self / self class over explicit class reference'!
+!provides: 'SmalltalkMentor' 1 46!
 !requires: 'JSON' 1 29 nil!
 !requires: 'OSProcess' 1 36 nil!
 SystemOrganization addCategory: #SmalltalkMentor!
@@ -1453,7 +1453,18 @@ emptyMethodCategoryFindingsFor: aClass
 				findings add: (self emptyMethodCategoryFindingFor: categoryName in: classOrMetaclass) ] ] ].
 	^findings! !
 
-!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 7/Sep/2026, 9:55:31 pm (UTC)'!
+!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 7/Sep/2026, 10:59:27 pm (UTC)'!
+explicitClassReferenceFindingsFor: aClass
+
+	| findings |
+
+	findings := OrderedCollection new.
+	(Smalltalk allCallsOn: aClass binding) do: [ :methodReference |
+		methodReference actualClass theNonMetaClass = aClass ifTrue: [
+			findings add: (self explicitClassReferenceFindingFor: methodReference in: aClass) ] ].
+	^findings! !
+
+!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 7/Sep/2026, 10:47:25 pm (UTC)'!
 heuristicGroupsFor: aClass
 
 	"The static (Smalltalk) verifications for aClass, as title -> (collection of findings)
@@ -1468,6 +1479,7 @@ heuristicGroupsFor: aClass
 		add: 'No unused or write-only temporaries' -> (self unusedTemporariesFindingsFor: aClass);
 		add: 'No empty method categories' -> (self emptyMethodCategoryFindingsFor: aClass);
 		add: 'No class-name prefix in names' -> (self classNamePrefixFindingsFor: aClass);
+		add: 'Prefer self / self class over explicit class reference' -> (self explicitClassReferenceFindingsFor: aClass);
 		add: 'Class is referenced' -> (self classReferencedFindingsFor: aClass);
 		add: 'Shared leaf-subclass protocol in root' -> (self commonLeafSubclassProtocolFindingsFor: aClass);
 		yourself! !
@@ -1939,6 +1951,19 @@ emptyMethodCategoryFindingFor: aCategoryName in: aClassOrMetaclass
 		detail: 'The method category ''', aCategoryName, ''' of ', aClassOrMetaclass name, ' has no methods. Remove the empty category.'
 		editKind: #none
 		editTarget: nil! !
+
+!SmalltalkMentorClassReview methodsFor: 'private' stamp: 'HAW 7/Sep/2026, 10:59:34 pm (UTC)'!
+explicitClassReferenceFindingFor: aMethodReference in: aClass
+
+	| replacement location |
+
+	replacement := aMethodReference actualClass = aClass class ifTrue: [ 'self' ] ifFalse: [ 'self class' ].
+	location := aMethodReference actualClass name, '>>', aMethodReference selector asString.
+	^SmalltalkMentorFinding
+		title: 'Explicit class reference: ', location, ' (may be ', replacement, ')'
+		detail: 'The method ', location, ' refers to ', aClass name, ' explicitly. Check whether that reference can be replaced by ', replacement, '.'
+		editKind: #method
+		editTarget: (aMethodReference actualClass -> aMethodReference selector)! !
 
 !SmalltalkMentorClassReview methodsFor: 'private' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 firstIndexOf: aSubstring in: aString
