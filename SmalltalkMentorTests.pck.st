@@ -1,6 +1,6 @@
-'From Cuis7.9 [latest update: #8158] on 7 September 2026 at 8:12:15 pm'!
-'Description Add prefer = over == class heuristic'!
-!provides: 'SmalltalkMentorTests' 1 16!
+'From Cuis7.9 [latest update: #8158] on 7 September 2026 at 8:37:47 pm'!
+'Description Add instance-creation-funnel class heuristic'!
+!provides: 'SmalltalkMentorTests' 1 17!
 !requires: 'SmalltalkMentor' nil nil nil!
 SystemOrganization addCategory: #SmalltalkMentorTests!
 
@@ -189,6 +189,20 @@ testMethodMustHaveSenders
 	count as a sender and defeat the heuristic."
 	self assert: (findings anySatisfy: [ :finding | finding editTarget value asString = 'orphanMethodXyz' ])! !
 
+!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 7/Sep/2026, 11:21:38 pm (UTC)'!
+testMultipleInstanceCreationFunnelsAreFlagged
+
+	| classToVerify findings |
+
+	classToVerify := self newFixtureInstanceVariableNames: 'value' classVariableNames: ''.
+	classToVerify class compile: 'withValue: aValue ^self new initializeValue: aValue' classified: 'instance creation'.
+	classToVerify class compile: 'empty ^self new initializeValue: 0' classified: 'instance creation'.
+	classToVerify class compile: 'sample ^OrderedCollection new' classified: 'instance creation'.
+	findings := review instanceCreationFunnelFindingsFor: classToVerify.
+	self assert: (findings anySatisfy: [ :finding | self includesSubstring: '>>withValue:' in: finding title ]).
+	self assert: (findings anySatisfy: [ :finding | self includesSubstring: '>>empty' in: finding title ]).
+	self deny: (findings anySatisfy: [ :finding | self includesSubstring: '>>sample' in: finding title ])! !
+
 !SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 7/Sep/2026, 10:14:05 pm (UTC)'!
 testNameRepeatingClassNameWordIsFlagged
 
@@ -233,6 +247,17 @@ testSharedLeafSubclassProtocolMustBeInRoot
 	rootClass compile: 'sharedOperation ^self subclassResponsibility' classified: 'operations'.
 	findings := review commonLeafSubclassProtocolFindingsFor: rootClass.
 	self deny: (findings anySatisfy: [ :finding | self includesSubstring: 'sharedOperation' in: finding title ])! !
+
+!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 7/Sep/2026, 11:21:45 pm (UTC)'!
+testSingleInstanceCreationFunnelIsNotFlagged
+
+	| classToVerify findings |
+
+	classToVerify := self newFixtureInstanceVariableNames: 'value' classVariableNames: ''.
+	classToVerify class compile: 'withValue: aValue ^self new initializeValue: aValue' classified: 'instance creation'.
+	classToVerify class compile: 'empty ^self withValue: 0' classified: 'instance creation'.
+	findings := review instanceCreationFunnelFindingsFor: classToVerify.
+	self assert: findings isEmpty! !
 
 !SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 testUnusedAndWriteOnlyTemporariesAreFlaggedButUsedAndCapturedAreNot

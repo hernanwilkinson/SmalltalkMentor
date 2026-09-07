@@ -1,6 +1,6 @@
-'From Cuis7.9 [latest update: #8158] on 7 September 2026 at 8:12:07 pm'!
-'Description Add prefer = over == class heuristic'!
-!provides: 'SmalltalkMentor' 1 47!
+'From Cuis7.9 [latest update: #8158] on 7 September 2026 at 8:37:40 pm'!
+'Description Add instance-creation-funnel class heuristic'!
+!provides: 'SmalltalkMentor' 1 48!
 !requires: 'JSON' 1 29 nil!
 !requires: 'OSProcess' 1 36 nil!
 SystemOrganization addCategory: #SmalltalkMentor!
@@ -1464,7 +1464,7 @@ explicitClassReferenceFindingsFor: aClass
 			findings add: (self explicitClassReferenceFindingFor: methodReference in: aClass) ] ].
 	^findings! !
 
-!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 7/Sep/2026, 11:10:25 pm (UTC)'!
+!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 7/Sep/2026, 11:21:29 pm (UTC)'!
 heuristicGroupsFor: aClass
 
 	"The static (Smalltalk) verifications for aClass, as title -> (collection of findings)
@@ -1481,6 +1481,7 @@ heuristicGroupsFor: aClass
 		add: 'No class-name prefix in names' -> (self classNamePrefixFindingsFor: aClass);
 		add: 'Prefer self / self class over explicit class reference' -> (self explicitClassReferenceFindingsFor: aClass);
 		add: 'Prefer = over ==' -> (self identityComparisonFindingsFor: aClass);
+		add: 'Instance creation funnelled through one message' -> (self instanceCreationFunnelFindingsFor: aClass);
 		add: 'Class is referenced' -> (self classReferencedFindingsFor: aClass);
 		add: 'Shared leaf-subclass protocol in root' -> (self commonLeafSubclassProtocolFindingsFor: aClass);
 		yourself! !
@@ -1495,6 +1496,20 @@ identityComparisonFindingsFor: aClass
 		classOrMetaclass selectors asSortedCollection do: [ :eachSelector |
 			((classOrMetaclass >> eachSelector) messages includes: #==) ifTrue: [
 				findings add: (self identityComparisonFindingFor: eachSelector in: classOrMetaclass) ] ] ].
+	^findings! !
+
+!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 7/Sep/2026, 11:20:47 pm (UTC)'!
+instanceCreationFunnelFindingsFor: aClass
+
+	| metaclass instantiatingSelectors findings |
+
+	findings := OrderedCollection new.
+	metaclass := aClass class.
+	instantiatingSelectors := metaclass selectors asSortedCollection select: [ :eachSelector |
+		self sendsSelfInstantiation: (metaclass >> eachSelector) ].
+	instantiatingSelectors size > 1 ifTrue: [
+		instantiatingSelectors do: [ :eachSelector |
+			findings add: (self instanceCreationFunnelFindingFor: eachSelector in: metaclass) ] ].
 	^findings! !
 
 !SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 7/Sep/2026, 10:13:30 pm (UTC)'!
@@ -2003,6 +2018,18 @@ identityComparisonFindingFor: aSelector in: aClassOrMetaclass
 		editKind: #method
 		editTarget: (aClassOrMetaclass -> aSelector)! !
 
+!SmalltalkMentorClassReview methodsFor: 'private' stamp: 'HAW 7/Sep/2026, 11:20:53 pm (UTC)'!
+instanceCreationFunnelFindingFor: aSelector in: aMetaclass
+
+	| location |
+
+	location := aMetaclass name, '>>', aSelector asString.
+	^SmalltalkMentorFinding
+		title: 'Instance creation not funnelled: ', location
+		detail: 'The class-side method ', location, ' sends self new directly. All instance creation messages should funnel through a single one that runs the preconditions and sends the only initialize; the others should delegate to it.'
+		editKind: #method
+		editTarget: (aMetaclass -> aSelector)! !
+
 !SmalltalkMentorClassReview methodsFor: 'private' stamp: 'HAW 7/Sep/2026, 10:13:57 pm (UTC)'!
 isInstanceVariable: anInstanceVariableName readInHierarchyOf: aClass
 
@@ -2047,6 +2074,19 @@ name: aName startsWithAnyWordOf: classNameWords
 
 	aName isEmpty ifTrue: [ ^false ].
 	^classNameWords anySatisfy: [ :eachWord | eachWord sameAs: aName camelCaseWords first ]! !
+
+!SmalltalkMentorClassReview methodsFor: 'private' stamp: 'HAW 7/Sep/2026, 11:20:38 pm (UTC)'!
+sendsSelfInstantiation: aCompiledMethod
+
+	| found |
+
+	found := false.
+	[ aCompiledMethod methodNode accept: (ParseNodeEnumerator ofBlock: [ :parseNode |
+		(parseNode isMessageNode
+			and: [ parseNode receiver isSelfPseudoVariable
+			and: [ #(new basicNew new: basicNew:) includes: parseNode selectorSymbol ] ]) ifTrue: [ found := true ] ]) ]
+		on: Error do: [ :error | ].
+	^found! !
 
 !SmalltalkMentorClassReview methodsFor: 'private' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 sharedSelectorsAmongLeaves: leafSubclasses ofRoot: rootClass
