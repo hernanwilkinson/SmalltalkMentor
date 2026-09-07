@@ -1,6 +1,6 @@
-'From Cuis7.9 [latest update: #8158] on 7 September 2026 at 6:08:53 pm'!
-'Description Add move-helper-methods-to-right-class heuristic and its test'!
-!provides: 'SmalltalkMentorTests' 1 12!
+'From Cuis7.9 [latest update: #8158] on 7 September 2026 at 6:46:45 pm'!
+'Description Check instance variable references across subclasses'!
+!provides: 'SmalltalkMentorTests' 1 13!
 !requires: 'SmalltalkMentor' nil nil nil!
 SystemOrganization addCategory: #SmalltalkMentorTests!
 
@@ -106,6 +106,21 @@ testInstanceVariableMustBeReadAndWritten
 	classToVerify := self newFixtureInstanceVariableNames: 'unusedInstanceVariable' classVariableNames: ''.
 	findings := review instanceVariableFindingsFor: classToVerify.
 	self assert: (findings anySatisfy: [ :finding | finding editKind = #variable and: [ finding editTarget value = 'unusedInstanceVariable' ] ])! !
+
+!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 7/Sep/2026, 9:37:18 pm (UTC)'!
+testInstanceVariableReadAndWrittenOnlyInSubclassIsNotFlagged
+
+	"An instance variable's scope includes the subclasses, so a variable declared in a class but
+	read and written only in a subclass is used and must not be flagged as unused."
+
+	| superclassToVerify subclass findings |
+
+	superclassToVerify := self newFixtureInstanceVariableNames: 'stateUsedInSubclass' classVariableNames: ''.
+	subclass := self newFixtureClassNamed: #SMMentorFixtureSubclass superclass: superclassToVerify.
+	subclass compile: 'storeState stateUsedInSubclass := 42' classified: 'accessing'.
+	subclass compile: 'state ^stateUsedInSubclass' classified: 'accessing'.
+	findings := review instanceVariableFindingsFor: superclassToVerify.
+	self deny: (findings anySatisfy: [ :finding | finding editTarget value = 'stateUsedInSubclass' ])! !
 
 !SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 20/Aug/2026, 10:12:23 pm (UTC)'!
 testMethodCategoryMustNotBeEmpty
