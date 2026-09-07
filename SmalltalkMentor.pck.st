@@ -1,6 +1,6 @@
-'From Cuis7.9 [latest update: #8158] on 7 September 2026 at 6:46:32 pm'!
-'Description Check instance variable references across subclasses'!
-!provides: 'SmalltalkMentor' 1 44!
+'From Cuis7.9 [latest update: #8158] on 7 September 2026 at 7:41:21 pm'!
+'Description Add no-class-name-prefix class heuristic'!
+!provides: 'SmalltalkMentor' 1 45!
 !requires: 'JSON' 1 29 nil!
 !requires: 'OSProcess' 1 36 nil!
 SystemOrganization addCategory: #SmalltalkMentor!
@@ -1338,6 +1338,20 @@ initializeClass: aClass mentor: aMentor
 	mentor := aMentor.
 	methodReviewCache := Dictionary new! !
 
+!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 7/Sep/2026, 10:28:58 pm (UTC)'!
+classNamePrefixFindingsFor: aClass
+
+	| findings classNameWords |
+
+	findings := OrderedCollection new.
+	classNameWords := aClass name camelCaseWords.
+	aClass instVarNames do: [ :instanceVariableName |
+		(self name: instanceVariableName startsWithAnyWordOf: classNameWords) ifTrue: [
+			findings add: (self classNamePrefixVariableFindingFor: instanceVariableName in: aClass) ] ].
+	findings addAll: (self classNamePrefixSelectorFindingsFor: aClass words: classNameWords onClassSide: false).
+	findings addAll: (self classNamePrefixSelectorFindingsFor: aClass class words: classNameWords onClassSide: true).
+	^findings! !
+
 !SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 classReferencedFindingsFor: aClass
 
@@ -1439,7 +1453,7 @@ emptyMethodCategoryFindingsFor: aClass
 				findings add: (self emptyMethodCategoryFindingFor: categoryName in: classOrMetaclass) ] ] ].
 	^findings! !
 
-!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 20/Aug/2026, 10:11:59 pm (UTC)'!
+!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 7/Sep/2026, 9:55:31 pm (UTC)'!
 heuristicGroupsFor: aClass
 
 	"The static (Smalltalk) verifications for aClass, as title -> (collection of findings)
@@ -1453,15 +1467,13 @@ heuristicGroupsFor: aClass
 		add: 'Methods are categorized' -> (self uncategorizedMethodsFindingsFor: aClass);
 		add: 'No unused or write-only temporaries' -> (self unusedTemporariesFindingsFor: aClass);
 		add: 'No empty method categories' -> (self emptyMethodCategoryFindingsFor: aClass);
+		add: 'No class-name prefix in names' -> (self classNamePrefixFindingsFor: aClass);
 		add: 'Class is referenced' -> (self classReferencedFindingsFor: aClass);
 		add: 'Shared leaf-subclass protocol in root' -> (self commonLeafSubclassProtocolFindingsFor: aClass);
 		yourself! !
 
-!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 7/Sep/2026, 9:38:00 pm (UTC)'!
+!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 7/Sep/2026, 10:13:30 pm (UTC)'!
 instanceVariableFindingsFor: aClass
-
-	"Heuristic 1: every instance variable should be both read and written. An instance variable is
-	in scope in the subclasses too, so a read or a write in any subclass counts."
 
 	| findings |
 
@@ -1870,6 +1882,38 @@ categoryOf: aSelector in: aClassOrMeta
 	^[ aClassOrMeta organization categoryOfElement: aSelector ]
 		on: Error do: [ :e | 'as yet unclassified' ]! !
 
+!SmalltalkMentorClassReview methodsFor: 'private' stamp: 'HAW 7/Sep/2026, 9:54:38 pm (UTC)'!
+classNamePrefixSelectorFindingFor: aSelector in: aClassOrMetaclass
+
+	^SmalltalkMentorFinding
+		title: 'Class name in selector: ', aClassOrMetaclass name, '>>', aSelector asString
+		detail: 'The selector ', aClassOrMetaclass name, '>>', aSelector asString, ' repeats a word of the class name. A message name is read in the context of its receiver''s class, so drop the class-name prefix.'
+		editKind: #method
+		editTarget: (aClassOrMetaclass -> aSelector)! !
+
+!SmalltalkMentorClassReview methodsFor: 'private' stamp: 'HAW 7/Sep/2026, 10:13:00 pm (UTC)'!
+classNamePrefixSelectorFindingsFor: aClassOrMetaclass words: classNameWords onClassSide: isClassSide
+
+	| findings |
+
+	findings := OrderedCollection new.
+	aClassOrMetaclass selectors asSortedCollection do: [ :eachSelector |
+		| firstKeyword |
+		firstKeyword := eachSelector asString copyUpTo: $:.
+		((self name: firstKeyword startsWithAnyWordOf: classNameWords)
+			and: [ (isClassSide and: [ self isReservedAfterPrefix: firstKeyword ]) not ]) ifTrue: [
+				findings add: (self classNamePrefixSelectorFindingFor: eachSelector in: aClassOrMetaclass) ] ].
+	^findings! !
+
+!SmalltalkMentorClassReview methodsFor: 'private' stamp: 'HAW 7/Sep/2026, 9:54:32 pm (UTC)'!
+classNamePrefixVariableFindingFor: anInstanceVariableName in: aClass
+
+	^SmalltalkMentorFinding
+		title: 'Class name in variable: ', aClass name, ' - ', anInstanceVariableName
+		detail: 'The instance variable ''', anInstanceVariableName, ''' of ', aClass name, ' repeats a word of the class name. A name is read in the context of its class, so drop the class-name prefix.'
+		editKind: #variable
+		editTarget: (aClass -> anInstanceVariableName)! !
+
 !SmalltalkMentorClassReview methodsFor: 'private' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 countOf: aSubstring in: aString
 
@@ -1909,11 +1953,8 @@ firstIndexOf: aSubstring in: aString
 		(aString copyFrom: scanIndex to: scanIndex + substringSize - 1) = aSubstring ifTrue: [ ^scanIndex ] ].
 	^0! !
 
-!SmalltalkMentorClassReview methodsFor: 'private' stamp: 'HAW 7/Sep/2026, 9:38:08 pm (UTC)'!
+!SmalltalkMentorClassReview methodsFor: 'private' stamp: 'HAW 7/Sep/2026, 10:13:57 pm (UTC)'!
 isInstanceVariable: anInstanceVariableName readInHierarchyOf: aClass
-
-	"Whether any method of aClass or a subclass reads the instance variable. The variable keeps
-	its index across the hierarchy, so the index taken from aClass is valid in every subclass."
 
 	| instanceVariableIndex |
 
@@ -1922,13 +1963,19 @@ isInstanceVariable: anInstanceVariableName readInHierarchyOf: aClass
 		(eachClass whichSelectorsAccess: anInstanceVariableName) anySatisfy: [ :accessorSelector |
 			(eachClass >> accessorSelector) readsField: instanceVariableIndex ] ]! !
 
-!SmalltalkMentorClassReview methodsFor: 'private' stamp: 'HAW 7/Sep/2026, 9:38:13 pm (UTC)'!
+!SmalltalkMentorClassReview methodsFor: 'private' stamp: 'HAW 7/Sep/2026, 10:13:43 pm (UTC)'!
 isInstanceVariable: anInstanceVariableName writtenInHierarchyOf: aClass
-
-	"Whether any method of aClass or a subclass assigns to the instance variable."
 
 	^aClass withAllSubclasses anySatisfy: [ :eachClass |
 		(eachClass whichSelectorsStoreInto: anInstanceVariableName) notEmpty ]! !
+
+!SmalltalkMentorClassReview methodsFor: 'private' stamp: 'HAW 7/Sep/2026, 10:28:49 pm (UTC)'!
+isReservedAfterPrefix: aFirstKeyword
+
+	| remainingWords |
+
+	remainingWords := (aFirstKeyword camelCaseWords allButFirst collect: [ :eachWord | eachWord asLowercase ]) asArray.
+	^#( #('name') #('definition') #('category') #('comment') #('class' 'name') ) includes: remainingWords! !
 
 !SmalltalkMentorClassReview methodsFor: 'private' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 missingRootProtocolFindingFor: aSelector root: rootClass
@@ -1944,6 +1991,12 @@ missingRootProtocolFindingFor: aSelector root: rootClass
 		detail: 'Instances of every leaf subclass of ', rootClass name, ' answer #', aSelector, ', but ', rootClass name, ' does not implement it. Lift it to ', rootClass name, ' as a concrete method or as subclassResponsibility so the shared protocol is declared in one place.'
 		editKind: (anImplementor isNil ifTrue: [ #none ] ifFalse: [ #method ])
 		editTarget: (anImplementor isNil ifTrue: [ nil ] ifFalse: [ anImplementor -> aSelector ])! !
+
+!SmalltalkMentorClassReview methodsFor: 'private' stamp: 'HAW 7/Sep/2026, 10:28:44 pm (UTC)'!
+name: aName startsWithAnyWordOf: classNameWords
+
+	aName isEmpty ifTrue: [ ^false ].
+	^classNameWords anySatisfy: [ :eachWord | eachWord sameAs: aName camelCaseWords first ]! !
 
 !SmalltalkMentorClassReview methodsFor: 'private' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 sharedSelectorsAmongLeaves: leafSubclasses ofRoot: rootClass
@@ -2459,4 +2512,29 @@ label: aLabel kind: aKind payload: aPayload childrenBlock: aBlock model: aModel
 	the first time the node is expanded."
 
 	^self new initializeLabel: aLabel kind: aKind payload: aPayload children: aBlock model: aModel! !
+
+!String methodsFor: '*SmalltalkMentor' stamp: 'HAW 7/Sep/2026, 10:28:27 pm (UTC)'!
+camelCaseWords
+
+	| words wordStream |
+
+	words := OrderedCollection new.
+	wordStream := WriteStream on: String new.
+	self keysAndValuesDo: [ :characterIndex :eachCharacter |
+		(self startsNewCamelCaseWordAt: characterIndex) ifTrue: [
+			words add: wordStream contents.
+			wordStream := WriteStream on: String new ].
+		wordStream nextPut: eachCharacter ].
+	^words add: wordStream contents; yourself! !
+
+!String methodsFor: '*SmalltalkMentor' stamp: 'HAW 7/Sep/2026, 10:28:21 pm (UTC)'!
+startsNewCamelCaseWordAt: anIndex
+
+	| characterAtIndex |
+
+	anIndex = 1 ifTrue: [ ^false ].
+	characterAtIndex := self at: anIndex.
+	characterAtIndex isUppercase ifFalse: [ ^false ].
+	^(self at: anIndex - 1) isLowercase
+		or: [ anIndex < self size and: [ (self at: anIndex + 1) isLowercase ] ]! !
 SmalltalkMentor initialize!

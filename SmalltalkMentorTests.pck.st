@@ -1,6 +1,6 @@
-'From Cuis7.9 [latest update: #8158] on 7 September 2026 at 6:46:45 pm'!
-'Description Check instance variable references across subclasses'!
-!provides: 'SmalltalkMentorTests' 1 13!
+'From Cuis7.9 [latest update: #8158] on 7 September 2026 at 7:41:29 pm'!
+'Description Add no-class-name-prefix class heuristic'!
+!provides: 'SmalltalkMentorTests' 1 14!
 !requires: 'SmalltalkMentor' nil nil nil!
 SystemOrganization addCategory: #SmalltalkMentorTests!
 
@@ -89,6 +89,18 @@ testClassMustBeReferenced
 	"a class that other classes reference is not flagged"
 	self assert: (review classReferencedFindingsFor: SmalltalkMentorFinding) isEmpty! !
 
+!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 7/Sep/2026, 10:14:12 pm (UTC)'!
+testClassSideSelectorKeepsPrefixWhenUnprefixedNameIsReserved
+
+	| classToVerify findings |
+
+	classToVerify := self newFixtureInstanceVariableNames: '' classVariableNames: ''.
+	classToVerify class compile: 'fixtureName ^1' classified: 'accessing'.
+	classToVerify class compile: 'fixtureOwner ^2' classified: 'accessing'.
+	findings := review classNamePrefixFindingsFor: classToVerify.
+	self deny: (findings anySatisfy: [ :finding | self includesSubstring: 'fixtureName' in: finding title ]).
+	self assert: (findings anySatisfy: [ :finding | self includesSubstring: 'fixtureOwner' in: finding title ])! !
+
 !SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 testClassVariableMustBeReadAndWritten
 
@@ -107,11 +119,8 @@ testInstanceVariableMustBeReadAndWritten
 	findings := review instanceVariableFindingsFor: classToVerify.
 	self assert: (findings anySatisfy: [ :finding | finding editKind = #variable and: [ finding editTarget value = 'unusedInstanceVariable' ] ])! !
 
-!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 7/Sep/2026, 9:37:18 pm (UTC)'!
+!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 7/Sep/2026, 10:14:20 pm (UTC)'!
 testInstanceVariableReadAndWrittenOnlyInSubclassIsNotFlagged
-
-	"An instance variable's scope includes the subclasses, so a variable declared in a class but
-	read and written only in a subclass is used and must not be flagged as unused."
 
 	| superclassToVerify subclass findings |
 
@@ -153,6 +162,20 @@ testMethodMustHaveSenders
 	"Compare by asString, not the #orphanMethodXyz literal: a Symbol literal here would itself
 	count as a sender and defeat the heuristic."
 	self assert: (findings anySatisfy: [ :finding | finding editTarget value asString = 'orphanMethodXyz' ])! !
+
+!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 7/Sep/2026, 10:14:05 pm (UTC)'!
+testNameRepeatingClassNameWordIsFlagged
+
+	| classToVerify findings |
+
+	classToVerify := self newFixtureInstanceVariableNames: 'fixtureName balance' classVariableNames: ''.
+	classToVerify compile: 'fixtureBalance ^balance' classified: 'accessing'.
+	classToVerify compile: 'balance ^balance' classified: 'accessing'.
+	findings := review classNamePrefixFindingsFor: classToVerify.
+	self assert: (findings anySatisfy: [ :finding | self includesSubstring: 'fixtureName' in: finding title ]).
+	self assert: (findings anySatisfy: [ :finding | self includesSubstring: 'fixtureBalance' in: finding title ]).
+	self deny: (findings anySatisfy: [ :finding | self includesSubstring: ' - balance' in: finding title ]).
+	self deny: (findings anySatisfy: [ :finding | self includesSubstring: '>>balance' in: finding title ])! !
 
 !SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 testSentMessageMustHaveImplementer
@@ -395,11 +418,8 @@ testMethodDeclarativity
 	^(self basePrice * self quantity) - ((self basePrice * self quantity) * self discountRate)'
 		fix: [ :suggestedSource | false ]! !
 
-!SmalltalkMentorHeuristicTest methodsFor: 'object design heuristics tests' stamp: 'HAW 7/Sep/2026, 8:56:58 pm (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'object design heuristics tests' stamp: 'HAW 7/Sep/2026, 10:14:26 pm (UTC)'!
 testMoveHelperMethodsToRightClass
-
-	"The method sends messages only to its parameter - no self, super or instance variable - so
-	it is a helper that belongs on the parameter's class (Product) as an extension method."
 
 	self
 		assertHeuristic: 'move-helper-methods-to-right-class'
