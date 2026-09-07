@@ -1,6 +1,6 @@
-'From Cuis7.9 [latest update: #8158] on 7 September 2026 at 8:08:48 pm'!
-'Description Suggest self / self class over explicit class reference'!
-!provides: 'SmalltalkMentor' 1 46!
+'From Cuis7.9 [latest update: #8158] on 7 September 2026 at 8:12:07 pm'!
+'Description Add prefer = over == class heuristic'!
+!provides: 'SmalltalkMentor' 1 47!
 !requires: 'JSON' 1 29 nil!
 !requires: 'OSProcess' 1 36 nil!
 SystemOrganization addCategory: #SmalltalkMentor!
@@ -1464,7 +1464,7 @@ explicitClassReferenceFindingsFor: aClass
 			findings add: (self explicitClassReferenceFindingFor: methodReference in: aClass) ] ].
 	^findings! !
 
-!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 7/Sep/2026, 10:47:25 pm (UTC)'!
+!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 7/Sep/2026, 11:10:25 pm (UTC)'!
 heuristicGroupsFor: aClass
 
 	"The static (Smalltalk) verifications for aClass, as title -> (collection of findings)
@@ -1480,9 +1480,22 @@ heuristicGroupsFor: aClass
 		add: 'No empty method categories' -> (self emptyMethodCategoryFindingsFor: aClass);
 		add: 'No class-name prefix in names' -> (self classNamePrefixFindingsFor: aClass);
 		add: 'Prefer self / self class over explicit class reference' -> (self explicitClassReferenceFindingsFor: aClass);
+		add: 'Prefer = over ==' -> (self identityComparisonFindingsFor: aClass);
 		add: 'Class is referenced' -> (self classReferencedFindingsFor: aClass);
 		add: 'Shared leaf-subclass protocol in root' -> (self commonLeafSubclassProtocolFindingsFor: aClass);
 		yourself! !
+
+!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 7/Sep/2026, 11:09:59 pm (UTC)'!
+identityComparisonFindingsFor: aClass
+
+	| findings |
+
+	findings := OrderedCollection new.
+	{ aClass. aClass class } do: [ :classOrMetaclass |
+		classOrMetaclass selectors asSortedCollection do: [ :eachSelector |
+			((classOrMetaclass >> eachSelector) messages includes: #==) ifTrue: [
+				findings add: (self identityComparisonFindingFor: eachSelector in: classOrMetaclass) ] ] ].
+	^findings! !
 
 !SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 7/Sep/2026, 10:13:30 pm (UTC)'!
 instanceVariableFindingsFor: aClass
@@ -1977,6 +1990,18 @@ firstIndexOf: aSubstring in: aString
 	1 to: aString size - substringSize + 1 do: [ :scanIndex |
 		(aString copyFrom: scanIndex to: scanIndex + substringSize - 1) = aSubstring ifTrue: [ ^scanIndex ] ].
 	^0! !
+
+!SmalltalkMentorClassReview methodsFor: 'private' stamp: 'HAW 7/Sep/2026, 11:10:07 pm (UTC)'!
+identityComparisonFindingFor: aSelector in: aClassOrMetaclass
+
+	| location |
+
+	location := aClassOrMetaclass name, '>>', aSelector asString.
+	^SmalltalkMentorFinding
+		title: 'Identity comparison ==: ', location, ' (may be =)'
+		detail: 'The method ', location, ' compares with == . Prefer = unless it must be exactly the same object.'
+		editKind: #method
+		editTarget: (aClassOrMetaclass -> aSelector)! !
 
 !SmalltalkMentorClassReview methodsFor: 'private' stamp: 'HAW 7/Sep/2026, 10:13:57 pm (UTC)'!
 isInstanceVariable: anInstanceVariableName readInHierarchyOf: aClass

@@ -1,6 +1,6 @@
-'From Cuis7.9 [latest update: #8158] on 7 September 2026 at 8:08:56 pm'!
-'Description Suggest self / self class over explicit class reference'!
-!provides: 'SmalltalkMentorTests' 1 15!
+'From Cuis7.9 [latest update: #8158] on 7 September 2026 at 8:12:15 pm'!
+'Description Add prefer = over == class heuristic'!
+!provides: 'SmalltalkMentorTests' 1 16!
 !requires: 'SmalltalkMentor' nil nil nil!
 SystemOrganization addCategory: #SmalltalkMentorTests!
 
@@ -123,6 +123,18 @@ testExplicitClassReferenceIsFlaggedForSelfOrSelfClass
 	self assert: (findings anySatisfy: [ :finding | (self includesSubstring: '>>makeAnother' in: finding title) and: [ self includesSubstring: '(may be self class)' in: finding title ] ]).
 	self assert: (findings anySatisfy: [ :finding | (self includesSubstring: 'class>>create' in: finding title) and: [ self includesSubstring: '(may be self)' in: finding title ] ]).
 	self deny: (findings anySatisfy: [ :finding | self includesSubstring: '>>harmless' in: finding title ])! !
+
+!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 7/Sep/2026, 11:10:40 pm (UTC)'!
+testIdentityComparisonIsFlagged
+
+	| classToVerify findings |
+
+	classToVerify := self newFixtureInstanceVariableNames: '' classVariableNames: ''.
+	classToVerify compile: 'sameAs: anObject ^self == anObject' classified: 'comparing'.
+	classToVerify compile: 'equalTo: anObject ^self = anObject' classified: 'comparing'.
+	findings := review identityComparisonFindingsFor: classToVerify.
+	self assert: (findings anySatisfy: [ :finding | self includesSubstring: '>>sameAs:' in: finding title ]).
+	self deny: (findings anySatisfy: [ :finding | self includesSubstring: '>>equalTo:' in: finding title ])! !
 
 !SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 testInstanceVariableMustBeReadAndWritten
