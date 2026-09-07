@@ -33,6 +33,7 @@
 - [method-complexity] Methods should not have more than 10 message sends or so.
 - [method-declarativity] Methods should be declarative and not imperative. Complex expressions should be extracted to methods whose names should represent the meaning of the expression
 - [one-initialize-message] A class should define only one `initialize` message, and it should do assignments and nothing else
+- [move-helper-methods-to-right-class] A method that has no references to self, super or any instance variable is a helper method. Usually helper method belong to a class of one of the parameters of the method. Move it there as extension method if the class belongs to another package
 - [instance-creation-funnel] All instance creation messages should be written based on a single one that runs all the preconditions and sends the only `initialize` message. Only that one sends `self new`; the others supply defaults and delegate to it, so an object can not be created invalid through any of them. Follows [valid-objects] and [complete-objects]
 - [subclass-for-knowledge-not-implementation] Subclassing should be based on how knowledge is organized, not on sharing implementation. If a subclass `is not` a superclass, then it should not subclass it, even when they share instance variables or methods. For example `MCPMethodTool` is not a `MCPClassTool` although both know a class: knowing a class is something a method tool needs to find its method, not something it is. Repeating the shared instance variable or method in both classes is preferable to an inheritance that lies
 
