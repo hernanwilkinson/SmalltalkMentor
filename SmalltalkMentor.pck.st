@@ -1,6 +1,6 @@
-'From Cuis7.9 [latest update: #8158] on 7 September 2026 at 8:37:40 pm'!
-'Description Add instance-creation-funnel class heuristic'!
-!provides: 'SmalltalkMentor' 1 48!
+'From Cuis7.9 [latest update: #8158] on 8 September 2026 at 9:23:22 am'!
+'Description Show the heuristic description when a heuristic is selected'!
+!provides: 'SmalltalkMentor' 1 49!
 !requires: 'JSON' 1 29 nil!
 !requires: 'OSProcess' 1 36 nil!
 SystemOrganization addCategory: #SmalltalkMentor!
@@ -1372,7 +1372,7 @@ classReferencedFindingsFor: aClass
 			editTarget: nil) ].
 	^result! !
 
-!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 8/Sep/2026, 10:59:50 am (UTC)'!
 classReviewRootNodesFor: aClass
 
 	"The class-review subtree for aClass: one root per static heuristic (children = its failing
@@ -1388,7 +1388,7 @@ classReviewRootNodesFor: aClass
 			SmalltalkMentorNode label: finding title kind: #finding payload: finding children: #() model: self ].
 		roots add: (SmalltalkMentorNode
 			label: group key, ' (', children size printString, ')'
-			kind: #heuristicRoot payload: nil children: children model: self) ].
+			kind: #heuristicRoot payload: (self heuristicDescriptionFor: group key) children: children model: self) ].
 	roots add: (self methodsSideNodeFor: aClass label: 'Instance methods').
 	roots add: (self methodsSideNodeFor: aClass class label: 'Class methods').
 	^roots! !
@@ -1464,7 +1464,7 @@ explicitClassReferenceFindingsFor: aClass
 			findings add: (self explicitClassReferenceFindingFor: methodReference in: aClass) ] ].
 	^findings! !
 
-!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 7/Sep/2026, 11:21:29 pm (UTC)'!
+!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 7/Sep/2026, 11:41:23 pm (UTC)'!
 heuristicGroupsFor: aClass
 
 	"The static (Smalltalk) verifications for aClass, as title -> (collection of findings)
@@ -1482,6 +1482,7 @@ heuristicGroupsFor: aClass
 		add: 'Prefer self / self class over explicit class reference' -> (self explicitClassReferenceFindingsFor: aClass);
 		add: 'Prefer = over ==' -> (self identityComparisonFindingsFor: aClass);
 		add: 'Instance creation funnelled through one message' -> (self instanceCreationFunnelFindingsFor: aClass);
+		add: 'One initialize message doing only assignments' -> (self oneInitializeMessageFindingsFor: aClass);
 		add: 'Class is referenced' -> (self classReferencedFindingsFor: aClass);
 		add: 'Shared leaf-subclass protocol in root' -> (self commonLeafSubclassProtocolFindingsFor: aClass);
 		yourself! !
@@ -1576,6 +1577,22 @@ methodsWithoutSendersFindingsFor: aClass
 					editTarget: (classOrMetaclass -> eachSelector)) ] ] ].
 	^findings! !
 
+!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 7/Sep/2026, 11:42:57 pm (UTC)'!
+oneInitializeMessageFindingsFor: aClass
+
+	| initializeSelectors findings |
+
+	findings := OrderedCollection new.
+	initializeSelectors := aClass selectors asSortedCollection select: [ :eachSelector |
+		eachSelector asString beginsWith: 'initialize' ].
+	initializeSelectors size > 1 ifTrue: [
+		initializeSelectors do: [ :eachSelector |
+			findings add: (self multipleInitializeFindingFor: eachSelector in: aClass) ] ].
+	initializeSelectors do: [ :eachSelector |
+		(self doesOnlyAssignments: (aClass >> eachSelector)) ifFalse: [
+			findings add: (self notOnlyAssignmentsFindingFor: eachSelector in: aClass) ] ].
+	^findings! !
+
 !SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
 uncategorizedMethodsFindingsFor: aClass
 
@@ -1636,14 +1653,16 @@ methodsSideNodeFor: aClassOrMetaclass label: aLabel
 		label: aLabel, ' (', aClassOrMetaclass selectors size printString, ')'
 		kind: #side payload: nil children: categoryNodes model: self! !
 
-!SmalltalkMentorClassReview methodsFor: 'tree' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
+!SmalltalkMentorClassReview methodsFor: 'tree' stamp: 'HAW 8/Sep/2026, 11:00:00 am (UTC)'!
 nodeSelected: aNode
 
 	"Dispatch a tree selection: a method leaf triggers a (lazy) LLM review; a finding leaf
-	shows an editor (method or class-definition) or text; headers clear the panel."
+	shows an editor (method or class-definition) or text; a heuristic root shows the heuristic
+	description; other headers clear the panel."
 
 	aNode kind = #method ifTrue: [ ^self showMethodReview: aNode payload ].
 	aNode kind = #finding ifTrue: [ ^self showFinding: aNode payload ].
+	aNode kind = #heuristicRoot ifTrue: [ ^self showText: aNode payload ].
 	self clearDetail! !
 
 !SmalltalkMentorClassReview methodsFor: 'tree' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
@@ -1971,6 +1990,13 @@ countOf: aSubstring in: aString
 			ifFalse: [ scanIndex := scanIndex + 1 ] ].
 	^occurrenceCount! !
 
+!SmalltalkMentorClassReview methodsFor: 'private' stamp: 'HAW 7/Sep/2026, 11:42:44 pm (UTC)'!
+doesOnlyAssignments: aCompiledMethod
+
+	^[ aCompiledMethod methodNode block statements allSatisfy: [ :eachStatement |
+		self isAssignmentOrAllowedInInitialize: eachStatement ] ]
+		on: Error do: [ :error | true ]! !
+
 !SmalltalkMentorClassReview methodsFor: 'private' stamp: 'HAW 20/Aug/2026, 10:11:48 pm (UTC)'!
 emptyMethodCategoryFindingFor: aCategoryName in: aClassOrMetaclass
 
@@ -2006,6 +2032,33 @@ firstIndexOf: aSubstring in: aString
 		(aString copyFrom: scanIndex to: scanIndex + substringSize - 1) = aSubstring ifTrue: [ ^scanIndex ] ].
 	^0! !
 
+!SmalltalkMentorClassReview methodsFor: 'private' stamp: 'HAW 8/Sep/2026, 10:59:33 am (UTC)'!
+heuristicDescriptionFor: aTitle
+
+	self heuristicDescriptions do: [ :eachPair |
+		(eachPair first = aTitle) ifTrue: [ ^eachPair second ] ].
+	^aTitle! !
+
+!SmalltalkMentorClassReview methodsFor: 'private' stamp: 'HAW 8/Sep/2026, 10:59:26 am (UTC)'!
+heuristicDescriptions
+
+	^#(
+		#('Instance variables read & written' 'Every instance variable should be both read and written, in this class or a subclass, since an instance variable is in scope in the subclasses. One that is only read, only written, or never used is likely dead state.')
+		#('Class variables read & written' 'Every class variable should be both read and written, on the instance or the class side. One that is only read, only written, or never used is likely dead state.')
+		#('Methods have senders' 'Every method should have a sender. A method with no senders in the image that does not override an inherited one may be dead code. Test methods are excluded.')
+		#('Messages have implementers' 'Every message a method sends should have an implementer in the image. A send with no implementer is likely a typo or a missing method.')
+		#('Methods are categorized' 'Every method should live in a meaningful protocol, not in ''as yet unclassified''.')
+		#('No unused or write-only temporaries' 'A method should not declare a temporary variable that is never read, whether it is unreferenced or only assigned.')
+		#('No empty method categories' 'A method category that has no methods should be removed.')
+		#('No class-name prefix in names' 'An instance variable or message name should not repeat a word of the class name, since it is already read in the context of its class. A class-side selector may keep the prefix only when the unprefixed name would shadow reserved Class, Metaclass or Object protocol.')
+		#('Prefer self / self class over explicit class reference' 'Inside a class''s own methods, do not name the class. Use self class in instance methods and self in class-side methods, so subclasses resolve to the right class. Name the class only when you mean that exact class regardless of subclass.')
+		#('Prefer = over ==' 'Compare with = unless it must be exactly the same object.')
+		#('Instance creation funnelled through one message' 'All instance creation messages should funnel through a single class-side message that runs the preconditions and sends the one initialize; only that message should send new to self.')
+		#('One initialize message doing only assignments' 'A class should define a single initialize message, and it should do assignments and nothing else, an optional super initialize aside.')
+		#('Class is referenced' 'A class should be referenced by another class or have subclasses. One that is neither may be dead code.')
+		#('Shared leaf-subclass protocol in root' 'When every leaf subclass of a class answers the same message, that message should be declared in the root, concretely or as subclassResponsibility, so the shared protocol lives in one place.')
+	)! !
+
 !SmalltalkMentorClassReview methodsFor: 'private' stamp: 'HAW 7/Sep/2026, 11:10:07 pm (UTC)'!
 identityComparisonFindingFor: aSelector in: aClassOrMetaclass
 
@@ -2029,6 +2082,15 @@ instanceCreationFunnelFindingFor: aSelector in: aMetaclass
 		detail: 'The class-side method ', location, ' sends self new directly. All instance creation messages should funnel through a single one that runs the preconditions and sends the only initialize; the others should delegate to it.'
 		editKind: #method
 		editTarget: (aMetaclass -> aSelector)! !
+
+!SmalltalkMentorClassReview methodsFor: 'private' stamp: 'HAW 7/Sep/2026, 11:40:35 pm (UTC)'!
+isAssignmentOrAllowedInInitialize: aStatement
+
+	aStatement isAssignmentNode ifTrue: [ ^true ].
+	(aStatement isKindOf: ReturnNode) ifTrue: [ ^aStatement expr isSelfPseudoVariable ].
+	^aStatement isMessageNode
+		and: [ aStatement receiver isSuperPseudoVariable
+		and: [ aStatement selectorSymbol = #initialize ] ]! !
 
 !SmalltalkMentorClassReview methodsFor: 'private' stamp: 'HAW 7/Sep/2026, 10:13:57 pm (UTC)'!
 isInstanceVariable: anInstanceVariableName readInHierarchyOf: aClass
@@ -2069,11 +2131,35 @@ missingRootProtocolFindingFor: aSelector root: rootClass
 		editKind: (anImplementor isNil ifTrue: [ #none ] ifFalse: [ #method ])
 		editTarget: (anImplementor isNil ifTrue: [ nil ] ifFalse: [ anImplementor -> aSelector ])! !
 
+!SmalltalkMentorClassReview methodsFor: 'private' stamp: 'HAW 7/Sep/2026, 11:40:56 pm (UTC)'!
+multipleInitializeFindingFor: aSelector in: aClass
+
+	| location |
+
+	location := aClass name, '>>', aSelector asString.
+	^SmalltalkMentorFinding
+		title: 'Multiple initialize messages: ', location
+		detail: 'The class ', aClass name, ' defines more than one initialize message. A class should define only one; the instance creation messages should funnel through it.'
+		editKind: #method
+		editTarget: (aClass -> aSelector)! !
+
 !SmalltalkMentorClassReview methodsFor: 'private' stamp: 'HAW 7/Sep/2026, 10:28:44 pm (UTC)'!
 name: aName startsWithAnyWordOf: classNameWords
 
 	aName isEmpty ifTrue: [ ^false ].
 	^classNameWords anySatisfy: [ :eachWord | eachWord sameAs: aName camelCaseWords first ]! !
+
+!SmalltalkMentorClassReview methodsFor: 'private' stamp: 'HAW 7/Sep/2026, 11:42:50 pm (UTC)'!
+notOnlyAssignmentsFindingFor: aSelector in: aClass
+
+	| location |
+
+	location := aClass name, '>>', aSelector asString.
+	^SmalltalkMentorFinding
+		title: 'Initialize does more than assignments: ', location
+		detail: 'The method ', location, ' does more than assignments. An initialize message should only assign instance variables, aside from an optional super initialize.'
+		editKind: #method
+		editTarget: (aClass -> aSelector)! !
 
 !SmalltalkMentorClassReview methodsFor: 'private' stamp: 'HAW 7/Sep/2026, 11:20:38 pm (UTC)'!
 sendsSelfInstantiation: aCompiledMethod
