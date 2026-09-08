@@ -1,6 +1,6 @@
-'From Cuis7.9 [latest update: #8158] on 7 September 2026 at 8:37:47 pm'!
-'Description Add instance-creation-funnel class heuristic'!
-!provides: 'SmalltalkMentorTests' 1 17!
+'From Cuis7.9 [latest update: #8158] on 8 September 2026 at 5:57:11 pm'!
+'Description Reify fixed heuristics as a SmalltalkDesignHeuristic hierarchy'!
+!provides: 'SmalltalkMentorTests' 1 18!
 !requires: 'SmalltalkMentor' nil nil nil!
 SystemOrganization addCategory: #SmalltalkMentorTests!
 
@@ -78,18 +78,18 @@ newFixtureInstanceVariableNames: instanceNames classVariableNames: classNames
 	fixtures add: createdClass.
 	^createdClass! !
 
-!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
+!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 8/Sep/2026, 2:37:25 pm (UTC)'!
 testClassMustBeReferenced
 
 	| classToVerify findings |
 
 	classToVerify := self newFixtureInstanceVariableNames: '' classVariableNames: ''.
-	findings := review classReferencedFindingsFor: classToVerify.
+	findings := ClassIsReferencedHeuristic new findingsFor: classToVerify.
 	self assert: findings notEmpty.
 	"a class that other classes reference is not flagged"
-	self assert: (review classReferencedFindingsFor: SmalltalkMentorFinding) isEmpty! !
+	self assert: (ClassIsReferencedHeuristic new findingsFor: SmalltalkMentorFinding) isEmpty! !
 
-!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 7/Sep/2026, 10:14:12 pm (UTC)'!
+!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 8/Sep/2026, 2:36:17 pm (UTC)'!
 testClassSideSelectorKeepsPrefixWhenUnprefixedNameIsReserved
 
 	| classToVerify findings |
@@ -97,20 +97,20 @@ testClassSideSelectorKeepsPrefixWhenUnprefixedNameIsReserved
 	classToVerify := self newFixtureInstanceVariableNames: '' classVariableNames: ''.
 	classToVerify class compile: 'fixtureName ^1' classified: 'accessing'.
 	classToVerify class compile: 'fixtureOwner ^2' classified: 'accessing'.
-	findings := review classNamePrefixFindingsFor: classToVerify.
+	findings := NoClassNamePrefixHeuristic new findingsFor: classToVerify.
 	self deny: (findings anySatisfy: [ :finding | self includesSubstring: 'fixtureName' in: finding title ]).
 	self assert: (findings anySatisfy: [ :finding | self includesSubstring: 'fixtureOwner' in: finding title ])! !
 
-!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
+!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 8/Sep/2026, 2:35:22 pm (UTC)'!
 testClassVariableMustBeReadAndWritten
 
 	| classToVerify findings |
 
 	classToVerify := self newFixtureInstanceVariableNames: '' classVariableNames: 'UnusedClassVariable'.
-	findings := review classVariableFindingsFor: classToVerify.
+	findings := ClassVariablesReadAndWrittenHeuristic new findingsFor: classToVerify.
 	self assert: (findings anySatisfy: [ :finding | finding editKind = #variable and: [ finding editTarget value = 'UnusedClassVariable' ] ])! !
 
-!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 7/Sep/2026, 10:47:49 pm (UTC)'!
+!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 8/Sep/2026, 2:36:27 pm (UTC)'!
 testExplicitClassReferenceIsFlaggedForSelfOrSelfClass
 
 	| classToVerify findings |
@@ -119,12 +119,12 @@ testExplicitClassReferenceIsFlaggedForSelfOrSelfClass
 	classToVerify compile: 'makeAnother ^SMMentorFixture new' classified: 'instance creation'.
 	classToVerify compile: 'harmless ^42' classified: 'accessing'.
 	classToVerify class compile: 'create ^SMMentorFixture new' classified: 'instance creation'.
-	findings := review explicitClassReferenceFindingsFor: classToVerify.
+	findings := SelfOverExplicitClassReferenceHeuristic new findingsFor: classToVerify.
 	self assert: (findings anySatisfy: [ :finding | (self includesSubstring: '>>makeAnother' in: finding title) and: [ self includesSubstring: '(may be self class)' in: finding title ] ]).
 	self assert: (findings anySatisfy: [ :finding | (self includesSubstring: 'class>>create' in: finding title) and: [ self includesSubstring: '(may be self)' in: finding title ] ]).
 	self deny: (findings anySatisfy: [ :finding | self includesSubstring: '>>harmless' in: finding title ])! !
 
-!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 7/Sep/2026, 11:10:40 pm (UTC)'!
+!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 8/Sep/2026, 2:36:34 pm (UTC)'!
 testIdentityComparisonIsFlagged
 
 	| classToVerify findings |
@@ -132,20 +132,32 @@ testIdentityComparisonIsFlagged
 	classToVerify := self newFixtureInstanceVariableNames: '' classVariableNames: ''.
 	classToVerify compile: 'sameAs: anObject ^self == anObject' classified: 'comparing'.
 	classToVerify compile: 'equalTo: anObject ^self = anObject' classified: 'comparing'.
-	findings := review identityComparisonFindingsFor: classToVerify.
+	findings := EqualityOverIdentityHeuristic new findingsFor: classToVerify.
 	self assert: (findings anySatisfy: [ :finding | self includesSubstring: '>>sameAs:' in: finding title ]).
 	self deny: (findings anySatisfy: [ :finding | self includesSubstring: '>>equalTo:' in: finding title ])! !
 
-!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
+!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 8/Sep/2026, 2:37:18 pm (UTC)'!
+testInitializeWithNonAssignmentIsFlagged
+
+	| classToVerify findings |
+
+	classToVerify := self newFixtureInstanceVariableNames: 'value' classVariableNames: ''.
+	classToVerify compile: 'initializeValue: aValue
+	value := aValue.
+	self recompute' classified: 'initialization'.
+	findings := OneInitializeMessageHeuristic new findingsFor: classToVerify.
+	self assert: (findings anySatisfy: [ :finding | self includesSubstring: 'does more than assignments' in: finding title ])! !
+
+!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 8/Sep/2026, 2:35:07 pm (UTC)'!
 testInstanceVariableMustBeReadAndWritten
 
 	| classToVerify findings |
 
 	classToVerify := self newFixtureInstanceVariableNames: 'unusedInstanceVariable' classVariableNames: ''.
-	findings := review instanceVariableFindingsFor: classToVerify.
+	findings := InstanceVariablesReadAndWrittenHeuristic new findingsFor: classToVerify.
 	self assert: (findings anySatisfy: [ :finding | finding editKind = #variable and: [ finding editTarget value = 'unusedInstanceVariable' ] ])! !
 
-!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 7/Sep/2026, 10:14:20 pm (UTC)'!
+!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 8/Sep/2026, 2:35:15 pm (UTC)'!
 testInstanceVariableReadAndWrittenOnlyInSubclassIsNotFlagged
 
 	| superclassToVerify subclass findings |
@@ -154,42 +166,54 @@ testInstanceVariableReadAndWrittenOnlyInSubclassIsNotFlagged
 	subclass := self newFixtureClassNamed: #SMMentorFixtureSubclass superclass: superclassToVerify.
 	subclass compile: 'storeState stateUsedInSubclass := 42' classified: 'accessing'.
 	subclass compile: 'state ^stateUsedInSubclass' classified: 'accessing'.
-	findings := review instanceVariableFindingsFor: superclassToVerify.
+	findings := InstanceVariablesReadAndWrittenHeuristic new findingsFor: superclassToVerify.
 	self deny: (findings anySatisfy: [ :finding | finding editTarget value = 'stateUsedInSubclass' ])! !
 
-!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 20/Aug/2026, 10:12:23 pm (UTC)'!
+!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 8/Sep/2026, 2:36:00 pm (UTC)'!
 testMethodCategoryMustNotBeEmpty
 
 	| classToVerify findings |
 
 	classToVerify := self newFixtureInstanceVariableNames: '' classVariableNames: ''.
 	classToVerify organization addCategory: 'unused protocol'.
-	findings := review emptyMethodCategoryFindingsFor: classToVerify.
+	findings := NoEmptyMethodCategoriesHeuristic new findingsFor: classToVerify.
 	self assert: (findings anySatisfy: [ :finding | self includesSubstring: 'unused protocol' in: finding title ])! !
 
-!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
+!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 8/Sep/2026, 2:35:44 pm (UTC)'!
 testMethodMustBeCategorized
 
 	| classToVerify findings |
 
 	classToVerify := self newFixtureInstanceVariableNames: '' classVariableNames: ''.
 	classToVerify compile: 'looseMethod ^1' classified: 'as yet unclassified'.
-	findings := review uncategorizedMethodsFindingsFor: classToVerify.
+	findings := MethodsAreCategorizedHeuristic new findingsFor: classToVerify.
 	self assert: (findings anySatisfy: [ :finding | finding editTarget value asString = 'looseMethod' ])! !
 
-!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 8/Sep/2026, 2:35:29 pm (UTC)'!
 testMethodMustHaveSenders
 
 	| classToVerify findings |
 
 	classToVerify := self newFixtureInstanceVariableNames: '' classVariableNames: ''.
 	classToVerify compile: 'orphanMethodXyz ^42' classified: 'accessing'.
-	findings := review methodsWithoutSendersFindingsFor: classToVerify.
+	findings := MethodsHaveSendersHeuristic new findingsFor: classToVerify.
 	"Compare by asString, not the #orphanMethodXyz literal: a Symbol literal here would itself
 	count as a sender and defeat the heuristic."
 	self assert: (findings anySatisfy: [ :finding | finding editTarget value asString = 'orphanMethodXyz' ])! !
 
-!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 7/Sep/2026, 11:21:38 pm (UTC)'!
+!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 8/Sep/2026, 2:37:01 pm (UTC)'!
+testMultipleInitializeMessagesAreFlagged
+
+	| classToVerify findings |
+
+	classToVerify := self newFixtureInstanceVariableNames: 'value' classVariableNames: ''.
+	classToVerify compile: 'initialize value := 0' classified: 'initialization'.
+	classToVerify compile: 'initializeValue: aValue value := aValue' classified: 'initialization'.
+	findings := OneInitializeMessageHeuristic new findingsFor: classToVerify.
+	self assert: (findings anySatisfy: [ :finding | (self includesSubstring: 'Multiple initialize' in: finding title) and: [ self includesSubstring: '>>initialize' in: finding title ] ]).
+	self assert: (findings anySatisfy: [ :finding | (self includesSubstring: 'Multiple initialize' in: finding title) and: [ self includesSubstring: '>>initializeValue:' in: finding title ] ])! !
+
+!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 8/Sep/2026, 2:36:44 pm (UTC)'!
 testMultipleInstanceCreationFunnelsAreFlagged
 
 	| classToVerify findings |
@@ -198,12 +222,12 @@ testMultipleInstanceCreationFunnelsAreFlagged
 	classToVerify class compile: 'withValue: aValue ^self new initializeValue: aValue' classified: 'instance creation'.
 	classToVerify class compile: 'empty ^self new initializeValue: 0' classified: 'instance creation'.
 	classToVerify class compile: 'sample ^OrderedCollection new' classified: 'instance creation'.
-	findings := review instanceCreationFunnelFindingsFor: classToVerify.
+	findings := InstanceCreationFunnelHeuristic new findingsFor: classToVerify.
 	self assert: (findings anySatisfy: [ :finding | self includesSubstring: '>>withValue:' in: finding title ]).
 	self assert: (findings anySatisfy: [ :finding | self includesSubstring: '>>empty' in: finding title ]).
 	self deny: (findings anySatisfy: [ :finding | self includesSubstring: '>>sample' in: finding title ])! !
 
-!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 7/Sep/2026, 10:14:05 pm (UTC)'!
+!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 8/Sep/2026, 2:36:09 pm (UTC)'!
 testNameRepeatingClassNameWordIsFlagged
 
 	| classToVerify findings |
@@ -211,23 +235,23 @@ testNameRepeatingClassNameWordIsFlagged
 	classToVerify := self newFixtureInstanceVariableNames: 'fixtureName balance' classVariableNames: ''.
 	classToVerify compile: 'fixtureBalance ^balance' classified: 'accessing'.
 	classToVerify compile: 'balance ^balance' classified: 'accessing'.
-	findings := review classNamePrefixFindingsFor: classToVerify.
+	findings := NoClassNamePrefixHeuristic new findingsFor: classToVerify.
 	self assert: (findings anySatisfy: [ :finding | self includesSubstring: 'fixtureName' in: finding title ]).
 	self assert: (findings anySatisfy: [ :finding | self includesSubstring: 'fixtureBalance' in: finding title ]).
 	self deny: (findings anySatisfy: [ :finding | self includesSubstring: ' - balance' in: finding title ]).
 	self deny: (findings anySatisfy: [ :finding | self includesSubstring: '>>balance' in: finding title ])! !
 
-!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
+!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 8/Sep/2026, 2:35:36 pm (UTC)'!
 testSentMessageMustHaveImplementer
 
 	| classToVerify findings |
 
 	classToVerify := self newFixtureInstanceVariableNames: '' classVariableNames: ''.
 	classToVerify compile: 'callsMissing ^self zzzNoSuchSelectorXyz' classified: 'accessing'.
-	findings := review messagesWithoutImplementersFindingsFor: classToVerify.
+	findings := MessagesHaveImplementersHeuristic new findingsFor: classToVerify.
 	self assert: (findings anySatisfy: [ :finding | self includesSubstring: 'zzzNoSuchSelectorXyz' in: finding title ])! !
 
-!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
+!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 8/Sep/2026, 2:37:37 pm (UTC)'!
 testSharedLeafSubclassProtocolMustBeInRoot
 
 	| rootClass firstLeaf secondLeaf findings |
@@ -238,17 +262,27 @@ testSharedLeafSubclassProtocolMustBeInRoot
 	firstLeaf compile: 'sharedOperation ^1' classified: 'operations'.
 	secondLeaf compile: 'sharedOperation ^2' classified: 'operations'.
 	firstLeaf compile: 'onlyInOneLeaf ^0' classified: 'operations'.
-	findings := review commonLeafSubclassProtocolFindingsFor: rootClass.
+	findings := SharedLeafSubclassProtocolHeuristic new findingsFor: rootClass.
 	"answered by every leaf but missing in the root -> flagged"
 	self assert: (findings anySatisfy: [ :finding | self includesSubstring: 'sharedOperation' in: finding title ]).
 	"answered by only one leaf -> not flagged"
 	self deny: (findings anySatisfy: [ :finding | self includesSubstring: 'onlyInOneLeaf' in: finding title ]).
 	"once the root declares it (even as subclassResponsibility) it is no longer flagged"
 	rootClass compile: 'sharedOperation ^self subclassResponsibility' classified: 'operations'.
-	findings := review commonLeafSubclassProtocolFindingsFor: rootClass.
+	findings := SharedLeafSubclassProtocolHeuristic new findingsFor: rootClass.
 	self deny: (findings anySatisfy: [ :finding | self includesSubstring: 'sharedOperation' in: finding title ])! !
 
-!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 7/Sep/2026, 11:21:45 pm (UTC)'!
+!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 8/Sep/2026, 2:37:11 pm (UTC)'!
+testSingleAssignmentOnlyInitializeIsNotFlagged
+
+	| classToVerify findings |
+
+	classToVerify := self newFixtureInstanceVariableNames: 'value' classVariableNames: ''.
+	classToVerify compile: 'initializeValue: aValue value := aValue' classified: 'initialization'.
+	findings := OneInitializeMessageHeuristic new findingsFor: classToVerify.
+	self assert: findings isEmpty! !
+
+!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 8/Sep/2026, 2:36:53 pm (UTC)'!
 testSingleInstanceCreationFunnelIsNotFlagged
 
 	| classToVerify findings |
@@ -256,10 +290,10 @@ testSingleInstanceCreationFunnelIsNotFlagged
 	classToVerify := self newFixtureInstanceVariableNames: 'value' classVariableNames: ''.
 	classToVerify class compile: 'withValue: aValue ^self new initializeValue: aValue' classified: 'instance creation'.
 	classToVerify class compile: 'empty ^self withValue: 0' classified: 'instance creation'.
-	findings := review instanceCreationFunnelFindingsFor: classToVerify.
+	findings := InstanceCreationFunnelHeuristic new findingsFor: classToVerify.
 	self assert: findings isEmpty! !
 
-!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
+!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 8/Sep/2026, 2:35:54 pm (UTC)'!
 testUnusedAndWriteOnlyTemporariesAreFlaggedButUsedAndCapturedAreNot
 
 	| classToVerify findings |
@@ -274,7 +308,7 @@ testUnusedAndWriteOnlyTemporariesAreFlaggedButUsedAndCapturedAreNot
 	| shared |
 	[ shared := 5 ] value.
 	^shared' classified: 'accessing'.
-	findings := review unusedTemporariesFindingsFor: classToVerify.
+	findings := NoUnusedTemporariesHeuristic new findingsFor: classToVerify.
 	self assert: 2 equals: findings size.
 	self assert: (findings anySatisfy: [ :finding | self includesSubstring: 'reallyUnused' in: finding title ]).
 	self assert: (findings anySatisfy: [ :finding | self includesSubstring: 'writeOnly' in: finding title ]).

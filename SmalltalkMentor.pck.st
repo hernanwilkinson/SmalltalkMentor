@@ -1,6 +1,6 @@
-'From Cuis7.9 [latest update: #8158] on 8 September 2026 at 9:23:22 am'!
-'Description Show the heuristic description when a heuristic is selected'!
-!provides: 'SmalltalkMentor' 1 49!
+'From Cuis7.9 [latest update: #8158] on 8 September 2026 at 5:57:06 pm'!
+'Description Reify fixed heuristics as a SmalltalkDesignHeuristic hierarchy'!
+!provides: 'SmalltalkMentor' 1 50!
 !requires: 'JSON' 1 29 nil!
 !requires: 'OSProcess' 1 36 nil!
 SystemOrganization addCategory: #SmalltalkMentor!
@@ -94,6 +94,156 @@ LLMProvider subclass: #OpenAICompatibleProvider
 	category: 'SmalltalkMentor'!
 !classDefinition: 'OpenAICompatibleProvider class' category: #SmalltalkMentor!
 OpenAICompatibleProvider class
+	instanceVariableNames: ''!
+
+!classDefinition: #SmalltalkDesignHeuristic category: #SmalltalkMentor!
+Object subclass: #SmalltalkDesignHeuristic
+	instanceVariableNames: ''
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'SmalltalkMentor'!
+!classDefinition: 'SmalltalkDesignHeuristic class' category: #SmalltalkMentor!
+SmalltalkDesignHeuristic class
+	instanceVariableNames: ''!
+
+!classDefinition: #ClassIsReferencedHeuristic category: #SmalltalkMentor!
+SmalltalkDesignHeuristic subclass: #ClassIsReferencedHeuristic
+	instanceVariableNames: ''
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'SmalltalkMentor'!
+!classDefinition: 'ClassIsReferencedHeuristic class' category: #SmalltalkMentor!
+ClassIsReferencedHeuristic class
+	instanceVariableNames: ''!
+
+!classDefinition: #ClassVariablesReadAndWrittenHeuristic category: #SmalltalkMentor!
+SmalltalkDesignHeuristic subclass: #ClassVariablesReadAndWrittenHeuristic
+	instanceVariableNames: ''
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'SmalltalkMentor'!
+!classDefinition: 'ClassVariablesReadAndWrittenHeuristic class' category: #SmalltalkMentor!
+ClassVariablesReadAndWrittenHeuristic class
+	instanceVariableNames: ''!
+
+!classDefinition: #EqualityOverIdentityHeuristic category: #SmalltalkMentor!
+SmalltalkDesignHeuristic subclass: #EqualityOverIdentityHeuristic
+	instanceVariableNames: ''
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'SmalltalkMentor'!
+!classDefinition: 'EqualityOverIdentityHeuristic class' category: #SmalltalkMentor!
+EqualityOverIdentityHeuristic class
+	instanceVariableNames: ''!
+
+!classDefinition: #InstanceCreationFunnelHeuristic category: #SmalltalkMentor!
+SmalltalkDesignHeuristic subclass: #InstanceCreationFunnelHeuristic
+	instanceVariableNames: ''
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'SmalltalkMentor'!
+!classDefinition: 'InstanceCreationFunnelHeuristic class' category: #SmalltalkMentor!
+InstanceCreationFunnelHeuristic class
+	instanceVariableNames: ''!
+
+!classDefinition: #InstanceVariablesReadAndWrittenHeuristic category: #SmalltalkMentor!
+SmalltalkDesignHeuristic subclass: #InstanceVariablesReadAndWrittenHeuristic
+	instanceVariableNames: ''
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'SmalltalkMentor'!
+!classDefinition: 'InstanceVariablesReadAndWrittenHeuristic class' category: #SmalltalkMentor!
+InstanceVariablesReadAndWrittenHeuristic class
+	instanceVariableNames: ''!
+
+!classDefinition: #MessagesHaveImplementersHeuristic category: #SmalltalkMentor!
+SmalltalkDesignHeuristic subclass: #MessagesHaveImplementersHeuristic
+	instanceVariableNames: ''
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'SmalltalkMentor'!
+!classDefinition: 'MessagesHaveImplementersHeuristic class' category: #SmalltalkMentor!
+MessagesHaveImplementersHeuristic class
+	instanceVariableNames: ''!
+
+!classDefinition: #MethodsAreCategorizedHeuristic category: #SmalltalkMentor!
+SmalltalkDesignHeuristic subclass: #MethodsAreCategorizedHeuristic
+	instanceVariableNames: ''
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'SmalltalkMentor'!
+!classDefinition: 'MethodsAreCategorizedHeuristic class' category: #SmalltalkMentor!
+MethodsAreCategorizedHeuristic class
+	instanceVariableNames: ''!
+
+!classDefinition: #MethodsHaveSendersHeuristic category: #SmalltalkMentor!
+SmalltalkDesignHeuristic subclass: #MethodsHaveSendersHeuristic
+	instanceVariableNames: ''
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'SmalltalkMentor'!
+!classDefinition: 'MethodsHaveSendersHeuristic class' category: #SmalltalkMentor!
+MethodsHaveSendersHeuristic class
+	instanceVariableNames: ''!
+
+!classDefinition: #NoClassNamePrefixHeuristic category: #SmalltalkMentor!
+SmalltalkDesignHeuristic subclass: #NoClassNamePrefixHeuristic
+	instanceVariableNames: ''
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'SmalltalkMentor'!
+!classDefinition: 'NoClassNamePrefixHeuristic class' category: #SmalltalkMentor!
+NoClassNamePrefixHeuristic class
+	instanceVariableNames: ''!
+
+!classDefinition: #NoEmptyMethodCategoriesHeuristic category: #SmalltalkMentor!
+SmalltalkDesignHeuristic subclass: #NoEmptyMethodCategoriesHeuristic
+	instanceVariableNames: ''
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'SmalltalkMentor'!
+!classDefinition: 'NoEmptyMethodCategoriesHeuristic class' category: #SmalltalkMentor!
+NoEmptyMethodCategoriesHeuristic class
+	instanceVariableNames: ''!
+
+!classDefinition: #NoUnusedTemporariesHeuristic category: #SmalltalkMentor!
+SmalltalkDesignHeuristic subclass: #NoUnusedTemporariesHeuristic
+	instanceVariableNames: ''
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'SmalltalkMentor'!
+!classDefinition: 'NoUnusedTemporariesHeuristic class' category: #SmalltalkMentor!
+NoUnusedTemporariesHeuristic class
+	instanceVariableNames: ''!
+
+!classDefinition: #OneInitializeMessageHeuristic category: #SmalltalkMentor!
+SmalltalkDesignHeuristic subclass: #OneInitializeMessageHeuristic
+	instanceVariableNames: ''
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'SmalltalkMentor'!
+!classDefinition: 'OneInitializeMessageHeuristic class' category: #SmalltalkMentor!
+OneInitializeMessageHeuristic class
+	instanceVariableNames: ''!
+
+!classDefinition: #SelfOverExplicitClassReferenceHeuristic category: #SmalltalkMentor!
+SmalltalkDesignHeuristic subclass: #SelfOverExplicitClassReferenceHeuristic
+	instanceVariableNames: ''
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'SmalltalkMentor'!
+!classDefinition: 'SelfOverExplicitClassReferenceHeuristic class' category: #SmalltalkMentor!
+SelfOverExplicitClassReferenceHeuristic class
+	instanceVariableNames: ''!
+
+!classDefinition: #SharedLeafSubclassProtocolHeuristic category: #SmalltalkMentor!
+SmalltalkDesignHeuristic subclass: #SharedLeafSubclassProtocolHeuristic
+	instanceVariableNames: ''
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'SmalltalkMentor'!
+!classDefinition: 'SharedLeafSubclassProtocolHeuristic class' category: #SmalltalkMentor!
+SharedLeafSubclassProtocolHeuristic class
 	instanceVariableNames: ''!
 
 !classDefinition: #SmalltalkMentor category: #SmalltalkMentor!
@@ -644,6 +794,631 @@ name: aName endpoint: anEndpoint model: aModel imageKeyBasename: anImageBasename
 
 	^self new
 		initializeName: aName endpoint: anEndpoint model: aModel imageKeyBasename: anImageBasename! !
+
+!SmalltalkDesignHeuristic methodsFor: 'accessing' stamp: 'HAW 8/Sep/2026, 2:24:41 pm (UTC)'!
+description
+
+	^self subclassResponsibility! !
+
+!SmalltalkDesignHeuristic methodsFor: 'accessing' stamp: 'HAW 8/Sep/2026, 2:24:36 pm (UTC)'!
+name
+
+	^self subclassResponsibility! !
+
+!SmalltalkDesignHeuristic methodsFor: 'verifying' stamp: 'HAW 8/Sep/2026, 2:24:47 pm (UTC)'!
+findingsFor: aClass
+
+	^self subclassResponsibility! !
+
+!ClassIsReferencedHeuristic methodsFor: 'accessing' stamp: 'HAW 8/Sep/2026, 2:32:07 pm (UTC)'!
+description
+
+	^'A class should be referenced by another class or have subclasses. One that is neither may be dead code.'! !
+
+!ClassIsReferencedHeuristic methodsFor: 'accessing' stamp: 'HAW 8/Sep/2026, 2:32:01 pm (UTC)'!
+name
+
+	^'Class is referenced'! !
+
+!ClassIsReferencedHeuristic methodsFor: 'verifying' stamp: 'HAW 8/Sep/2026, 2:32:15 pm (UTC)'!
+findingsFor: aClass
+
+	| result external |
+
+	result := OrderedCollection new.
+	external := (Smalltalk allCallsOn: aClass binding)
+		reject: [ :mr | mr actualClass theNonMetaClass = aClass ].
+	(external isEmpty and: [ aClass subclasses isEmpty ]) ifTrue: [
+		result add: (SmalltalkMentorFinding
+			title: 'Class not referenced: ', aClass name
+			detail: 'The class ', aClass name, ' is not referenced by any other class and has no subclasses - it may be dead code.'
+			editKind: #none
+			editTarget: nil) ].
+	^result! !
+
+!ClassVariablesReadAndWrittenHeuristic methodsFor: 'accessing' stamp: 'HAW 8/Sep/2026, 2:25:53 pm (UTC)'!
+description
+
+	^'Every class variable should be both read and written, on the instance or the class side. One that is only read, only written, or never used is likely dead state.'! !
+
+!ClassVariablesReadAndWrittenHeuristic methodsFor: 'accessing' stamp: 'HAW 8/Sep/2026, 2:25:47 pm (UTC)'!
+name
+
+	^'Class variables read & written'! !
+
+!ClassVariablesReadAndWrittenHeuristic methodsFor: 'verifying' stamp: 'HAW 8/Sep/2026, 2:26:03 pm (UTC)'!
+findingsFor: aClass
+
+	| findings |
+
+	findings := OrderedCollection new.
+	aClass classVarNames asSortedCollection do: [ :classVariableName |
+		| binding sources assignmentCount occurrenceCount isWritten isRead problem |
+		binding := aClass bindingOf: classVariableName.
+		sources := OrderedCollection new.
+		(aClass whichSelectorsReferTo: binding) do: [ :referringSelector | sources add: (aClass sourceCodeAt: referringSelector) ].
+		(aClass class whichSelectorsReferTo: binding) do: [ :referringSelector | sources add: (aClass class sourceCodeAt: referringSelector) ].
+		assignmentCount := sources inject: 0 into: [ :runningTotal :eachSource | runningTotal + (self countOf: classVariableName, ' :=' in: eachSource) + (self countOf: classVariableName, ':=' in: eachSource) ].
+		occurrenceCount := sources inject: 0 into: [ :runningTotal :eachSource | runningTotal + (self countOf: classVariableName in: eachSource) ].
+		isWritten := assignmentCount > 0.
+		isRead := occurrenceCount > assignmentCount.
+		(isRead and: [ isWritten ]) ifFalse: [
+			problem := (isRead or: [ isWritten ])
+				ifFalse: [ 'is never read nor written' ]
+				ifTrue: [ isRead ifTrue: [ 'is read but never written' ] ifFalse: [ 'is written but never read' ] ].
+			findings add: (SmalltalkMentorFinding
+				title: 'Class variable ', classVariableName, ' ', problem
+				detail: 'The class variable ''', classVariableName, ''' of ', aClass name, ' ', problem, '.'
+				editKind: #variable
+				editTarget: (aClass -> classVariableName)) ] ].
+	^findings! !
+
+!ClassVariablesReadAndWrittenHeuristic methodsFor: 'private' stamp: 'HAW 8/Sep/2026, 2:26:11 pm (UTC)'!
+countOf: aSubstring in: aString
+
+	"Case-sensitive count of non-overlapping occurrences of aSubstring in aString."
+
+	| substringSize occurrenceCount scanIndex |
+
+	substringSize := aSubstring size.
+	substringSize = 0 ifTrue: [ ^0 ].
+	occurrenceCount := 0.
+	scanIndex := 1.
+	[ scanIndex + substringSize - 1 <= aString size ] whileTrue: [
+		(aString copyFrom: scanIndex to: scanIndex + substringSize - 1) = aSubstring
+			ifTrue: [ occurrenceCount := occurrenceCount + 1. scanIndex := scanIndex + substringSize ]
+			ifFalse: [ scanIndex := scanIndex + 1 ] ].
+	^occurrenceCount! !
+
+!EqualityOverIdentityHeuristic methodsFor: 'accessing' stamp: 'HAW 8/Sep/2026, 2:30:14 pm (UTC)'!
+description
+
+	^'Compare with = unless it must be exactly the same object.'! !
+
+!EqualityOverIdentityHeuristic methodsFor: 'accessing' stamp: 'HAW 8/Sep/2026, 2:30:07 pm (UTC)'!
+name
+
+	^'Prefer = over =='! !
+
+!EqualityOverIdentityHeuristic methodsFor: 'verifying' stamp: 'HAW 8/Sep/2026, 2:30:21 pm (UTC)'!
+findingsFor: aClass
+
+	| findings |
+
+	findings := OrderedCollection new.
+	{ aClass. aClass class } do: [ :classOrMetaclass |
+		classOrMetaclass selectors asSortedCollection do: [ :eachSelector |
+			((classOrMetaclass >> eachSelector) messages includes: #==) ifTrue: [
+				findings add: (self identityComparisonFindingFor: eachSelector in: classOrMetaclass) ] ] ].
+	^findings! !
+
+!EqualityOverIdentityHeuristic methodsFor: 'private' stamp: 'HAW 8/Sep/2026, 2:30:29 pm (UTC)'!
+identityComparisonFindingFor: aSelector in: aClassOrMetaclass
+
+	| location |
+
+	location := aClassOrMetaclass name, '>>', aSelector asString.
+	^SmalltalkMentorFinding
+		title: 'Identity comparison ==: ', location, ' (may be =)'
+		detail: 'The method ', location, ' compares with == . Prefer = unless it must be exactly the same object.'
+		editKind: #method
+		editTarget: (aClassOrMetaclass -> aSelector)! !
+
+!InstanceCreationFunnelHeuristic methodsFor: 'accessing' stamp: 'HAW 8/Sep/2026, 2:30:43 pm (UTC)'!
+description
+
+	^'All instance creation messages should funnel through a single class-side message that runs the preconditions and sends the one initialize; only that message should send new to self.'! !
+
+!InstanceCreationFunnelHeuristic methodsFor: 'accessing' stamp: 'HAW 8/Sep/2026, 2:30:38 pm (UTC)'!
+name
+
+	^'Instance creation funnelled through one message'! !
+
+!InstanceCreationFunnelHeuristic methodsFor: 'verifying' stamp: 'HAW 8/Sep/2026, 2:30:50 pm (UTC)'!
+findingsFor: aClass
+
+	| metaclass instantiatingSelectors findings |
+
+	findings := OrderedCollection new.
+	metaclass := aClass class.
+	instantiatingSelectors := metaclass selectors asSortedCollection select: [ :eachSelector |
+		self sendsSelfInstantiation: (metaclass >> eachSelector) ].
+	instantiatingSelectors size > 1 ifTrue: [
+		instantiatingSelectors do: [ :eachSelector |
+			findings add: (self instanceCreationFunnelFindingFor: eachSelector in: metaclass) ] ].
+	^findings! !
+
+!InstanceCreationFunnelHeuristic methodsFor: 'private' stamp: 'HAW 8/Sep/2026, 2:31:06 pm (UTC)'!
+instanceCreationFunnelFindingFor: aSelector in: aMetaclass
+
+	| location |
+
+	location := aMetaclass name, '>>', aSelector asString.
+	^SmalltalkMentorFinding
+		title: 'Instance creation not funnelled: ', location
+		detail: 'The class-side method ', location, ' sends self new directly. All instance creation messages should funnel through a single one that runs the preconditions and sends the only initialize; the others should delegate to it.'
+		editKind: #method
+		editTarget: (aMetaclass -> aSelector)! !
+
+!InstanceCreationFunnelHeuristic methodsFor: 'private' stamp: 'HAW 8/Sep/2026, 2:30:58 pm (UTC)'!
+sendsSelfInstantiation: aCompiledMethod
+
+	| found |
+
+	found := false.
+	[ aCompiledMethod methodNode accept: (ParseNodeEnumerator ofBlock: [ :parseNode |
+		(parseNode isMessageNode
+			and: [ parseNode receiver isSelfPseudoVariable
+			and: [ #(new basicNew new: basicNew:) includes: parseNode selectorSymbol ] ]) ifTrue: [ found := true ] ]) ]
+		on: Error do: [ :error | ].
+	^found! !
+
+!InstanceVariablesReadAndWrittenHeuristic methodsFor: 'accessing' stamp: 'HAW 8/Sep/2026, 2:25:16 pm (UTC)'!
+description
+
+	^'Every instance variable should be both read and written, in this class or a subclass, since an instance variable is in scope in the subclasses. One that is only read, only written, or never used is likely dead state.'! !
+
+!InstanceVariablesReadAndWrittenHeuristic methodsFor: 'accessing' stamp: 'HAW 8/Sep/2026, 2:25:10 pm (UTC)'!
+name
+
+	^'Instance variables read & written'! !
+
+!InstanceVariablesReadAndWrittenHeuristic methodsFor: 'verifying' stamp: 'HAW 8/Sep/2026, 2:25:25 pm (UTC)'!
+findingsFor: aClass
+
+	| findings |
+
+	findings := OrderedCollection new.
+	aClass instVarNames do: [ :instanceVariableName |
+		| isRead isWritten problem |
+		isRead := self isInstanceVariable: instanceVariableName readInHierarchyOf: aClass.
+		isWritten := self isInstanceVariable: instanceVariableName writtenInHierarchyOf: aClass.
+		(isRead and: [ isWritten ]) ifFalse: [
+			problem := (isRead or: [ isWritten ])
+				ifFalse: [ 'is never read nor written' ]
+				ifTrue: [ isRead ifTrue: [ 'is read but never written' ] ifFalse: [ 'is written but never read' ] ].
+			findings add: (SmalltalkMentorFinding
+				title: 'Instance variable ', instanceVariableName, ' ', problem
+				detail: 'The instance variable ''', instanceVariableName, ''' of ', aClass name, ' ', problem, '.'
+				editKind: #variable
+				editTarget: (aClass -> instanceVariableName)) ] ].
+	^findings! !
+
+!InstanceVariablesReadAndWrittenHeuristic methodsFor: 'private' stamp: 'HAW 8/Sep/2026, 2:25:33 pm (UTC)'!
+isInstanceVariable: anInstanceVariableName readInHierarchyOf: aClass
+
+	| instanceVariableIndex |
+
+	instanceVariableIndex := aClass allInstVarNames indexOf: anInstanceVariableName.
+	^aClass withAllSubclasses anySatisfy: [ :eachClass |
+		(eachClass whichSelectorsAccess: anInstanceVariableName) anySatisfy: [ :accessorSelector |
+			(eachClass >> accessorSelector) readsField: instanceVariableIndex ] ]! !
+
+!InstanceVariablesReadAndWrittenHeuristic methodsFor: 'private' stamp: 'HAW 8/Sep/2026, 2:25:39 pm (UTC)'!
+isInstanceVariable: anInstanceVariableName writtenInHierarchyOf: aClass
+
+	^aClass withAllSubclasses anySatisfy: [ :eachClass |
+		(eachClass whichSelectorsStoreInto: anInstanceVariableName) notEmpty ]! !
+
+!MessagesHaveImplementersHeuristic methodsFor: 'accessing' stamp: 'HAW 8/Sep/2026, 2:26:47 pm (UTC)'!
+description
+
+	^'Every message a method sends should have an implementer in the image. A send with no implementer is likely a typo or a missing method.'! !
+
+!MessagesHaveImplementersHeuristic methodsFor: 'accessing' stamp: 'HAW 8/Sep/2026, 2:26:41 pm (UTC)'!
+name
+
+	^'Messages have implementers'! !
+
+!MessagesHaveImplementersHeuristic methodsFor: 'verifying' stamp: 'HAW 8/Sep/2026, 2:26:55 pm (UTC)'!
+findingsFor: aClass
+
+	| findings seenMessages |
+
+	findings := OrderedCollection new.
+	seenMessages := Set new.
+	{ aClass. aClass class } do: [ :classOrMetaclass |
+		classOrMetaclass selectors asSortedCollection do: [ :eachSelector |
+			(classOrMetaclass >> eachSelector) messages do: [ :sentMessage |
+				(seenMessages includes: sentMessage) ifFalse: [
+					seenMessages add: sentMessage.
+					(Smalltalk allImplementorsOf: sentMessage) isEmpty ifTrue: [
+						findings add: (SmalltalkMentorFinding
+							title: 'No implementer: #', sentMessage
+							detail: 'The message #', sentMessage, ' is sent (e.g. in ', classOrMetaclass name, '>>', eachSelector, ') but no class implements it - likely a typo or a missing method.'
+							editKind: #method
+							editTarget: (classOrMetaclass -> eachSelector)) ] ] ] ] ].
+	^findings! !
+
+!MethodsAreCategorizedHeuristic methodsFor: 'accessing' stamp: 'HAW 8/Sep/2026, 2:27:08 pm (UTC)'!
+description
+
+	^'Every method should live in a meaningful protocol, not in ''as yet unclassified''.'! !
+
+!MethodsAreCategorizedHeuristic methodsFor: 'accessing' stamp: 'HAW 8/Sep/2026, 2:27:01 pm (UTC)'!
+name
+
+	^'Methods are categorized'! !
+
+!MethodsAreCategorizedHeuristic methodsFor: 'verifying' stamp: 'HAW 8/Sep/2026, 2:27:16 pm (UTC)'!
+findingsFor: aClass
+
+	| findings |
+
+	findings := OrderedCollection new.
+	{ aClass. aClass class } do: [ :classOrMetaclass |
+		classOrMetaclass selectors asSortedCollection do: [ :eachSelector |
+			| categoryName |
+			categoryName := self categoryOf: eachSelector in: classOrMetaclass.
+			(categoryName isNil or: [ categoryName asString = 'as yet unclassified' ]) ifTrue: [
+				findings add: (SmalltalkMentorFinding
+					title: 'Uncategorized: ', classOrMetaclass name, '>>', eachSelector
+					detail: 'The method ', classOrMetaclass name, '>>', eachSelector, ' is not categorized. Move it into a meaningful protocol.'
+					editKind: #method
+					editTarget: (classOrMetaclass -> eachSelector)) ] ] ].
+	^findings! !
+
+!MethodsAreCategorizedHeuristic methodsFor: 'private' stamp: 'HAW 8/Sep/2026, 2:27:24 pm (UTC)'!
+categoryOf: aSelector in: aClassOrMeta
+
+	^[ aClassOrMeta organization categoryOfElement: aSelector ]
+		on: Error do: [ :error | 'as yet unclassified' ]! !
+
+!MethodsHaveSendersHeuristic methodsFor: 'accessing' stamp: 'HAW 8/Sep/2026, 2:26:26 pm (UTC)'!
+description
+
+	^'Every method should have a sender. A method with no senders in the image that does not override an inherited one may be dead code. Test methods are excluded.'! !
+
+!MethodsHaveSendersHeuristic methodsFor: 'accessing' stamp: 'HAW 8/Sep/2026, 2:26:20 pm (UTC)'!
+name
+
+	^'Methods have senders'! !
+
+!MethodsHaveSendersHeuristic methodsFor: 'verifying' stamp: 'HAW 8/Sep/2026, 2:26:34 pm (UTC)'!
+findingsFor: aClass
+
+	| findings |
+
+	findings := OrderedCollection new.
+	{ aClass. aClass class } do: [ :classOrMetaclass |
+		classOrMetaclass selectors asSortedCollection do: [ :eachSelector |
+			((Smalltalk allCallsOn: eachSelector) isEmpty
+				and: [ (classOrMetaclass superclass canUnderstand: eachSelector) not
+				and: [ (classOrMetaclass >> eachSelector) isTestMethod not ] ]) ifTrue: [
+				findings add: (SmalltalkMentorFinding
+					title: 'No senders: ', classOrMetaclass name, '>>', eachSelector
+					detail: 'The method ', classOrMetaclass name, '>>', eachSelector, ' has no senders in the image and does not override an inherited method - it may be dead code.'
+					editKind: #method
+					editTarget: (classOrMetaclass -> eachSelector)) ] ] ].
+	^findings! !
+
+!NoClassNamePrefixHeuristic methodsFor: 'accessing' stamp: 'HAW 8/Sep/2026, 2:28:45 pm (UTC)'!
+description
+
+	^'An instance variable or message name should not repeat a word of the class name, since it is already read in the context of its class. A class-side selector may keep the prefix only when the unprefixed name would shadow reserved Class, Metaclass or Object protocol.'! !
+
+!NoClassNamePrefixHeuristic methodsFor: 'accessing' stamp: 'HAW 8/Sep/2026, 2:28:38 pm (UTC)'!
+name
+
+	^'No class-name prefix in names'! !
+
+!NoClassNamePrefixHeuristic methodsFor: 'verifying' stamp: 'HAW 8/Sep/2026, 2:28:53 pm (UTC)'!
+findingsFor: aClass
+
+	| findings classNameWords |
+
+	findings := OrderedCollection new.
+	classNameWords := aClass name camelCaseWords.
+	aClass instVarNames do: [ :instanceVariableName |
+		(self name: instanceVariableName startsWithAnyWordOf: classNameWords) ifTrue: [
+			findings add: (self classNamePrefixVariableFindingFor: instanceVariableName in: aClass) ] ].
+	findings addAll: (self classNamePrefixSelectorFindingsFor: aClass words: classNameWords onClassSide: false).
+	findings addAll: (self classNamePrefixSelectorFindingsFor: aClass class words: classNameWords onClassSide: true).
+	^findings! !
+
+!NoClassNamePrefixHeuristic methodsFor: 'private' stamp: 'HAW 8/Sep/2026, 2:29:33 pm (UTC)'!
+classNamePrefixSelectorFindingFor: aSelector in: aClassOrMetaclass
+
+	^SmalltalkMentorFinding
+		title: 'Class name in selector: ', aClassOrMetaclass name, '>>', aSelector asString
+		detail: 'The selector ', aClassOrMetaclass name, '>>', aSelector asString, ' repeats a word of the class name. A message name is read in the context of its receiver''s class, so drop the class-name prefix.'
+		editKind: #method
+		editTarget: (aClassOrMetaclass -> aSelector)! !
+
+!NoClassNamePrefixHeuristic methodsFor: 'private' stamp: 'HAW 8/Sep/2026, 2:29:16 pm (UTC)'!
+classNamePrefixSelectorFindingsFor: aClassOrMetaclass words: classNameWords onClassSide: isClassSide
+
+	| findings |
+
+	findings := OrderedCollection new.
+	aClassOrMetaclass selectors asSortedCollection do: [ :eachSelector |
+		| firstKeyword |
+		firstKeyword := eachSelector asString copyUpTo: $:.
+		((self name: firstKeyword startsWithAnyWordOf: classNameWords)
+			and: [ (isClassSide and: [ self isReservedAfterPrefix: firstKeyword ]) not ]) ifTrue: [
+				findings add: (self classNamePrefixSelectorFindingFor: eachSelector in: aClassOrMetaclass) ] ].
+	^findings! !
+
+!NoClassNamePrefixHeuristic methodsFor: 'private' stamp: 'HAW 8/Sep/2026, 2:29:23 pm (UTC)'!
+classNamePrefixVariableFindingFor: anInstanceVariableName in: aClass
+
+	^SmalltalkMentorFinding
+		title: 'Class name in variable: ', aClass name, ' - ', anInstanceVariableName
+		detail: 'The instance variable ''', anInstanceVariableName, ''' of ', aClass name, ' repeats a word of the class name. A name is read in the context of its class, so drop the class-name prefix.'
+		editKind: #variable
+		editTarget: (aClass -> anInstanceVariableName)! !
+
+!NoClassNamePrefixHeuristic methodsFor: 'private' stamp: 'HAW 8/Sep/2026, 2:29:08 pm (UTC)'!
+isReservedAfterPrefix: aFirstKeyword
+
+	| remainingWords |
+
+	remainingWords := (aFirstKeyword camelCaseWords allButFirst collect: [ :eachWord | eachWord asLowercase ]) asArray.
+	^#( #('name') #('definition') #('category') #('comment') #('class' 'name') ) includes: remainingWords! !
+
+!NoClassNamePrefixHeuristic methodsFor: 'private' stamp: 'HAW 8/Sep/2026, 2:29:01 pm (UTC)'!
+name: aName startsWithAnyWordOf: classNameWords
+
+	aName isEmpty ifTrue: [ ^false ].
+	^classNameWords anySatisfy: [ :eachWord | eachWord sameAs: aName camelCaseWords first ]! !
+
+!NoEmptyMethodCategoriesHeuristic methodsFor: 'accessing' stamp: 'HAW 8/Sep/2026, 2:28:14 pm (UTC)'!
+description
+
+	^'A method category that has no methods should be removed.'! !
+
+!NoEmptyMethodCategoriesHeuristic methodsFor: 'accessing' stamp: 'HAW 8/Sep/2026, 2:28:09 pm (UTC)'!
+name
+
+	^'No empty method categories'! !
+
+!NoEmptyMethodCategoriesHeuristic methodsFor: 'verifying' stamp: 'HAW 8/Sep/2026, 2:28:22 pm (UTC)'!
+findingsFor: aClass
+
+	| findings |
+
+	findings := OrderedCollection new.
+	{ aClass. aClass class } do: [ :classOrMetaclass |
+		classOrMetaclass organization categories do: [ :categoryName |
+			(classOrMetaclass organization listAtCategoryNamed: categoryName) isEmpty ifTrue: [
+				findings add: (self emptyMethodCategoryFindingFor: categoryName in: classOrMetaclass) ] ] ].
+	^findings! !
+
+!NoEmptyMethodCategoriesHeuristic methodsFor: 'private' stamp: 'HAW 8/Sep/2026, 2:28:28 pm (UTC)'!
+emptyMethodCategoryFindingFor: aCategoryName in: aClassOrMetaclass
+
+	^SmalltalkMentorFinding
+		title: 'Empty method category: ', aClassOrMetaclass name, ' - ', aCategoryName
+		detail: 'The method category ''', aCategoryName, ''' of ', aClassOrMetaclass name, ' has no methods. Remove the empty category.'
+		editKind: #none
+		editTarget: nil! !
+
+!NoUnusedTemporariesHeuristic methodsFor: 'accessing' stamp: 'HAW 8/Sep/2026, 2:27:39 pm (UTC)'!
+description
+
+	^'A method should not declare a temporary variable that is never read, whether it is unreferenced or only assigned.'! !
+
+!NoUnusedTemporariesHeuristic methodsFor: 'accessing' stamp: 'HAW 8/Sep/2026, 2:27:33 pm (UTC)'!
+name
+
+	^'No unused or write-only temporaries'! !
+
+!NoUnusedTemporariesHeuristic methodsFor: 'verifying' stamp: 'HAW 8/Sep/2026, 2:27:46 pm (UTC)'!
+findingsFor: aClass
+
+	| findings |
+
+	findings := OrderedCollection new.
+	{ aClass. aClass class } do: [ :classOrMetaclass |
+		classOrMetaclass selectors asSortedCollection do: [ :eachSelector |
+			findings addAll: (self unusedTemporariesFindingsIn: classOrMetaclass selector: eachSelector) ] ].
+	^findings! !
+
+!NoUnusedTemporariesHeuristic methodsFor: 'private' stamp: 'HAW 8/Sep/2026, 2:27:57 pm (UTC)'!
+unusedTemporariesFindingsIn: aClassOrMetaclass selector: aSelector
+
+	"isUnusedTemp is 'never read' (hasRefs not), which covers both an unreferenced temporary and a
+	write-only one. Only real TempVariableNodes are considered: closure analysis bundles
+	block-captured temporaries into a RemoteTempVectorNode (a subclass whose name is a range like
+	'<0-6>') that must be ignored. Arguments are not temporaries."
+
+	| findings |
+
+	findings := OrderedCollection new.
+	[ | methodNode temporaryNodes |
+	  methodNode := (aClassOrMetaclass >> aSelector) methodNode.
+	  methodNode ensureClosureAnalysisDone.
+	  temporaryNodes := IdentitySet new.
+	  methodNode accept: (ParseNodeEnumerator ofBlock: [ :parseNode |
+		(parseNode isKindOf: BlockNode) ifTrue: [
+			(parseNode temporaries ifNil: [ #() ]) do: [ :temporaryNode |
+				temporaryNode class == TempVariableNode ifTrue: [ temporaryNodes add: temporaryNode ] ] ] ]).
+	  (temporaryNodes asSortedCollection: [ :firstNode :secondNode | firstNode name <= secondNode name ]) do: [ :temporaryNode |
+		temporaryNode isUnusedTemp ifTrue: [ | isWritten problem |
+			isWritten := (temporaryNode instVarNamed: 'hasDefs') == true.
+			problem := isWritten ifTrue: [ 'is assigned but never read' ] ifFalse: [ 'is declared but never used' ].
+			findings add: (SmalltalkMentorFinding
+				title: 'Temporary ', temporaryNode name, ' ', problem, ': ', aClassOrMetaclass name, '>>', aSelector
+				detail: 'The temporary variable ''', temporaryNode name, ''' in ', aClassOrMetaclass name, '>>', aSelector, ' ', problem, '.'
+				editKind: #method
+				editTarget: (aClassOrMetaclass -> aSelector)) ] ] ]
+		on: Error do: [ :error | ].
+	^findings! !
+
+!OneInitializeMessageHeuristic methodsFor: 'accessing' stamp: 'HAW 8/Sep/2026, 2:31:19 pm (UTC)'!
+description
+
+	^'A class should define a single initialize message, and it should do assignments and nothing else, an optional super initialize aside.'! !
+
+!OneInitializeMessageHeuristic methodsFor: 'accessing' stamp: 'HAW 8/Sep/2026, 2:31:14 pm (UTC)'!
+name
+
+	^'One initialize message doing only assignments'! !
+
+!OneInitializeMessageHeuristic methodsFor: 'verifying' stamp: 'HAW 8/Sep/2026, 2:31:28 pm (UTC)'!
+findingsFor: aClass
+
+	| initializeSelectors findings |
+
+	findings := OrderedCollection new.
+	initializeSelectors := aClass selectors asSortedCollection select: [ :eachSelector |
+		eachSelector asString beginsWith: 'initialize' ].
+	initializeSelectors size > 1 ifTrue: [
+		initializeSelectors do: [ :eachSelector |
+			findings add: (self multipleInitializeFindingFor: eachSelector in: aClass) ] ].
+	initializeSelectors do: [ :eachSelector |
+		(self doesOnlyAssignments: (aClass >> eachSelector)) ifFalse: [
+			findings add: (self notOnlyAssignmentsFindingFor: eachSelector in: aClass) ] ].
+	^findings! !
+
+!OneInitializeMessageHeuristic methodsFor: 'private' stamp: 'HAW 8/Sep/2026, 2:31:35 pm (UTC)'!
+doesOnlyAssignments: aCompiledMethod
+
+	^[ aCompiledMethod methodNode block statements allSatisfy: [ :eachStatement |
+		self isAssignmentOrAllowedInInitialize: eachStatement ] ]
+		on: Error do: [ :error | true ]! !
+
+!OneInitializeMessageHeuristic methodsFor: 'private' stamp: 'HAW 8/Sep/2026, 2:31:42 pm (UTC)'!
+isAssignmentOrAllowedInInitialize: aStatement
+
+	aStatement isAssignmentNode ifTrue: [ ^true ].
+	(aStatement isKindOf: ReturnNode) ifTrue: [ ^aStatement expr isSelfPseudoVariable ].
+	^aStatement isMessageNode
+		and: [ aStatement receiver isSuperPseudoVariable
+		and: [ aStatement selectorSymbol = #initialize ] ]! !
+
+!OneInitializeMessageHeuristic methodsFor: 'private' stamp: 'HAW 8/Sep/2026, 2:31:49 pm (UTC)'!
+multipleInitializeFindingFor: aSelector in: aClass
+
+	| location |
+
+	location := aClass name, '>>', aSelector asString.
+	^SmalltalkMentorFinding
+		title: 'Multiple initialize messages: ', location
+		detail: 'The class ', aClass name, ' defines more than one initialize message. A class should define only one; the instance creation messages should funnel through it.'
+		editKind: #method
+		editTarget: (aClass -> aSelector)! !
+
+!OneInitializeMessageHeuristic methodsFor: 'private' stamp: 'HAW 8/Sep/2026, 2:31:56 pm (UTC)'!
+notOnlyAssignmentsFindingFor: aSelector in: aClass
+
+	| location |
+
+	location := aClass name, '>>', aSelector asString.
+	^SmalltalkMentorFinding
+		title: 'Initialize does more than assignments: ', location
+		detail: 'The method ', location, ' does more than assignments. An initialize message should only assign instance variables, aside from an optional super initialize.'
+		editKind: #method
+		editTarget: (aClass -> aSelector)! !
+
+!SelfOverExplicitClassReferenceHeuristic methodsFor: 'accessing' stamp: 'HAW 8/Sep/2026, 2:29:47 pm (UTC)'!
+description
+
+	^'Inside a class''s own methods, do not name the class. Use self class in instance methods and self in class-side methods, so subclasses resolve to the right class. Name the class only when you mean that exact class regardless of subclass.'! !
+
+!SelfOverExplicitClassReferenceHeuristic methodsFor: 'accessing' stamp: 'HAW 8/Sep/2026, 2:29:40 pm (UTC)'!
+name
+
+	^'Prefer self / self class over explicit class reference'! !
+
+!SelfOverExplicitClassReferenceHeuristic methodsFor: 'verifying' stamp: 'HAW 8/Sep/2026, 2:29:54 pm (UTC)'!
+findingsFor: aClass
+
+	| findings |
+
+	findings := OrderedCollection new.
+	(Smalltalk allCallsOn: aClass binding) do: [ :methodReference |
+		methodReference actualClass theNonMetaClass = aClass ifTrue: [
+			findings add: (self explicitClassReferenceFindingFor: methodReference in: aClass) ] ].
+	^findings! !
+
+!SelfOverExplicitClassReferenceHeuristic methodsFor: 'private' stamp: 'HAW 8/Sep/2026, 2:30:01 pm (UTC)'!
+explicitClassReferenceFindingFor: aMethodReference in: aClass
+
+	| replacement location |
+
+	replacement := aMethodReference actualClass = aClass class ifTrue: [ 'self' ] ifFalse: [ 'self class' ].
+	location := aMethodReference actualClass name, '>>', aMethodReference selector asString.
+	^SmalltalkMentorFinding
+		title: 'Explicit class reference: ', location, ' (may be ', replacement, ')'
+		detail: 'The method ', location, ' refers to ', aClass name, ' explicitly. Check whether that reference can be replaced by ', replacement, '.'
+		editKind: #method
+		editTarget: (aMethodReference actualClass -> aMethodReference selector)! !
+
+!SharedLeafSubclassProtocolHeuristic methodsFor: 'accessing' stamp: 'HAW 8/Sep/2026, 2:32:32 pm (UTC)'!
+description
+
+	^'When every leaf subclass of a class answers the same message, that message should be declared in the root, concretely or as subclassResponsibility, so the shared protocol lives in one place.'! !
+
+!SharedLeafSubclassProtocolHeuristic methodsFor: 'accessing' stamp: 'HAW 8/Sep/2026, 2:32:26 pm (UTC)'!
+name
+
+	^'Shared leaf-subclass protocol in root'! !
+
+!SharedLeafSubclassProtocolHeuristic methodsFor: 'verifying' stamp: 'HAW 8/Sep/2026, 2:32:40 pm (UTC)'!
+findingsFor: rootClass
+
+	| leafSubclasses sharedSelectors findings |
+
+	findings := OrderedCollection new.
+	leafSubclasses := rootClass allSubclasses select: [ :eachSubclass | eachSubclass subclasses isEmpty ].
+	(leafSubclasses size between: 2 and: 300) ifFalse: [ ^findings ].
+	sharedSelectors := self sharedSelectorsAmongLeaves: leafSubclasses ofRoot: rootClass.
+	sharedSelectors asSortedCollection do: [ :sharedSelector |
+		(rootClass includesSelector: sharedSelector) ifFalse: [
+			findings add: (self missingRootProtocolFindingFor: sharedSelector root: rootClass) ] ].
+	^findings! !
+
+!SharedLeafSubclassProtocolHeuristic methodsFor: 'private' stamp: 'HAW 8/Sep/2026, 2:32:58 pm (UTC)'!
+missingRootProtocolFindingFor: aSelector root: rootClass
+
+	| anImplementor |
+
+	anImplementor := rootClass allSubclasses detect: [ :eachSubclass | eachSubclass includesSelector: aSelector ] ifNone: [ nil ].
+	^SmalltalkMentorFinding
+		title: 'Not in root: #', aSelector, ' (every leaf subclass of ', rootClass name, ' answers it)'
+		detail: 'Instances of every leaf subclass of ', rootClass name, ' answer #', aSelector, ', but ', rootClass name, ' does not implement it. Lift it to ', rootClass name, ' as a concrete method or as subclassResponsibility so the shared protocol is declared in one place.'
+		editKind: (anImplementor isNil ifTrue: [ #none ] ifFalse: [ #method ])
+		editTarget: (anImplementor isNil ifTrue: [ nil ] ifFalse: [ anImplementor -> aSelector ])! !
+
+!SharedLeafSubclassProtocolHeuristic methodsFor: 'private' stamp: 'HAW 8/Sep/2026, 2:32:49 pm (UTC)'!
+sharedSelectorsAmongLeaves: leafSubclasses ofRoot: rootClass
+
+	"Protocol inherited from above rootClass is excluded, so shared Object protocol is not
+	reported."
+
+	| protocolAboveRoot sharedSelectors |
+
+	protocolAboveRoot := rootClass superclass
+		ifNil: [ Set new ]
+		ifNotNil: [ :aSuperclass | aSuperclass allSelectors asSet ].
+	sharedSelectors := nil.
+	leafSubclasses do: [ :eachLeaf | | protocolIntroducedBelowRoot |
+		protocolIntroducedBelowRoot := eachLeaf allSelectors asSet reject: [ :eachSelector | protocolAboveRoot includes: eachSelector ].
+		sharedSelectors := sharedSelectors
+			ifNil: [ protocolIntroducedBelowRoot ]
+			ifNotNil: [ sharedSelectors select: [ :eachSelector | protocolIntroducedBelowRoot includes: eachSelector ] ] ].
+	^sharedSelectors ifNil: [ Set new ]! !
 
 !SmalltalkMentor methodsFor: 'initialization' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 initialize
@@ -1338,294 +2113,47 @@ initializeClass: aClass mentor: aMentor
 	mentor := aMentor.
 	methodReviewCache := Dictionary new! !
 
-!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 7/Sep/2026, 10:28:58 pm (UTC)'!
-classNamePrefixFindingsFor: aClass
-
-	| findings classNameWords |
-
-	findings := OrderedCollection new.
-	classNameWords := aClass name camelCaseWords.
-	aClass instVarNames do: [ :instanceVariableName |
-		(self name: instanceVariableName startsWithAnyWordOf: classNameWords) ifTrue: [
-			findings add: (self classNamePrefixVariableFindingFor: instanceVariableName in: aClass) ] ].
-	findings addAll: (self classNamePrefixSelectorFindingsFor: aClass words: classNameWords onClassSide: false).
-	findings addAll: (self classNamePrefixSelectorFindingsFor: aClass class words: classNameWords onClassSide: true).
-	^findings! !
-
-!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
-classReferencedFindingsFor: aClass
-
-	"Heuristic 7: the class should be referenced. Flags a class that no other class mentions and
-	that has no subclasses - i.e. dead code. References from the class's own methods do not
-	count."
-
-	| result external |
-
-	result := OrderedCollection new.
-	external := (Smalltalk allCallsOn: aClass binding)
-		reject: [ :mr | mr actualClass theNonMetaClass == aClass ].
-	(external isEmpty and: [ aClass subclasses isEmpty ]) ifTrue: [
-		result add: (SmalltalkMentorFinding
-			title: 'Class not referenced: ', aClass name
-			detail: 'The class ', aClass name, ' is not referenced by any other class and has no subclasses - it may be dead code.'
-			editKind: #none
-			editTarget: nil) ].
-	^result! !
-
-!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 8/Sep/2026, 10:59:50 am (UTC)'!
+!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 8/Sep/2026, 7:44:57 pm (UTC)'!
 classReviewRootNodesFor: aClass
 
-	"The class-review subtree for aClass: one root per static heuristic (children = its failing
+	"The class-review subtree for aClass: one root per design heuristic (children = its failing
 	elements), then 'Instance methods' and 'Class methods' grouped by category. Reused both as
 	the roots of a class review and, lazily, under each class of a class-category review."
 
 	| roots |
 
 	roots := OrderedCollection new.
-	(self heuristicGroupsFor: aClass) do: [ :group |
+	self heuristics do: [ :heuristic |
 		| children |
-		children := group value collect: [ :finding |
+		children := (heuristic findingsFor: aClass) collect: [ :finding |
 			SmalltalkMentorNode label: finding title kind: #finding payload: finding children: #() model: self ].
 		roots add: (SmalltalkMentorNode
-			label: group key, ' (', children size printString, ')'
-			kind: #heuristicRoot payload: (self heuristicDescriptionFor: group key) children: children model: self) ].
+			label: heuristic name, ' (', children size printString, ')'
+			kind: #heuristicRoot payload: heuristic description children: children model: self) ].
 	roots add: (self methodsSideNodeFor: aClass label: 'Instance methods').
 	roots add: (self methodsSideNodeFor: aClass class label: 'Class methods').
 	^roots! !
 
-!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
-classVariableFindingsFor: aClass
+!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 8/Sep/2026, 7:44:47 pm (UTC)'!
+heuristics
 
-	"Heuristic 4: every class variable should be both read and written (instance or class side)."
+	"The design heuristics this review runs, in the order they are shown."
 
-	| findings |
-
-	findings := OrderedCollection new.
-	aClass classVarNames asSortedCollection do: [ :classVariableName |
-		| binding sources assignmentCount occurrenceCount isWritten isRead problem |
-		binding := aClass bindingOf: classVariableName.
-		sources := OrderedCollection new.
-		(aClass whichSelectorsReferTo: binding) do: [ :referringSelector | sources add: (aClass sourceCodeAt: referringSelector) ].
-		(aClass class whichSelectorsReferTo: binding) do: [ :referringSelector | sources add: (aClass class sourceCodeAt: referringSelector) ].
-		assignmentCount := sources inject: 0 into: [ :runningTotal :eachSource | runningTotal + (self countOf: classVariableName, ' :=' in: eachSource) + (self countOf: classVariableName, ':=' in: eachSource) ].
-		occurrenceCount := sources inject: 0 into: [ :runningTotal :eachSource | runningTotal + (self countOf: classVariableName in: eachSource) ].
-		isWritten := assignmentCount > 0.
-		isRead := occurrenceCount > assignmentCount.
-		(isRead and: [ isWritten ]) ifFalse: [
-			problem := (isRead or: [ isWritten ])
-				ifFalse: [ 'is never read nor written' ]
-				ifTrue: [ isRead ifTrue: [ 'is read but never written' ] ifFalse: [ 'is written but never read' ] ].
-			findings add: (SmalltalkMentorFinding
-				title: 'Class variable ', classVariableName, ' ', problem
-				detail: 'The class variable ''', classVariableName, ''' of ', aClass name, ' ', problem, '.'
-				editKind: #variable
-				editTarget: (aClass -> classVariableName)) ] ].
-	^findings! !
-
-!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
-commonLeafSubclassProtocolFindingsFor: rootClass
-
-	"Heuristic 8: when rootClass has more than one leaf subclass, every message that instances of ALL
-	those leaf subclasses answer - restricted to protocol introduced within rootClass's own
-	hierarchy - should be implemented in rootClass itself, concretely or as subclassResponsibility,
-	so the shared protocol is declared in one place. Flags each such message rootClass omits."
-
-	| leafSubclasses sharedSelectors findings |
-
-	findings := OrderedCollection new.
-	leafSubclasses := rootClass allSubclasses select: [ :eachSubclass | eachSubclass subclasses isEmpty ].
-	(leafSubclasses size between: 2 and: 300) ifFalse: [ ^findings ].
-	sharedSelectors := self sharedSelectorsAmongLeaves: leafSubclasses ofRoot: rootClass.
-	sharedSelectors asSortedCollection do: [ :sharedSelector |
-		(rootClass includesSelector: sharedSelector) ifFalse: [
-			findings add: (self missingRootProtocolFindingFor: sharedSelector root: rootClass) ] ].
-	^findings! !
-
-!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 20/Aug/2026, 10:11:39 pm (UTC)'!
-emptyMethodCategoryFindingsFor: aClass
-
-	| findings |
-
-	findings := OrderedCollection new.
-	{ aClass. aClass class } do: [ :classOrMetaclass |
-		classOrMetaclass organization categories do: [ :categoryName |
-			(classOrMetaclass organization listAtCategoryNamed: categoryName) isEmpty ifTrue: [
-				findings add: (self emptyMethodCategoryFindingFor: categoryName in: classOrMetaclass) ] ] ].
-	^findings! !
-
-!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 7/Sep/2026, 10:59:27 pm (UTC)'!
-explicitClassReferenceFindingsFor: aClass
-
-	| findings |
-
-	findings := OrderedCollection new.
-	(Smalltalk allCallsOn: aClass binding) do: [ :methodReference |
-		methodReference actualClass theNonMetaClass = aClass ifTrue: [
-			findings add: (self explicitClassReferenceFindingFor: methodReference in: aClass) ] ].
-	^findings! !
-
-!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 7/Sep/2026, 11:41:23 pm (UTC)'!
-heuristicGroupsFor: aClass
-
-	"The static (Smalltalk) verifications for aClass, as title -> (collection of findings)
-	associations. Each becomes a heuristic root in the tree."
-
-	^OrderedCollection new
-		add: 'Instance variables read & written' -> (self instanceVariableFindingsFor: aClass);
-		add: 'Class variables read & written' -> (self classVariableFindingsFor: aClass);
-		add: 'Methods have senders' -> (self methodsWithoutSendersFindingsFor: aClass);
-		add: 'Messages have implementers' -> (self messagesWithoutImplementersFindingsFor: aClass);
-		add: 'Methods are categorized' -> (self uncategorizedMethodsFindingsFor: aClass);
-		add: 'No unused or write-only temporaries' -> (self unusedTemporariesFindingsFor: aClass);
-		add: 'No empty method categories' -> (self emptyMethodCategoryFindingsFor: aClass);
-		add: 'No class-name prefix in names' -> (self classNamePrefixFindingsFor: aClass);
-		add: 'Prefer self / self class over explicit class reference' -> (self explicitClassReferenceFindingsFor: aClass);
-		add: 'Prefer = over ==' -> (self identityComparisonFindingsFor: aClass);
-		add: 'Instance creation funnelled through one message' -> (self instanceCreationFunnelFindingsFor: aClass);
-		add: 'One initialize message doing only assignments' -> (self oneInitializeMessageFindingsFor: aClass);
-		add: 'Class is referenced' -> (self classReferencedFindingsFor: aClass);
-		add: 'Shared leaf-subclass protocol in root' -> (self commonLeafSubclassProtocolFindingsFor: aClass);
-		yourself! !
-
-!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 7/Sep/2026, 11:09:59 pm (UTC)'!
-identityComparisonFindingsFor: aClass
-
-	| findings |
-
-	findings := OrderedCollection new.
-	{ aClass. aClass class } do: [ :classOrMetaclass |
-		classOrMetaclass selectors asSortedCollection do: [ :eachSelector |
-			((classOrMetaclass >> eachSelector) messages includes: #==) ifTrue: [
-				findings add: (self identityComparisonFindingFor: eachSelector in: classOrMetaclass) ] ] ].
-	^findings! !
-
-!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 7/Sep/2026, 11:20:47 pm (UTC)'!
-instanceCreationFunnelFindingsFor: aClass
-
-	| metaclass instantiatingSelectors findings |
-
-	findings := OrderedCollection new.
-	metaclass := aClass class.
-	instantiatingSelectors := metaclass selectors asSortedCollection select: [ :eachSelector |
-		self sendsSelfInstantiation: (metaclass >> eachSelector) ].
-	instantiatingSelectors size > 1 ifTrue: [
-		instantiatingSelectors do: [ :eachSelector |
-			findings add: (self instanceCreationFunnelFindingFor: eachSelector in: metaclass) ] ].
-	^findings! !
-
-!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 7/Sep/2026, 10:13:30 pm (UTC)'!
-instanceVariableFindingsFor: aClass
-
-	| findings |
-
-	findings := OrderedCollection new.
-	aClass instVarNames do: [ :instanceVariableName |
-		| isRead isWritten problem |
-		isRead := self isInstanceVariable: instanceVariableName readInHierarchyOf: aClass.
-		isWritten := self isInstanceVariable: instanceVariableName writtenInHierarchyOf: aClass.
-		(isRead and: [ isWritten ]) ifFalse: [
-			problem := (isRead or: [ isWritten ])
-				ifFalse: [ 'is never read nor written' ]
-				ifTrue: [ isRead ifTrue: [ 'is read but never written' ] ifFalse: [ 'is written but never read' ] ].
-			findings add: (SmalltalkMentorFinding
-				title: 'Instance variable ', instanceVariableName, ' ', problem
-				detail: 'The instance variable ''', instanceVariableName, ''' of ', aClass name, ' ', problem, '.'
-				editKind: #variable
-				editTarget: (aClass -> instanceVariableName)) ] ].
-	^findings! !
-
-!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
-messagesWithoutImplementersFindingsFor: aClass
-
-	"Heuristic 3: every message sent by this class's methods should have an implementer."
-
-	| findings seenMessages |
-
-	findings := OrderedCollection new.
-	seenMessages := Set new.
-	{ aClass. aClass class } do: [ :classOrMetaclass |
-		classOrMetaclass selectors asSortedCollection do: [ :eachSelector |
-			(classOrMetaclass >> eachSelector) messages do: [ :sentMessage |
-				(seenMessages includes: sentMessage) ifFalse: [
-					seenMessages add: sentMessage.
-					(Smalltalk allImplementorsOf: sentMessage) isEmpty ifTrue: [
-						findings add: (SmalltalkMentorFinding
-							title: 'No implementer: #', sentMessage
-							detail: 'The message #', sentMessage, ' is sent (e.g. in ', classOrMetaclass name, '>>', eachSelector, ') but no class implements it - likely a typo or a missing method.'
-							editKind: #method
-							editTarget: (classOrMetaclass -> eachSelector)) ] ] ] ] ].
-	^findings! !
-
-!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
-methodsWithoutSendersFindingsFor: aClass
-
-	"Heuristic 2: every implemented message should have a sender. Excludes methods that override an
-	inherited implementation and test methods (run by metaprogramming)."
-
-	| findings |
-
-	findings := OrderedCollection new.
-	{ aClass. aClass class } do: [ :classOrMetaclass |
-		classOrMetaclass selectors asSortedCollection do: [ :eachSelector |
-			((Smalltalk allCallsOn: eachSelector) isEmpty
-				and: [ (classOrMetaclass superclass canUnderstand: eachSelector) not
-				and: [ (classOrMetaclass >> eachSelector) isTestMethod not ] ]) ifTrue: [
-				findings add: (SmalltalkMentorFinding
-					title: 'No senders: ', classOrMetaclass name, '>>', eachSelector
-					detail: 'The method ', classOrMetaclass name, '>>', eachSelector, ' has no senders in the image and does not override an inherited method - it may be dead code.'
-					editKind: #method
-					editTarget: (classOrMetaclass -> eachSelector)) ] ] ].
-	^findings! !
-
-!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 7/Sep/2026, 11:42:57 pm (UTC)'!
-oneInitializeMessageFindingsFor: aClass
-
-	| initializeSelectors findings |
-
-	findings := OrderedCollection new.
-	initializeSelectors := aClass selectors asSortedCollection select: [ :eachSelector |
-		eachSelector asString beginsWith: 'initialize' ].
-	initializeSelectors size > 1 ifTrue: [
-		initializeSelectors do: [ :eachSelector |
-			findings add: (self multipleInitializeFindingFor: eachSelector in: aClass) ] ].
-	initializeSelectors do: [ :eachSelector |
-		(self doesOnlyAssignments: (aClass >> eachSelector)) ifFalse: [
-			findings add: (self notOnlyAssignmentsFindingFor: eachSelector in: aClass) ] ].
-	^findings! !
-
-!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
-uncategorizedMethodsFindingsFor: aClass
-
-	"Heuristic 5: every method should be in a meaningful protocol (not 'as yet unclassified')."
-
-	| findings |
-
-	findings := OrderedCollection new.
-	{ aClass. aClass class } do: [ :classOrMetaclass |
-		classOrMetaclass selectors asSortedCollection do: [ :eachSelector |
-			| categoryName |
-			categoryName := self categoryOf: eachSelector in: classOrMetaclass.
-			(categoryName isNil or: [ categoryName asString = 'as yet unclassified' ]) ifTrue: [
-				findings add: (SmalltalkMentorFinding
-					title: 'Uncategorized: ', classOrMetaclass name, '>>', eachSelector
-					detail: 'The method ', classOrMetaclass name, '>>', eachSelector, ' is not categorized. Move it into a meaningful protocol.'
-					editKind: #method
-					editTarget: (classOrMetaclass -> eachSelector)) ] ] ].
-	^findings! !
-
-!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
-unusedTemporariesFindingsFor: aClass
-
-	"Heuristic 6: no method should declare a temporary variable that is never read - an unreferenced
-	temporary, or one that is only written."
-
-	| findings |
-
-	findings := OrderedCollection new.
-	{ aClass. aClass class } do: [ :classOrMetaclass |
-		classOrMetaclass selectors asSortedCollection do: [ :eachSelector |
-			findings addAll: (self unusedTemporariesFindingsIn: classOrMetaclass selector: eachSelector) ] ].
-	^findings! !
+	^{
+		InstanceVariablesReadAndWrittenHeuristic new.
+		ClassVariablesReadAndWrittenHeuristic new.
+		MethodsHaveSendersHeuristic new.
+		MessagesHaveImplementersHeuristic new.
+		MethodsAreCategorizedHeuristic new.
+		NoUnusedTemporariesHeuristic new.
+		NoEmptyMethodCategoriesHeuristic new.
+		NoClassNamePrefixHeuristic new.
+		SelfOverExplicitClassReferenceHeuristic new.
+		EqualityOverIdentityHeuristic new.
+		InstanceCreationFunnelHeuristic new.
+		OneInitializeMessageHeuristic new.
+		ClassIsReferencedHeuristic new.
+		SharedLeafSubclassProtocolHeuristic new }! !
 
 !SmalltalkMentorClassReview methodsFor: 'tree' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 buildRootNodes
@@ -1719,6 +2247,26 @@ renderDetail: aMorph
 	detailHolder removeAllMorphs.
 	detailHolder addMorph: aMorph layoutSpec: LayoutSpec useAll.
 	window ifNotNil: [ aMorph adoptWidgetsColor: window widgetsColor ]! !
+
+!SmalltalkMentorClassReview methodsFor: 'detail' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
+showClassDefinitionEditorFor: aClassVariableAssociation
+
+	"Show the class definition (of the finding's class) in a real browser code pane
+	(class-definition mode: refactorings, add/remove instance variable, etc.). Accept redefines
+	the class. The variable is pre-selected."
+
+	| definedClass variableName browser codePane classDefinitionText variableIndex |
+
+	definedClass := aClassVariableAssociation key.
+	variableName := aClassVariableAssociation value.
+	browser := Browser new.
+	browser setClass: definedClass selector: nil.
+	browser editClass.
+	codePane := self codePaneForBrowser: browser.
+	self renderDetail: codePane.
+	classDefinitionText := browser acceptedContents asString.
+	variableIndex := self firstIndexOf: variableName in: classDefinitionText.
+	variableIndex > 0 ifTrue: [ [ codePane editor selectFrom: variableIndex to: variableIndex + variableName size - 1 ] on: Error do: [ :error | ] ]! !
 
 !SmalltalkMentorClassReview methodsFor: 'detail' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 showFinding: aFinding
@@ -1941,84 +2489,6 @@ categoryOf: aSelector in: aClassOrMeta
 	^[ aClassOrMeta organization categoryOfElement: aSelector ]
 		on: Error do: [ :e | 'as yet unclassified' ]! !
 
-!SmalltalkMentorClassReview methodsFor: 'private' stamp: 'HAW 7/Sep/2026, 9:54:38 pm (UTC)'!
-classNamePrefixSelectorFindingFor: aSelector in: aClassOrMetaclass
-
-	^SmalltalkMentorFinding
-		title: 'Class name in selector: ', aClassOrMetaclass name, '>>', aSelector asString
-		detail: 'The selector ', aClassOrMetaclass name, '>>', aSelector asString, ' repeats a word of the class name. A message name is read in the context of its receiver''s class, so drop the class-name prefix.'
-		editKind: #method
-		editTarget: (aClassOrMetaclass -> aSelector)! !
-
-!SmalltalkMentorClassReview methodsFor: 'private' stamp: 'HAW 7/Sep/2026, 10:13:00 pm (UTC)'!
-classNamePrefixSelectorFindingsFor: aClassOrMetaclass words: classNameWords onClassSide: isClassSide
-
-	| findings |
-
-	findings := OrderedCollection new.
-	aClassOrMetaclass selectors asSortedCollection do: [ :eachSelector |
-		| firstKeyword |
-		firstKeyword := eachSelector asString copyUpTo: $:.
-		((self name: firstKeyword startsWithAnyWordOf: classNameWords)
-			and: [ (isClassSide and: [ self isReservedAfterPrefix: firstKeyword ]) not ]) ifTrue: [
-				findings add: (self classNamePrefixSelectorFindingFor: eachSelector in: aClassOrMetaclass) ] ].
-	^findings! !
-
-!SmalltalkMentorClassReview methodsFor: 'private' stamp: 'HAW 7/Sep/2026, 9:54:32 pm (UTC)'!
-classNamePrefixVariableFindingFor: anInstanceVariableName in: aClass
-
-	^SmalltalkMentorFinding
-		title: 'Class name in variable: ', aClass name, ' - ', anInstanceVariableName
-		detail: 'The instance variable ''', anInstanceVariableName, ''' of ', aClass name, ' repeats a word of the class name. A name is read in the context of its class, so drop the class-name prefix.'
-		editKind: #variable
-		editTarget: (aClass -> anInstanceVariableName)! !
-
-!SmalltalkMentorClassReview methodsFor: 'private' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
-countOf: aSubstring in: aString
-
-	"Case-sensitive count of non-overlapping occurrences of aSubstring in aString."
-
-	| substringSize occurrenceCount scanIndex |
-
-	substringSize := aSubstring size.
-	substringSize = 0 ifTrue: [ ^0 ].
-	occurrenceCount := 0.
-	scanIndex := 1.
-	[ scanIndex + substringSize - 1 <= aString size ] whileTrue: [
-		(aString copyFrom: scanIndex to: scanIndex + substringSize - 1) = aSubstring
-			ifTrue: [ occurrenceCount := occurrenceCount + 1. scanIndex := scanIndex + substringSize ]
-			ifFalse: [ scanIndex := scanIndex + 1 ] ].
-	^occurrenceCount! !
-
-!SmalltalkMentorClassReview methodsFor: 'private' stamp: 'HAW 7/Sep/2026, 11:42:44 pm (UTC)'!
-doesOnlyAssignments: aCompiledMethod
-
-	^[ aCompiledMethod methodNode block statements allSatisfy: [ :eachStatement |
-		self isAssignmentOrAllowedInInitialize: eachStatement ] ]
-		on: Error do: [ :error | true ]! !
-
-!SmalltalkMentorClassReview methodsFor: 'private' stamp: 'HAW 20/Aug/2026, 10:11:48 pm (UTC)'!
-emptyMethodCategoryFindingFor: aCategoryName in: aClassOrMetaclass
-
-	^SmalltalkMentorFinding
-		title: 'Empty method category: ', aClassOrMetaclass name, ' - ', aCategoryName
-		detail: 'The method category ''', aCategoryName, ''' of ', aClassOrMetaclass name, ' has no methods. Remove the empty category.'
-		editKind: #none
-		editTarget: nil! !
-
-!SmalltalkMentorClassReview methodsFor: 'private' stamp: 'HAW 7/Sep/2026, 10:59:34 pm (UTC)'!
-explicitClassReferenceFindingFor: aMethodReference in: aClass
-
-	| replacement location |
-
-	replacement := aMethodReference actualClass = aClass class ifTrue: [ 'self' ] ifFalse: [ 'self class' ].
-	location := aMethodReference actualClass name, '>>', aMethodReference selector asString.
-	^SmalltalkMentorFinding
-		title: 'Explicit class reference: ', location, ' (may be ', replacement, ')'
-		detail: 'The method ', location, ' refers to ', aClass name, ' explicitly. Check whether that reference can be replaced by ', replacement, '.'
-		editKind: #method
-		editTarget: (aMethodReference actualClass -> aMethodReference selector)! !
-
 !SmalltalkMentorClassReview methodsFor: 'private' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 firstIndexOf: aSubstring in: aString
 
@@ -2031,220 +2501,6 @@ firstIndexOf: aSubstring in: aString
 	1 to: aString size - substringSize + 1 do: [ :scanIndex |
 		(aString copyFrom: scanIndex to: scanIndex + substringSize - 1) = aSubstring ifTrue: [ ^scanIndex ] ].
 	^0! !
-
-!SmalltalkMentorClassReview methodsFor: 'private' stamp: 'HAW 8/Sep/2026, 10:59:33 am (UTC)'!
-heuristicDescriptionFor: aTitle
-
-	self heuristicDescriptions do: [ :eachPair |
-		(eachPair first = aTitle) ifTrue: [ ^eachPair second ] ].
-	^aTitle! !
-
-!SmalltalkMentorClassReview methodsFor: 'private' stamp: 'HAW 8/Sep/2026, 10:59:26 am (UTC)'!
-heuristicDescriptions
-
-	^#(
-		#('Instance variables read & written' 'Every instance variable should be both read and written, in this class or a subclass, since an instance variable is in scope in the subclasses. One that is only read, only written, or never used is likely dead state.')
-		#('Class variables read & written' 'Every class variable should be both read and written, on the instance or the class side. One that is only read, only written, or never used is likely dead state.')
-		#('Methods have senders' 'Every method should have a sender. A method with no senders in the image that does not override an inherited one may be dead code. Test methods are excluded.')
-		#('Messages have implementers' 'Every message a method sends should have an implementer in the image. A send with no implementer is likely a typo or a missing method.')
-		#('Methods are categorized' 'Every method should live in a meaningful protocol, not in ''as yet unclassified''.')
-		#('No unused or write-only temporaries' 'A method should not declare a temporary variable that is never read, whether it is unreferenced or only assigned.')
-		#('No empty method categories' 'A method category that has no methods should be removed.')
-		#('No class-name prefix in names' 'An instance variable or message name should not repeat a word of the class name, since it is already read in the context of its class. A class-side selector may keep the prefix only when the unprefixed name would shadow reserved Class, Metaclass or Object protocol.')
-		#('Prefer self / self class over explicit class reference' 'Inside a class''s own methods, do not name the class. Use self class in instance methods and self in class-side methods, so subclasses resolve to the right class. Name the class only when you mean that exact class regardless of subclass.')
-		#('Prefer = over ==' 'Compare with = unless it must be exactly the same object.')
-		#('Instance creation funnelled through one message' 'All instance creation messages should funnel through a single class-side message that runs the preconditions and sends the one initialize; only that message should send new to self.')
-		#('One initialize message doing only assignments' 'A class should define a single initialize message, and it should do assignments and nothing else, an optional super initialize aside.')
-		#('Class is referenced' 'A class should be referenced by another class or have subclasses. One that is neither may be dead code.')
-		#('Shared leaf-subclass protocol in root' 'When every leaf subclass of a class answers the same message, that message should be declared in the root, concretely or as subclassResponsibility, so the shared protocol lives in one place.')
-	)! !
-
-!SmalltalkMentorClassReview methodsFor: 'private' stamp: 'HAW 7/Sep/2026, 11:10:07 pm (UTC)'!
-identityComparisonFindingFor: aSelector in: aClassOrMetaclass
-
-	| location |
-
-	location := aClassOrMetaclass name, '>>', aSelector asString.
-	^SmalltalkMentorFinding
-		title: 'Identity comparison ==: ', location, ' (may be =)'
-		detail: 'The method ', location, ' compares with == . Prefer = unless it must be exactly the same object.'
-		editKind: #method
-		editTarget: (aClassOrMetaclass -> aSelector)! !
-
-!SmalltalkMentorClassReview methodsFor: 'private' stamp: 'HAW 7/Sep/2026, 11:20:53 pm (UTC)'!
-instanceCreationFunnelFindingFor: aSelector in: aMetaclass
-
-	| location |
-
-	location := aMetaclass name, '>>', aSelector asString.
-	^SmalltalkMentorFinding
-		title: 'Instance creation not funnelled: ', location
-		detail: 'The class-side method ', location, ' sends self new directly. All instance creation messages should funnel through a single one that runs the preconditions and sends the only initialize; the others should delegate to it.'
-		editKind: #method
-		editTarget: (aMetaclass -> aSelector)! !
-
-!SmalltalkMentorClassReview methodsFor: 'private' stamp: 'HAW 7/Sep/2026, 11:40:35 pm (UTC)'!
-isAssignmentOrAllowedInInitialize: aStatement
-
-	aStatement isAssignmentNode ifTrue: [ ^true ].
-	(aStatement isKindOf: ReturnNode) ifTrue: [ ^aStatement expr isSelfPseudoVariable ].
-	^aStatement isMessageNode
-		and: [ aStatement receiver isSuperPseudoVariable
-		and: [ aStatement selectorSymbol = #initialize ] ]! !
-
-!SmalltalkMentorClassReview methodsFor: 'private' stamp: 'HAW 7/Sep/2026, 10:13:57 pm (UTC)'!
-isInstanceVariable: anInstanceVariableName readInHierarchyOf: aClass
-
-	| instanceVariableIndex |
-
-	instanceVariableIndex := aClass allInstVarNames indexOf: anInstanceVariableName.
-	^aClass withAllSubclasses anySatisfy: [ :eachClass |
-		(eachClass whichSelectorsAccess: anInstanceVariableName) anySatisfy: [ :accessorSelector |
-			(eachClass >> accessorSelector) readsField: instanceVariableIndex ] ]! !
-
-!SmalltalkMentorClassReview methodsFor: 'private' stamp: 'HAW 7/Sep/2026, 10:13:43 pm (UTC)'!
-isInstanceVariable: anInstanceVariableName writtenInHierarchyOf: aClass
-
-	^aClass withAllSubclasses anySatisfy: [ :eachClass |
-		(eachClass whichSelectorsStoreInto: anInstanceVariableName) notEmpty ]! !
-
-!SmalltalkMentorClassReview methodsFor: 'private' stamp: 'HAW 7/Sep/2026, 10:28:49 pm (UTC)'!
-isReservedAfterPrefix: aFirstKeyword
-
-	| remainingWords |
-
-	remainingWords := (aFirstKeyword camelCaseWords allButFirst collect: [ :eachWord | eachWord asLowercase ]) asArray.
-	^#( #('name') #('definition') #('category') #('comment') #('class' 'name') ) includes: remainingWords! !
-
-!SmalltalkMentorClassReview methodsFor: 'private' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
-missingRootProtocolFindingFor: aSelector root: rootClass
-
-	"A finding: aSelector is answered by every leaf subclass of rootClass but rootClass does not
-	implement it. Points at one subclass implementation as a reference to lift."
-
-	| anImplementor |
-
-	anImplementor := rootClass allSubclasses detect: [ :eachSubclass | eachSubclass includesSelector: aSelector ] ifNone: [ nil ].
-	^SmalltalkMentorFinding
-		title: 'Not in root: #', aSelector, ' (every leaf subclass of ', rootClass name, ' answers it)'
-		detail: 'Instances of every leaf subclass of ', rootClass name, ' answer #', aSelector, ', but ', rootClass name, ' does not implement it. Lift it to ', rootClass name, ' as a concrete method or as subclassResponsibility so the shared protocol is declared in one place.'
-		editKind: (anImplementor isNil ifTrue: [ #none ] ifFalse: [ #method ])
-		editTarget: (anImplementor isNil ifTrue: [ nil ] ifFalse: [ anImplementor -> aSelector ])! !
-
-!SmalltalkMentorClassReview methodsFor: 'private' stamp: 'HAW 7/Sep/2026, 11:40:56 pm (UTC)'!
-multipleInitializeFindingFor: aSelector in: aClass
-
-	| location |
-
-	location := aClass name, '>>', aSelector asString.
-	^SmalltalkMentorFinding
-		title: 'Multiple initialize messages: ', location
-		detail: 'The class ', aClass name, ' defines more than one initialize message. A class should define only one; the instance creation messages should funnel through it.'
-		editKind: #method
-		editTarget: (aClass -> aSelector)! !
-
-!SmalltalkMentorClassReview methodsFor: 'private' stamp: 'HAW 7/Sep/2026, 10:28:44 pm (UTC)'!
-name: aName startsWithAnyWordOf: classNameWords
-
-	aName isEmpty ifTrue: [ ^false ].
-	^classNameWords anySatisfy: [ :eachWord | eachWord sameAs: aName camelCaseWords first ]! !
-
-!SmalltalkMentorClassReview methodsFor: 'private' stamp: 'HAW 7/Sep/2026, 11:42:50 pm (UTC)'!
-notOnlyAssignmentsFindingFor: aSelector in: aClass
-
-	| location |
-
-	location := aClass name, '>>', aSelector asString.
-	^SmalltalkMentorFinding
-		title: 'Initialize does more than assignments: ', location
-		detail: 'The method ', location, ' does more than assignments. An initialize message should only assign instance variables, aside from an optional super initialize.'
-		editKind: #method
-		editTarget: (aClass -> aSelector)! !
-
-!SmalltalkMentorClassReview methodsFor: 'private' stamp: 'HAW 7/Sep/2026, 11:20:38 pm (UTC)'!
-sendsSelfInstantiation: aCompiledMethod
-
-	| found |
-
-	found := false.
-	[ aCompiledMethod methodNode accept: (ParseNodeEnumerator ofBlock: [ :parseNode |
-		(parseNode isMessageNode
-			and: [ parseNode receiver isSelfPseudoVariable
-			and: [ #(new basicNew new: basicNew:) includes: parseNode selectorSymbol ] ]) ifTrue: [ found := true ] ]) ]
-		on: Error do: [ :error | ].
-	^found! !
-
-!SmalltalkMentorClassReview methodsFor: 'private' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
-sharedSelectorsAmongLeaves: leafSubclasses ofRoot: rootClass
-
-	"The selectors that instances of every leaf subclass answer, restricted to protocol
-	introduced within rootClass's own hierarchy (protocol inherited from above rootClass is
-	excluded, so shared Object protocol is not reported)."
-
-	| protocolAboveRoot sharedSelectors |
-
-	protocolAboveRoot := rootClass superclass
-		ifNil: [ Set new ]
-		ifNotNil: [ :aSuperclass | aSuperclass allSelectors asSet ].
-	sharedSelectors := nil.
-	leafSubclasses do: [ :eachLeaf | | protocolIntroducedBelowRoot |
-		protocolIntroducedBelowRoot := eachLeaf allSelectors asSet reject: [ :eachSelector | protocolAboveRoot includes: eachSelector ].
-		sharedSelectors := sharedSelectors
-			ifNil: [ protocolIntroducedBelowRoot ]
-			ifNotNil: [ sharedSelectors select: [ :eachSelector | protocolIntroducedBelowRoot includes: eachSelector ] ] ].
-	^sharedSelectors ifNil: [ Set new ]! !
-
-!SmalltalkMentorClassReview methodsFor: 'private' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
-unusedTemporariesFindingsIn: aClassOrMetaclass selector: aSelector
-
-	"The unused/write-only temporary variables of one method, as findings (empty if none, or if
-	the method cannot be parsed). isUnusedTemp is 'never read' (hasRefs not), which covers both
-	an unreferenced temporary and a write-only one. Only real TempVariableNodes are considered:
-	closure analysis bundles block-captured temporaries into a RemoteTempVectorNode (a subclass
-	whose name is a range like '<0-6>') that must be ignored. Arguments are not temporaries."
-
-	| findings |
-
-	findings := OrderedCollection new.
-	[ | methodNode temporaryNodes |
-	  methodNode := (aClassOrMetaclass >> aSelector) methodNode.
-	  methodNode ensureClosureAnalysisDone.
-	  temporaryNodes := IdentitySet new.
-	  methodNode accept: (ParseNodeEnumerator ofBlock: [ :parseNode |
-		(parseNode isKindOf: BlockNode) ifTrue: [
-			(parseNode temporaries ifNil: [ #() ]) do: [ :temporaryNode |
-				temporaryNode class == TempVariableNode ifTrue: [ temporaryNodes add: temporaryNode ] ] ] ]).
-	  (temporaryNodes asSortedCollection: [ :firstNode :secondNode | firstNode name <= secondNode name ]) do: [ :temporaryNode |
-		temporaryNode isUnusedTemp ifTrue: [ | isWritten problem |
-			isWritten := (temporaryNode instVarNamed: 'hasDefs') == true.
-			problem := isWritten ifTrue: [ 'is assigned but never read' ] ifFalse: [ 'is declared but never used' ].
-			findings add: (SmalltalkMentorFinding
-				title: 'Temporary ', temporaryNode name, ' ', problem, ': ', aClassOrMetaclass name, '>>', aSelector
-				detail: 'The temporary variable ''', temporaryNode name, ''' in ', aClassOrMetaclass name, '>>', aSelector, ' ', problem, '.'
-				editKind: #method
-				editTarget: (aClassOrMetaclass -> aSelector)) ] ] ]
-		on: Error do: [ :error | ].
-	^findings! !
-
-!SmalltalkMentorClassReview methodsFor: 'as yet unclassified' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
-showClassDefinitionEditorFor: aClassVariableAssociation
-
-	"Show the class definition (of the finding's class) in a real browser code pane
-	(class-definition mode: refactorings, add/remove instance variable, etc.). Accept redefines
-	the class. The variable is pre-selected."
-
-	| definedClass variableName browser codePane classDefinitionText variableIndex |
-
-	definedClass := aClassVariableAssociation key.
-	variableName := aClassVariableAssociation value.
-	browser := Browser new.
-	browser setClass: definedClass selector: nil.
-	browser editClass.
-	codePane := self codePaneForBrowser: browser.
-	self renderDetail: codePane.
-	classDefinitionText := browser acceptedContents asString.
-	variableIndex := self firstIndexOf: variableName in: classDefinitionText.
-	variableIndex > 0 ifTrue: [ [ codePane editor selectFrom: variableIndex to: variableIndex + variableName size - 1 ] on: Error do: [ :error | ] ]! !
 
 !SmalltalkMentorClassReview class methodsFor: 'instance creation' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 reviewClass: aClass mentor: aMentor
