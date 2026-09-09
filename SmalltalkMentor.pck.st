@@ -1,6 +1,6 @@
-'From Cuis7.9 [latest update: #8158] on 9 September 2026 at 10:09:49 am'!
-'Description Add per-method heuristics as method objects and review the code with them'!
-!provides: 'SmalltalkMentor' 1 51!
+'From Cuis7.9 [latest update: #8158] on 9 September 2026 at 11:16:10 am'!
+'Description Make class heuristics method objects and share variable heuristics in a superclass'!
+!provides: 'SmalltalkMentor' 1 52!
 !requires: 'JSON' 1 29 nil!
 !requires: 'OSProcess' 1 36 nil!
 SystemOrganization addCategory: #SmalltalkMentor!
@@ -98,7 +98,7 @@ OpenAICompatibleProvider class
 
 !classDefinition: #SmalltalkDesignHeuristic category: #SmalltalkMentor!
 Object subclass: #SmalltalkDesignHeuristic
-	instanceVariableNames: ''
+	instanceVariableNames: 'reviewedClass'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'SmalltalkMentor'!
@@ -116,16 +116,6 @@ SmalltalkDesignHeuristic subclass: #ClassIsReferencedHeuristic
 ClassIsReferencedHeuristic class
 	instanceVariableNames: ''!
 
-!classDefinition: #ClassVariablesReadAndWrittenHeuristic category: #SmalltalkMentor!
-SmalltalkDesignHeuristic subclass: #ClassVariablesReadAndWrittenHeuristic
-	instanceVariableNames: ''
-	classVariableNames: ''
-	poolDictionaries: ''
-	category: 'SmalltalkMentor'!
-!classDefinition: 'ClassVariablesReadAndWrittenHeuristic class' category: #SmalltalkMentor!
-ClassVariablesReadAndWrittenHeuristic class
-	instanceVariableNames: ''!
-
 !classDefinition: #InstanceCreationFunnelHeuristic category: #SmalltalkMentor!
 SmalltalkDesignHeuristic subclass: #InstanceCreationFunnelHeuristic
 	instanceVariableNames: ''
@@ -134,16 +124,6 @@ SmalltalkDesignHeuristic subclass: #InstanceCreationFunnelHeuristic
 	category: 'SmalltalkMentor'!
 !classDefinition: 'InstanceCreationFunnelHeuristic class' category: #SmalltalkMentor!
 InstanceCreationFunnelHeuristic class
-	instanceVariableNames: ''!
-
-!classDefinition: #InstanceVariablesReadAndWrittenHeuristic category: #SmalltalkMentor!
-SmalltalkDesignHeuristic subclass: #InstanceVariablesReadAndWrittenHeuristic
-	instanceVariableNames: ''
-	classVariableNames: ''
-	poolDictionaries: ''
-	category: 'SmalltalkMentor'!
-!classDefinition: 'InstanceVariablesReadAndWrittenHeuristic class' category: #SmalltalkMentor!
-InstanceVariablesReadAndWrittenHeuristic class
 	instanceVariableNames: ''!
 
 !classDefinition: #MessagesHaveImplementersHeuristic category: #SmalltalkMentor!
@@ -234,6 +214,36 @@ SmalltalkDesignHeuristic subclass: #SharedLeafSubclassProtocolHeuristic
 	category: 'SmalltalkMentor'!
 !classDefinition: 'SharedLeafSubclassProtocolHeuristic class' category: #SmalltalkMentor!
 SharedLeafSubclassProtocolHeuristic class
+	instanceVariableNames: ''!
+
+!classDefinition: #VariablesReadAndWrittenHeuristic category: #SmalltalkMentor!
+SmalltalkDesignHeuristic subclass: #VariablesReadAndWrittenHeuristic
+	instanceVariableNames: ''
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'SmalltalkMentor'!
+!classDefinition: 'VariablesReadAndWrittenHeuristic class' category: #SmalltalkMentor!
+VariablesReadAndWrittenHeuristic class
+	instanceVariableNames: ''!
+
+!classDefinition: #ClassVariablesReadAndWrittenHeuristic category: #SmalltalkMentor!
+VariablesReadAndWrittenHeuristic subclass: #ClassVariablesReadAndWrittenHeuristic
+	instanceVariableNames: ''
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'SmalltalkMentor'!
+!classDefinition: 'ClassVariablesReadAndWrittenHeuristic class' category: #SmalltalkMentor!
+ClassVariablesReadAndWrittenHeuristic class
+	instanceVariableNames: ''!
+
+!classDefinition: #InstanceVariablesReadAndWrittenHeuristic category: #SmalltalkMentor!
+VariablesReadAndWrittenHeuristic subclass: #InstanceVariablesReadAndWrittenHeuristic
+	instanceVariableNames: ''
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'SmalltalkMentor'!
+!classDefinition: 'InstanceVariablesReadAndWrittenHeuristic class' category: #SmalltalkMentor!
+InstanceVariablesReadAndWrittenHeuristic class
 	instanceVariableNames: ''!
 
 !classDefinition: #SmalltalkMentor category: #SmalltalkMentor!
@@ -1023,25 +1033,20 @@ name
 
 	^self subclassResponsibility! !
 
-!SmalltalkDesignHeuristic methodsFor: 'verifying' stamp: 'HAW 8/Sep/2026, 2:24:47 pm (UTC)'!
-findingsFor: aClass
+!SmalltalkDesignHeuristic methodsFor: 'evaluating' stamp: 'HAW 9/Sep/2026, 1:46:49 pm (UTC)'!
+value
 
 	^self subclassResponsibility! !
 
-!SmalltalkDesignHeuristic methodsFor: 'descriptions' stamp: 'HAW 9/Sep/2026, 2:26:44 am (UTC)'!
-neverReadNorWrittenDescription
+!SmalltalkDesignHeuristic methodsFor: 'initialization' stamp: 'HAW 9/Sep/2026, 1:46:46 pm (UTC)'!
+initializeFor: aClass
 
-	^'is never read nor written'! !
+	reviewedClass := aClass! !
 
-!SmalltalkDesignHeuristic methodsFor: 'descriptions' stamp: 'HAW 9/Sep/2026, 2:26:46 am (UTC)'!
-readButNeverWrittenDescription
+!SmalltalkDesignHeuristic class methodsFor: 'instance creation' stamp: 'HAW 9/Sep/2026, 1:46:43 pm (UTC)'!
+for: aClass
 
-	^'is read but never written'! !
-
-!SmalltalkDesignHeuristic methodsFor: 'descriptions' stamp: 'HAW 9/Sep/2026, 2:26:48 am (UTC)'!
-writtenButNeverReadDescription
-
-	^'is written but never read'! !
+	^self new initializeFor: aClass! !
 
 !ClassIsReferencedHeuristic methodsFor: 'accessing' stamp: 'HAW 8/Sep/2026, 2:32:07 pm (UTC)'!
 description
@@ -1053,61 +1058,22 @@ name
 
 	^'Class is referenced'! !
 
-!ClassIsReferencedHeuristic methodsFor: 'verifying' stamp: 'HAW 9/Sep/2026, 2:28:54 am (UTC)'!
-findingsFor: aClass
+!ClassIsReferencedHeuristic methodsFor: 'evaluating' stamp: 'HAW 9/Sep/2026, 1:49:18 pm (UTC)'!
+value
 
-	(aClass isReferencedByOthers
-		or: [ aClass subclasses notEmpty
-		or: [ aClass inheritsFrom: TestCase ] ]) ifTrue: [ ^#() ].
-	^Array with: (self findingFor: aClass)! !
+	(reviewedClass isReferencedByOthers
+		or: [ reviewedClass subclasses notEmpty
+		or: [ reviewedClass inheritsFrom: TestCase ] ]) ifTrue: [ ^#() ].
+	^Array with: self finding! !
 
-!ClassIsReferencedHeuristic methodsFor: 'private' stamp: 'HAW 9/Sep/2026, 2:28:56 am (UTC)'!
-findingFor: aClass
+!ClassIsReferencedHeuristic methodsFor: 'private' stamp: 'HAW 9/Sep/2026, 1:49:21 pm (UTC)'!
+finding
 
 	^SmalltalkMentorFinding
-		title: self name, ': ', aClass name
-		detail: 'The class ', aClass name, ' is not referenced by any other class and has no subclasses - it may be dead code.'
+		title: self name, ': ', reviewedClass name
+		detail: 'The class ', reviewedClass name, ' is not referenced by any other class and has no subclasses - it may be dead code.'
 		editKind: #none
 		editTarget: nil! !
-
-!ClassVariablesReadAndWrittenHeuristic methodsFor: 'accessing' stamp: 'HAW 8/Sep/2026, 2:25:53 pm (UTC)'!
-description
-
-	^'Every class variable should be both read and written, on the instance or the class side. One that is only read, only written, or never used is likely dead state.'! !
-
-!ClassVariablesReadAndWrittenHeuristic methodsFor: 'accessing' stamp: 'HAW 8/Sep/2026, 2:25:47 pm (UTC)'!
-name
-
-	^'Class variables read & written'! !
-
-!ClassVariablesReadAndWrittenHeuristic methodsFor: 'verifying' stamp: 'HAW 9/Sep/2026, 2:45:58 am (UTC)'!
-findingsFor: aClass
-
-	^(aClass classVarNames asSortedCollection reject: [ :each |
-		(aClass readsClassVariableNamed: each)
-			and: [ aClass writesClassVariableNamed: each ] ])
-		collect: [ :each | self findingFor: each in: aClass ]! !
-
-!ClassVariablesReadAndWrittenHeuristic methodsFor: 'private' stamp: 'HAW 9/Sep/2026, 2:46:00 am (UTC)'!
-findingFor: aClassVariableName in: aClass
-
-	| problem |
-
-	problem := self problemWith: aClassVariableName in: aClass.
-	^SmalltalkMentorFinding
-		title: self name, ': ', aClassVariableName, ' ', problem
-		detail: 'The class variable ', aClassVariableName, ' ', problem, '.'
-		editKind: #variable
-		editTarget: aClass -> aClassVariableName! !
-
-!ClassVariablesReadAndWrittenHeuristic methodsFor: 'private' stamp: 'HAW 9/Sep/2026, 2:27:11 am (UTC)'!
-problemWith: aClassVariableName in: aClass
-
-	(aClass readsClassVariableNamed: aClassVariableName) ifFalse: [
-		^(aClass writesClassVariableNamed: aClassVariableName)
-			ifTrue: [ self writtenButNeverReadDescription ]
-			ifFalse: [ self neverReadNorWrittenDescription ] ].
-	^self readButNeverWrittenDescription! !
 
 !InstanceCreationFunnelHeuristic methodsFor: 'accessing' stamp: 'HAW 8/Sep/2026, 2:30:43 pm (UTC)'!
 description
@@ -1119,66 +1085,26 @@ name
 
 	^'Instance creation funnelled through one message'! !
 
-!InstanceCreationFunnelHeuristic methodsFor: 'verifying' stamp: 'HAW 9/Sep/2026, 6:59:21 am (UTC)'!
-findingsFor: aClass
+!InstanceCreationFunnelHeuristic methodsFor: 'evaluating' stamp: 'HAW 9/Sep/2026, 1:48:37 pm (UTC)'!
+value
 
 	| instantiatingSelectors |
 
-	instantiatingSelectors := aClass class selectorsSendingNewToSelf.
+	instantiatingSelectors := reviewedClass class selectorsSendingNewToSelf.
 	instantiatingSelectors size <= 1 ifTrue: [ ^#() ].
-	^instantiatingSelectors
-		collect: [ :each | self findingFor: each in: aClass class ]! !
+	^instantiatingSelectors collect: [ :each | self findingFor: each ]! !
 
-!InstanceCreationFunnelHeuristic methodsFor: 'private' stamp: 'HAW 9/Sep/2026, 2:46:46 am (UTC)'!
-findingFor: aSelector in: aMetaclass
+!InstanceCreationFunnelHeuristic methodsFor: 'private' stamp: 'HAW 9/Sep/2026, 1:48:39 pm (UTC)'!
+findingFor: aSelector
 
 	| location |
 
-	location := (aMetaclass -> aSelector) methodLocationString.
+	location := (reviewedClass class -> aSelector) methodLocationString.
 	^SmalltalkMentorFinding
 		title: self name, ': ', location
 		detail: 'The class-side method ', location, ' sends self new directly; the instance creation messages should funnel through a single one that runs the preconditions and sends the only initialize.'
 		editKind: #method
-		editTarget: aMetaclass -> aSelector! !
-
-!InstanceVariablesReadAndWrittenHeuristic methodsFor: 'accessing' stamp: 'HAW 8/Sep/2026, 2:25:16 pm (UTC)'!
-description
-
-	^'Every instance variable should be both read and written, in this class or a subclass, since an instance variable is in scope in the subclasses. One that is only read, only written, or never used is likely dead state.'! !
-
-!InstanceVariablesReadAndWrittenHeuristic methodsFor: 'accessing' stamp: 'HAW 8/Sep/2026, 2:25:10 pm (UTC)'!
-name
-
-	^'Instance variables read & written'! !
-
-!InstanceVariablesReadAndWrittenHeuristic methodsFor: 'verifying' stamp: 'HAW 9/Sep/2026, 2:45:53 am (UTC)'!
-findingsFor: aClass
-
-	^(aClass instVarNames reject: [ :each |
-		(aClass readsInstanceVariableNamed: each)
-			and: [ aClass writesInstanceVariableNamed: each ] ])
-		collect: [ :each | self findingFor: each in: aClass ]! !
-
-!InstanceVariablesReadAndWrittenHeuristic methodsFor: 'private' stamp: 'HAW 9/Sep/2026, 2:45:56 am (UTC)'!
-findingFor: anInstanceVariableName in: aClass
-
-	| problem |
-
-	problem := self problemWith: anInstanceVariableName in: aClass.
-	^SmalltalkMentorFinding
-		title: self name, ': ', anInstanceVariableName, ' ', problem
-		detail: 'The instance variable ', anInstanceVariableName, ' ', problem, '.'
-		editKind: #variable
-		editTarget: aClass -> anInstanceVariableName! !
-
-!InstanceVariablesReadAndWrittenHeuristic methodsFor: 'private' stamp: 'HAW 9/Sep/2026, 2:26:58 am (UTC)'!
-problemWith: anInstanceVariableName in: aClass
-
-	(aClass readsInstanceVariableNamed: anInstanceVariableName) ifFalse: [
-		^(aClass writesInstanceVariableNamed: anInstanceVariableName)
-			ifTrue: [ self writtenButNeverReadDescription ]
-			ifFalse: [ self neverReadNorWrittenDescription ] ].
-	^self readButNeverWrittenDescription! !
+		editTarget: reviewedClass class -> aSelector! !
 
 !MessagesHaveImplementersHeuristic methodsFor: 'accessing' stamp: 'HAW 8/Sep/2026, 2:26:47 pm (UTC)'!
 description
@@ -1189,20 +1115,6 @@ description
 name
 
 	^'Messages have implementers'! !
-
-!MessagesHaveImplementersHeuristic methodsFor: 'verifying' stamp: 'HAW 9/Sep/2026, 2:46:07 am (UTC)'!
-findingsFor: aClass
-
-	| findings seenMessages |
-
-	findings := OrderedCollection new.
-	seenMessages := Set new.
-	aClass compiledMethodsOnBothSides do: [ :each |
-		self
-			addUnimplementedMessagesSentIn: each
-			skipping: seenMessages
-			to: findings ].
-	^findings! !
 
 !MessagesHaveImplementersHeuristic methodsFor: 'private' stamp: 'HAW 9/Sep/2026, 3:09:33 am (UTC)'!
 addUnimplementedMessagesSentIn: aCompiledMethod skipping: seenMessages to: findings
@@ -1225,6 +1137,20 @@ findingFor: aMessage sentIn: aCompiledMethod
 		editKind: #method
 		editTarget: aCompiledMethod classSelectorAssociation! !
 
+!MessagesHaveImplementersHeuristic methodsFor: 'evaluating' stamp: 'HAW 9/Sep/2026, 1:47:36 pm (UTC)'!
+value
+
+	| findings seenMessages |
+
+	findings := OrderedCollection new.
+	seenMessages := Set new.
+	reviewedClass compiledMethodsOnBothSides do: [ :each |
+		self
+			addUnimplementedMessagesSentIn: each
+			skipping: seenMessages
+			to: findings ].
+	^findings! !
+
 !MethodsAreCategorizedHeuristic methodsFor: 'accessing' stamp: 'HAW 8/Sep/2026, 2:27:08 pm (UTC)'!
 description
 
@@ -1235,12 +1161,6 @@ name
 
 	^'Methods are categorized'! !
 
-!MethodsAreCategorizedHeuristic methodsFor: 'verifying' stamp: 'HAW 9/Sep/2026, 2:27:36 am (UTC)'!
-findingsFor: aClass
-
-	^(aClass compiledMethodsOnBothSides select: [ :each | each isUncategorized ])
-		collect: [ :each | self findingFor: each ]! !
-
 !MethodsAreCategorizedHeuristic methodsFor: 'private' stamp: 'HAW 9/Sep/2026, 2:31:41 am (UTC)'!
 findingFor: aCompiledMethod
 
@@ -1249,6 +1169,13 @@ findingFor: aCompiledMethod
 		detail: 'The method ', aCompiledMethod locationString, ' is not categorized. Move it into a meaningful protocol.'
 		editKind: #method
 		editTarget: aCompiledMethod classSelectorAssociation! !
+
+!MethodsAreCategorizedHeuristic methodsFor: 'evaluating' stamp: 'HAW 9/Sep/2026, 1:51:05 pm (UTC)'!
+value
+
+	^(reviewedClass compiledMethodsOnBothSides
+		select: [ :each | each isUncategorized ])
+		collect: [ :each | self findingFor: each ]! !
 
 !MethodsHaveSendersHeuristic methodsFor: 'accessing' stamp: 'HAW 8/Sep/2026, 2:26:26 pm (UTC)'!
 description
@@ -1260,14 +1187,6 @@ name
 
 	^'Methods have senders'! !
 
-!MethodsHaveSendersHeuristic methodsFor: 'verifying' stamp: 'HAW 9/Sep/2026, 2:46:03 am (UTC)'!
-findingsFor: aClass
-
-	^(aClass compiledMethodsOnBothSides reject: [ :each |
-		each hasSenders
-			or: [ each overridesInheritedMethod or: [ each isTestMethod ] ] ])
-		collect: [ :each | self findingFor: each ]! !
-
 !MethodsHaveSendersHeuristic methodsFor: 'private' stamp: 'HAW 9/Sep/2026, 2:31:36 am (UTC)'!
 findingFor: aCompiledMethod
 
@@ -1276,6 +1195,14 @@ findingFor: aCompiledMethod
 		detail: 'The method ', aCompiledMethod locationString, ' has no senders in the image and does not override an inherited method - it may be dead code.'
 		editKind: #method
 		editTarget: aCompiledMethod classSelectorAssociation! !
+
+!MethodsHaveSendersHeuristic methodsFor: 'evaluating' stamp: 'HAW 9/Sep/2026, 1:47:31 pm (UTC)'!
+value
+
+	^(reviewedClass compiledMethodsOnBothSides reject: [ :each |
+		each hasSenders
+			or: [ each overridesInheritedMethod or: [ each isTestMethod ] ] ])
+		collect: [ :each | self findingFor: each ]! !
 
 !NoEmptyMethodCategoriesHeuristic methodsFor: 'accessing' stamp: 'HAW 8/Sep/2026, 2:28:14 pm (UTC)'!
 description
@@ -1286,14 +1213,6 @@ description
 name
 
 	^'No empty method categories'! !
-
-!NoEmptyMethodCategoriesHeuristic methodsFor: 'verifying' stamp: 'HAW 9/Sep/2026, 3:09:26 am (UTC)'!
-findingsFor: aClass
-
-	^{ aClass. aClass class }
-		inject: OrderedCollection new
-		into: [ :findings :eachSide |
-			findings addAll: (self findingsIn: eachSide); yourself ]! !
 
 !NoEmptyMethodCategoriesHeuristic methodsFor: 'private' stamp: 'HAW 9/Sep/2026, 2:46:29 am (UTC)'!
 findingFor: aCategoryName in: aClassOrMetaclass
@@ -1310,6 +1229,14 @@ findingsIn: aClassOrMetaclass
 	^aClassOrMetaclass emptyMethodCategories
 		collect: [ :each | self findingFor: each in: aClassOrMetaclass ]! !
 
+!NoEmptyMethodCategoriesHeuristic methodsFor: 'evaluating' stamp: 'HAW 9/Sep/2026, 1:47:53 pm (UTC)'!
+value
+
+	^{ reviewedClass. reviewedClass class }
+		inject: OrderedCollection new
+		into: [ :findings :eachSide |
+			findings addAll: (self findingsIn: eachSide); yourself ]! !
+
 !NoUnusedTemporariesHeuristic methodsFor: 'accessing' stamp: 'HAW 8/Sep/2026, 2:27:39 pm (UTC)'!
 description
 
@@ -1319,13 +1246,6 @@ description
 name
 
 	^'No unused or write-only temporaries'! !
-
-!NoUnusedTemporariesHeuristic methodsFor: 'verifying' stamp: 'HAW 9/Sep/2026, 2:46:12 am (UTC)'!
-findingsFor: aClass
-
-	^aClass compiledMethodsOnBothSides
-		inject: OrderedCollection new
-		into: [ :findings :each | findings addAll: (self findingsIn: each); yourself ]! !
 
 !NoUnusedTemporariesHeuristic methodsFor: 'private' stamp: 'HAW 9/Sep/2026, 11:38:29 am (UTC)'!
 descriptionOf: aTemporaryNode
@@ -1353,6 +1273,13 @@ findingsIn: aCompiledMethod
 		collect: [ :each | self findingFor: each in: aCompiledMethod ] ]
 			on: Error do: [ :error | #() ]! !
 
+!NoUnusedTemporariesHeuristic methodsFor: 'evaluating' stamp: 'HAW 9/Sep/2026, 1:47:47 pm (UTC)'!
+value
+
+	^reviewedClass compiledMethodsOnBothSides
+		inject: OrderedCollection new
+		into: [ :findings :each | findings addAll: (self findingsIn: each); yourself ]! !
+
 !OneInitializeMessageHeuristic methodsFor: 'accessing' stamp: 'HAW 8/Sep/2026, 2:31:19 pm (UTC)'!
 description
 
@@ -1363,52 +1290,52 @@ name
 
 	^'One initialize message doing only assignments'! !
 
-!OneInitializeMessageHeuristic methodsFor: 'verifying' stamp: 'HAW 9/Sep/2026, 2:28:30 am (UTC)'!
-findingsFor: aClass
+!OneInitializeMessageHeuristic methodsFor: 'evaluating' stamp: 'HAW 9/Sep/2026, 1:48:49 pm (UTC)'!
+value
 
 	| initializeSelectors |
 
-	initializeSelectors := aClass selectors asSortedCollection
+	initializeSelectors := reviewedClass selectors asSortedCollection
 		select: [ :each | each beginsWith: 'initialize' ].
-	^(self multipleFindingsFor: aClass among: initializeSelectors),
-		(self notOnlyAssignmentsFindingsFor: aClass among: initializeSelectors)! !
+	^(self multipleFindingsAmong: initializeSelectors),
+		(self notOnlyAssignmentsFindingsAmong: initializeSelectors)! !
 
-!OneInitializeMessageHeuristic methodsFor: 'private' stamp: 'HAW 9/Sep/2026, 2:46:51 am (UTC)'!
-findingForMultiple: aSelector in: aClass
+!OneInitializeMessageHeuristic methodsFor: 'private' stamp: 'HAW 9/Sep/2026, 1:48:57 pm (UTC)'!
+findingForMultiple: aSelector
 
 	| location |
 
-	location := (aClass -> aSelector) methodLocationString.
+	location := (reviewedClass -> aSelector) methodLocationString.
 	^SmalltalkMentorFinding
 		title: self name, ': multiple initialize messages, ', location
 		detail: 'The class defines more than one initialize message; the instance creation messages should funnel through one.'
 		editKind: #method
-		editTarget: aClass -> aSelector! !
+		editTarget: reviewedClass -> aSelector! !
 
-!OneInitializeMessageHeuristic methodsFor: 'private' stamp: 'HAW 9/Sep/2026, 2:46:53 am (UTC)'!
-findingForNotOnlyAssignments: aSelector in: aClass
+!OneInitializeMessageHeuristic methodsFor: 'private' stamp: 'HAW 9/Sep/2026, 1:49:01 pm (UTC)'!
+findingForNotOnlyAssignments: aSelector
 
 	| location |
 
-	location := (aClass -> aSelector) methodLocationString.
+	location := (reviewedClass -> aSelector) methodLocationString.
 	^SmalltalkMentorFinding
 		title: self name, ': ', location, ' does more than assignments'
 		detail: 'The method ', location, ' does more than assignments; an initialize message only assigns instance variables, aside from an optional super initialize.'
 		editKind: #method
-		editTarget: aClass -> aSelector! !
+		editTarget: reviewedClass -> aSelector! !
 
-!OneInitializeMessageHeuristic methodsFor: 'private' stamp: 'HAW 9/Sep/2026, 2:46:48 am (UTC)'!
-multipleFindingsFor: aClass among: initializeSelectors
+!OneInitializeMessageHeuristic methodsFor: 'private' stamp: 'HAW 9/Sep/2026, 1:48:52 pm (UTC)'!
+multipleFindingsAmong: initializeSelectors
 
 	initializeSelectors size <= 1 ifTrue: [ ^#() ].
-	^initializeSelectors
-		collect: [ :each | self findingForMultiple: each in: aClass ]! !
+	^initializeSelectors collect: [ :each | self findingForMultiple: each ]! !
 
-!OneInitializeMessageHeuristic methodsFor: 'private' stamp: 'HAW 9/Sep/2026, 2:28:34 am (UTC)'!
-notOnlyAssignmentsFindingsFor: aClass among: initializeSelectors
+!OneInitializeMessageHeuristic methodsFor: 'private' stamp: 'HAW 9/Sep/2026, 1:51:08 pm (UTC)'!
+notOnlyAssignmentsFindingsAmong: initializeSelectors
 
-	^(initializeSelectors reject: [ :each | (aClass >> each) doesOnlyAssignments ])
-		collect: [ :each | self findingForNotOnlyAssignments: each in: aClass ]! !
+	^(initializeSelectors
+		reject: [ :each | (reviewedClass >> each) doesOnlyAssignments ])
+		collect: [ :each | self findingForNotOnlyAssignments: each ]! !
 
 !RepeatedClassWordHeuristic methodsFor: 'accessing' stamp: 'HAW 8/Sep/2026, 2:28:45 pm (UTC)'!
 description
@@ -1420,35 +1347,28 @@ name
 
 	^'No class-name prefix in names'! !
 
-!RepeatedClassWordHeuristic methodsFor: 'verifying' stamp: 'HAW 8/Sep/2026, 11:56:54 pm (UTC)'!
-findingsFor: aClass
-
-	| classNameWords |
-
-	classNameWords := aClass name camelCaseWords.
-	^(self variableFindingsFor: aClass words: classNameWords),
-		(self selectorFindingsFor: aClass words: classNameWords),
-		(self selectorFindingsFor: aClass class words: classNameWords)! !
-
-!RepeatedClassWordHeuristic methodsFor: 'private' stamp: 'HAW 9/Sep/2026, 11:38:52 am (UTC)'!
+!RepeatedClassWordHeuristic methodsFor: 'private' stamp: 'HAW 9/Sep/2026, 1:51:13 pm (UTC)'!
 hasReservedClassSideNameAfterFirstWord: aName
 
 	| remainingWords |
 
-	remainingWords := aName camelCaseWords allButFirst collect: [ :each | each asLowercase ].
+	remainingWords := aName camelCaseWords allButFirst
+		collect: [ :each | each asLowercase ].
 	^self reservedClassSideNames includes: remainingWords asArray! !
 
-!RepeatedClassWordHeuristic methodsFor: 'private' stamp: 'HAW 9/Sep/2026, 11:38:46 am (UTC)'!
+!RepeatedClassWordHeuristic methodsFor: 'private' stamp: 'HAW 9/Sep/2026, 1:51:15 pm (UTC)'!
 isSelector: aSelector exemptFromClassWordIn: aClassOrMetaclass
 
 	^(aClassOrMetaclass >> aSelector) isTestMethod
 		or: [ (aClassOrMetaclass superclass canUnderstand: aSelector)
-		or: [ aClassOrMetaclass isMeta and: [ self keepsPrefixOnClassSide: aSelector ] ] ]! !
+		or: [ aClassOrMetaclass isMeta
+			and: [ self keepsPrefixOnClassSide: aSelector ] ] ]! !
 
-!RepeatedClassWordHeuristic methodsFor: 'private' stamp: 'HAW 9/Sep/2026, 11:38:49 am (UTC)'!
+!RepeatedClassWordHeuristic methodsFor: 'private' stamp: 'HAW 9/Sep/2026, 1:51:18 pm (UTC)'!
 keepsPrefixOnClassSide: aSelector
 
-	^self hasReservedClassSideNameAfterFirstWord: aSelector firstKeywordWithoutColon! !
+	^self
+		hasReservedClassSideNameAfterFirstWord: aSelector firstKeywordWithoutColon! !
 
 !RepeatedClassWordHeuristic methodsFor: 'private' stamp: 'HAW 9/Sep/2026, 11:38:58 am (UTC)'!
 name: aName startsWithAnyWordOf: classNameWords
@@ -1464,11 +1384,13 @@ reservedClassSideNames
 
 	^#( #('name') #('definition') #('category') #('comment') #('class' 'name') )! !
 
-!RepeatedClassWordHeuristic methodsFor: 'private' stamp: 'HAW 9/Sep/2026, 11:38:44 am (UTC)'!
+!RepeatedClassWordHeuristic methodsFor: 'private' stamp: 'HAW 9/Sep/2026, 1:51:21 pm (UTC)'!
 selector: aSelector repeatsAClassWordIn: aClassOrMetaclass words: classNameWords
 
-	^(self name: aSelector firstKeywordWithoutColon startsWithAnyWordOf: classNameWords)
-		and: [ (self isSelector: aSelector exemptFromClassWordIn: aClassOrMetaclass) not ]! !
+	^(self
+		name: aSelector firstKeywordWithoutColon
+		startsWithAnyWordOf: classNameWords)
+			and: [ (self isSelector: aSelector exemptFromClassWordIn: aClassOrMetaclass) not ]! !
 
 !RepeatedClassWordHeuristic methodsFor: 'private' stamp: 'HAW 8/Sep/2026, 11:59:49 pm (UTC)'!
 selectorFindingFor: aSelector in: aClassOrMetaclass
@@ -1482,14 +1404,17 @@ selectorFindingFor: aSelector in: aClassOrMetaclass
 		editKind: #method
 		editTarget: aClassOrMetaclass -> aSelector! !
 
-!RepeatedClassWordHeuristic methodsFor: 'private' stamp: 'HAW 9/Sep/2026, 11:38:41 am (UTC)'!
+!RepeatedClassWordHeuristic methodsFor: 'private' stamp: 'HAW 9/Sep/2026, 1:51:24 pm (UTC)'!
 selectorFindingsFor: aClassOrMetaclass words: classNameWords
 
 	| selectors repeatedSelectors |
 
 	selectors := aClassOrMetaclass selectors asSortedCollection.
 	repeatedSelectors := selectors select: [ :each |
-		self selector: each repeatsAClassWordIn: aClassOrMetaclass words: classNameWords ].
+		self
+			selector: each
+			repeatsAClassWordIn: aClassOrMetaclass
+			words: classNameWords ].
 	^repeatedSelectors collect: [ :each |
 		self selectorFindingFor: each in: aClassOrMetaclass ]! !
 
@@ -1498,23 +1423,33 @@ titleFor: aLocation
 
 	^self name, ': ', aLocation! !
 
-!RepeatedClassWordHeuristic methodsFor: 'private' stamp: 'HAW 9/Sep/2026, 12:01:10 am (UTC)'!
-variableFindingFor: anInstanceVariableName in: aClass
+!RepeatedClassWordHeuristic methodsFor: 'private' stamp: 'HAW 9/Sep/2026, 1:48:05 pm (UTC)'!
+variableFindingFor: anInstanceVariableName
 
 	^SmalltalkMentorFinding
-		title: (self titleFor: aClass name, ' - ', anInstanceVariableName)
+		title: (self titleFor: reviewedClass name, ' - ', anInstanceVariableName)
 		detail: 'The instance variable ', anInstanceVariableName, ' repeats a word of the class name; a name is read in the context of its class, so drop the prefix.'
 		editKind: #variable
-		editTarget: aClass -> anInstanceVariableName! !
+		editTarget: reviewedClass -> anInstanceVariableName! !
 
-!RepeatedClassWordHeuristic methodsFor: 'private' stamp: 'HAW 9/Sep/2026, 11:39:01 am (UTC)'!
-variableFindingsFor: aClass words: classNameWords
+!RepeatedClassWordHeuristic methodsFor: 'private' stamp: 'HAW 9/Sep/2026, 1:48:02 pm (UTC)'!
+variableFindingsWith: classNameWords
 
 	| repeatedNames |
 
-	repeatedNames := aClass instVarNames select: [ :each |
+	repeatedNames := reviewedClass instVarNames select: [ :each |
 		self name: each startsWithAnyWordOf: classNameWords ].
-	^repeatedNames collect: [ :each | self variableFindingFor: each in: aClass ]! !
+	^repeatedNames collect: [ :each | self variableFindingFor: each ]! !
+
+!RepeatedClassWordHeuristic methodsFor: 'evaluating' stamp: 'HAW 9/Sep/2026, 1:47:59 pm (UTC)'!
+value
+
+	| classNameWords |
+
+	classNameWords := reviewedClass name camelCaseWords.
+	^(self variableFindingsWith: classNameWords),
+		(self selectorFindingsFor: reviewedClass words: classNameWords),
+		(self selectorFindingsFor: reviewedClass class words: classNameWords)! !
 
 !SelfOverExplicitClassReferenceHeuristic methodsFor: 'accessing' stamp: 'HAW 8/Sep/2026, 2:29:47 pm (UTC)'!
 description
@@ -1526,21 +1461,12 @@ name
 
 	^'Prefer self / self class over explicit class reference'! !
 
-!SelfOverExplicitClassReferenceHeuristic methodsFor: 'verifying' stamp: 'HAW 9/Sep/2026, 2:46:34 am (UTC)'!
-findingsFor: aClass
-
-	| ownReferences |
-
-	ownReferences := (Smalltalk allCallsOn: aClass binding)
-		select: [ :each | each actualClass theNonMetaClass = aClass ].
-	^ownReferences collect: [ :each | self findingFor: each in: aClass ]! !
-
-!SelfOverExplicitClassReferenceHeuristic methodsFor: 'private' stamp: 'HAW 9/Sep/2026, 11:39:56 am (UTC)'!
-findingFor: aMethodReference in: aClass
+!SelfOverExplicitClassReferenceHeuristic methodsFor: 'private' stamp: 'HAW 9/Sep/2026, 1:48:19 pm (UTC)'!
+findingFor: aMethodReference
 
 	| replacement location |
 
-	replacement := self replacementFor: aMethodReference in: aClass.
+	replacement := self replacementFor: aMethodReference.
 	location := aMethodReference locationString.
 	^SmalltalkMentorFinding
 		title: (self titleFor: location replacement: replacement)
@@ -1548,15 +1474,26 @@ findingFor: aMethodReference in: aClass
 		editKind: #method
 		editTarget: aMethodReference classSelectorAssociation! !
 
-!SelfOverExplicitClassReferenceHeuristic methodsFor: 'private' stamp: 'HAW 9/Sep/2026, 11:40:00 am (UTC)'!
-replacementFor: aMethodReference in: aClass
+!SelfOverExplicitClassReferenceHeuristic methodsFor: 'private' stamp: 'HAW 9/Sep/2026, 1:48:23 pm (UTC)'!
+replacementFor: aMethodReference
 
-	^aMethodReference actualClass = aClass class ifTrue: [ 'self' ] ifFalse: [ 'self class' ]! !
+	^aMethodReference actualClass = reviewedClass class
+		ifTrue: [ 'self' ]
+		ifFalse: [ 'self class' ]! !
 
 !SelfOverExplicitClassReferenceHeuristic methodsFor: 'private' stamp: 'HAW 9/Sep/2026, 2:46:39 am (UTC)'!
 titleFor: aLocation replacement: aReplacement
 
 	^self name, ': ', aLocation, ' (may be ', aReplacement, ')'! !
+
+!SelfOverExplicitClassReferenceHeuristic methodsFor: 'evaluating' stamp: 'HAW 9/Sep/2026, 1:48:17 pm (UTC)'!
+value
+
+	| ownReferences |
+
+	ownReferences := (Smalltalk allCallsOn: reviewedClass binding)
+		select: [ :each | each actualClass theNonMetaClass = reviewedClass ].
+	^ownReferences collect: [ :each | self findingFor: each ]! !
 
 !SharedLeafSubclassProtocolHeuristic methodsFor: 'accessing' stamp: 'HAW 8/Sep/2026, 2:32:32 pm (UTC)'!
 description
@@ -1568,27 +1505,150 @@ name
 
 	^'Shared leaf-subclass protocol in root'! !
 
-!SharedLeafSubclassProtocolHeuristic methodsFor: 'verifying' stamp: 'HAW 9/Sep/2026, 2:29:00 am (UTC)'!
-findingsFor: rootClass
+!SharedLeafSubclassProtocolHeuristic methodsFor: 'evaluating' stamp: 'HAW 9/Sep/2026, 1:49:29 pm (UTC)'!
+value
 
-	(rootClass leafSubclasses size between: 2 and: 300) ifFalse: [ ^#() ].
-	^(rootClass selectorsSharedByAllLeafSubclasses asSortedCollection
-		reject: [ :each | rootClass includesSelector: each ])
-		collect: [ :each | self findingFor: each root: rootClass ]! !
+	(reviewedClass leafSubclasses size between: 2 and: 300) ifFalse: [ ^#() ].
+	^(reviewedClass selectorsSharedByAllLeafSubclasses asSortedCollection
+		reject: [ :each | reviewedClass includesSelector: each ])
+		collect: [ :each | self findingFor: each ]! !
 
-!SharedLeafSubclassProtocolHeuristic methodsFor: 'private' stamp: 'HAW 9/Sep/2026, 2:46:56 am (UTC)'!
-findingFor: aSelector root: rootClass
+!SharedLeafSubclassProtocolHeuristic methodsFor: 'private' stamp: 'HAW 9/Sep/2026, 1:49:32 pm (UTC)'!
+findingFor: aSelector
 
 	^SmalltalkMentorFinding
-		title: (self titleFor: aSelector root: rootClass)
-		detail: 'Declare #', aSelector, ' in ', rootClass name, ', concretely or as subclassResponsibility, since every leaf subclass answers it.'
+		title: (self titleFor: aSelector)
+		detail: 'Declare #', aSelector, ' in ', reviewedClass name, ', concretely or as subclassResponsibility, since every leaf subclass answers it.'
 		editKind: #method
-		editTarget: (rootClass subclassImplementing: aSelector) -> aSelector! !
+		editTarget: (reviewedClass subclassImplementing: aSelector) -> aSelector! !
 
-!SharedLeafSubclassProtocolHeuristic methodsFor: 'private' stamp: 'HAW 9/Sep/2026, 2:46:58 am (UTC)'!
-titleFor: aSelector root: rootClass
+!SharedLeafSubclassProtocolHeuristic methodsFor: 'private' stamp: 'HAW 9/Sep/2026, 1:49:36 pm (UTC)'!
+titleFor: aSelector
 
-	^self name, ': #', aSelector, ' (every leaf subclass of ', rootClass name, ' answers it)'! !
+	^self name, ': #', aSelector, ' (every leaf subclass of ', reviewedClass name, ' answers it)'! !
+
+!VariablesReadAndWrittenHeuristic methodsFor: 'descriptions' stamp: 'HAW 9/Sep/2026, 2:05:54 pm (UTC)'!
+neverReadNorWrittenDescription
+
+	^'is never read nor written'! !
+
+!VariablesReadAndWrittenHeuristic methodsFor: 'descriptions' stamp: 'HAW 9/Sep/2026, 2:05:54 pm (UTC)'!
+readButNeverWrittenDescription
+
+	^'is read but never written'! !
+
+!VariablesReadAndWrittenHeuristic methodsFor: 'descriptions' stamp: 'HAW 9/Sep/2026, 2:05:54 pm (UTC)'!
+writtenButNeverReadDescription
+
+	^'is written but never read'! !
+
+!VariablesReadAndWrittenHeuristic methodsFor: 'evaluating' stamp: 'HAW 9/Sep/2026, 2:08:21 pm (UTC)'!
+value
+
+	^(self variableNames
+		reject: [ :each | (self isRead: each) and: [ self isWritten: each ] ])
+		collect: [ :each | self findingFor: each ]! !
+
+!VariablesReadAndWrittenHeuristic methodsFor: 'private' stamp: 'HAW 9/Sep/2026, 2:06:39 pm (UTC)'!
+findingFor: aVariableName
+
+	| problem |
+
+	problem := self problemWith: aVariableName.
+	^SmalltalkMentorFinding
+		title: self name, ': ', aVariableName, ' ', problem
+		detail: 'The ', self variableKind, ' ', aVariableName, ' ', problem, '.'
+		editKind: #variable
+		editTarget: reviewedClass -> aVariableName! !
+
+!VariablesReadAndWrittenHeuristic methodsFor: 'private' stamp: 'HAW 9/Sep/2026, 2:06:42 pm (UTC)'!
+problemWith: aVariableName
+
+	(self isRead: aVariableName) ifFalse: [
+		^(self isWritten: aVariableName)
+			ifTrue: [ self writtenButNeverReadDescription ]
+			ifFalse: [ self neverReadNorWrittenDescription ] ].
+	^self readButNeverWrittenDescription! !
+
+!VariablesReadAndWrittenHeuristic methodsFor: 'variables' stamp: 'HAW 9/Sep/2026, 2:06:49 pm (UTC)'!
+isRead: aVariableName
+
+	^self subclassResponsibility! !
+
+!VariablesReadAndWrittenHeuristic methodsFor: 'variables' stamp: 'HAW 9/Sep/2026, 2:06:52 pm (UTC)'!
+isWritten: aVariableName
+
+	^self subclassResponsibility! !
+
+!VariablesReadAndWrittenHeuristic methodsFor: 'variables' stamp: 'HAW 9/Sep/2026, 2:06:55 pm (UTC)'!
+variableKind
+
+	^self subclassResponsibility! !
+
+!VariablesReadAndWrittenHeuristic methodsFor: 'variables' stamp: 'HAW 9/Sep/2026, 2:06:46 pm (UTC)'!
+variableNames
+
+	^self subclassResponsibility! !
+
+!ClassVariablesReadAndWrittenHeuristic methodsFor: 'accessing' stamp: 'HAW 8/Sep/2026, 2:25:53 pm (UTC)'!
+description
+
+	^'Every class variable should be both read and written, on the instance or the class side. One that is only read, only written, or never used is likely dead state.'! !
+
+!ClassVariablesReadAndWrittenHeuristic methodsFor: 'accessing' stamp: 'HAW 8/Sep/2026, 2:25:47 pm (UTC)'!
+name
+
+	^'Class variables read & written'! !
+
+!ClassVariablesReadAndWrittenHeuristic methodsFor: 'variables' stamp: 'HAW 9/Sep/2026, 2:07:14 pm (UTC)'!
+isRead: aVariableName
+
+	^reviewedClass readsClassVariableNamed: aVariableName! !
+
+!ClassVariablesReadAndWrittenHeuristic methodsFor: 'variables' stamp: 'HAW 9/Sep/2026, 2:07:18 pm (UTC)'!
+isWritten: aVariableName
+
+	^reviewedClass writesClassVariableNamed: aVariableName! !
+
+!ClassVariablesReadAndWrittenHeuristic methodsFor: 'variables' stamp: 'HAW 9/Sep/2026, 2:07:21 pm (UTC)'!
+variableKind
+
+	^'class variable'! !
+
+!ClassVariablesReadAndWrittenHeuristic methodsFor: 'variables' stamp: 'HAW 9/Sep/2026, 2:07:10 pm (UTC)'!
+variableNames
+
+	^reviewedClass classVarNames asSortedCollection! !
+
+!InstanceVariablesReadAndWrittenHeuristic methodsFor: 'accessing' stamp: 'HAW 8/Sep/2026, 2:25:16 pm (UTC)'!
+description
+
+	^'Every instance variable should be both read and written, in this class or a subclass, since an instance variable is in scope in the subclasses. One that is only read, only written, or never used is likely dead state.'! !
+
+!InstanceVariablesReadAndWrittenHeuristic methodsFor: 'accessing' stamp: 'HAW 8/Sep/2026, 2:25:10 pm (UTC)'!
+name
+
+	^'Instance variables read & written'! !
+
+!InstanceVariablesReadAndWrittenHeuristic methodsFor: 'variables' stamp: 'HAW 9/Sep/2026, 2:07:01 pm (UTC)'!
+isRead: aVariableName
+
+	^reviewedClass readsInstanceVariableNamed: aVariableName! !
+
+!InstanceVariablesReadAndWrittenHeuristic methodsFor: 'variables' stamp: 'HAW 9/Sep/2026, 2:07:05 pm (UTC)'!
+isWritten: aVariableName
+
+	^reviewedClass writesInstanceVariableNamed: aVariableName! !
+
+!InstanceVariablesReadAndWrittenHeuristic methodsFor: 'variables' stamp: 'HAW 9/Sep/2026, 2:07:08 pm (UTC)'!
+variableKind
+
+	^'instance variable'! !
+
+!InstanceVariablesReadAndWrittenHeuristic methodsFor: 'variables' stamp: 'HAW 9/Sep/2026, 2:06:58 pm (UTC)'!
+variableNames
+
+	^reviewedClass instVarNames! !
 
 !SmalltalkMentor methodsFor: 'initialization' stamp: 'HAW 9/Sep/2026, 2:14:20 am (UTC)'!
 initialize
@@ -2172,23 +2232,28 @@ initializeClass: aClass mentor: aMentor
 	mentor := aMentor.
 	methodReviewCache := Dictionary new! !
 
-!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 8/Sep/2026, 11:56:40 pm (UTC)'!
-heuristics
+!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 9/Sep/2026, 1:49:47 pm (UTC)'!
+heuristicClasses
 
 	^{
-		InstanceVariablesReadAndWrittenHeuristic new.
-		ClassVariablesReadAndWrittenHeuristic new.
-		MethodsHaveSendersHeuristic new.
-		MessagesHaveImplementersHeuristic new.
-		MethodsAreCategorizedHeuristic new.
-		NoUnusedTemporariesHeuristic new.
-		NoEmptyMethodCategoriesHeuristic new.
-		RepeatedClassWordHeuristic new.
-		SelfOverExplicitClassReferenceHeuristic new.
-		InstanceCreationFunnelHeuristic new.
-		OneInitializeMessageHeuristic new.
-		ClassIsReferencedHeuristic new.
-		SharedLeafSubclassProtocolHeuristic new }! !
+		InstanceVariablesReadAndWrittenHeuristic.
+		ClassVariablesReadAndWrittenHeuristic.
+		MethodsHaveSendersHeuristic.
+		MessagesHaveImplementersHeuristic.
+		MethodsAreCategorizedHeuristic.
+		NoUnusedTemporariesHeuristic.
+		NoEmptyMethodCategoriesHeuristic.
+		RepeatedClassWordHeuristic.
+		SelfOverExplicitClassReferenceHeuristic.
+		InstanceCreationFunnelHeuristic.
+		OneInitializeMessageHeuristic.
+		ClassIsReferencedHeuristic.
+		SharedLeafSubclassProtocolHeuristic }! !
+
+!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 9/Sep/2026, 1:49:50 pm (UTC)'!
+heuristicsFor: aClass
+
+	^self heuristicClasses collect: [ :each | each for: aClass ]! !
 
 !SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 8/Sep/2026, 11:44:02 pm (UTC)'!
 methodHeuristicClasses
@@ -2233,11 +2298,11 @@ rootNodesFor: aClass
 	roots add: (self methodsSideNodeFor: aClass class label: 'Class methods').
 	^roots! !
 
-!SmalltalkMentorClassReview methodsFor: 'tree' stamp: 'HAW 8/Sep/2026, 11:44:38 pm (UTC)'!
+!SmalltalkMentorClassReview methodsFor: 'tree' stamp: 'HAW 9/Sep/2026, 1:49:53 pm (UTC)'!
 addClassHeuristicRootsFor: aClass to: roots
 
-	self heuristics do: [ :each |
-		self addRootFor: each findings: (each findingsFor: aClass) to: roots ]! !
+	(self heuristicsFor: aClass) do: [ :each |
+		self addRootFor: each findings: each value to: roots ]! !
 
 !SmalltalkMentorClassReview methodsFor: 'tree' stamp: 'HAW 8/Sep/2026, 11:44:40 pm (UTC)'!
 addMethodHeuristicRootsFor: aClass to: roots
@@ -2268,11 +2333,11 @@ addRootFor: aHeuristicClass overMethodsOf: aClass to: roots
 	methodHeuristics do: [ :each | findings addAll: each value ].
 	self addRootFor: methodHeuristics first findings: findings to: roots! !
 
-!SmalltalkMentorClassReview methodsFor: 'tree' stamp: 'HAW 8/Sep/2026, 11:44:50 pm (UTC)'!
+!SmalltalkMentorClassReview methodsFor: 'tree' stamp: 'HAW 9/Sep/2026, 1:49:56 pm (UTC)'!
 allHeuristicsPassedNodeFor: aClass
 
 	^self allHeuristicsPassedNodeListing:
-		self heuristics, (self methodHeuristicsListedFor: aClass)! !
+		(self heuristicsFor: aClass), (self methodHeuristicsListedFor: aClass)! !
 
 !SmalltalkMentorClassReview methodsFor: 'tree' stamp: 'HAW 8/Sep/2026, 11:44:52 pm (UTC)'!
 allHeuristicsPassedNodeListing: heuristics
