@@ -1,6 +1,6 @@
-'From Cuis7.9 [latest update: #8158] on 9 September 2026 at 11:47:12 am'!
-'Description Root the heuristics in SmalltalkHeuristic and rename the class heuristic root'!
-!provides: 'SmalltalkMentor' 1 54!
+'From Cuis7.9 [latest update: #8158] on 9 September 2026 at 12:06:14 pm'!
+'Description Root the four reviews in an abstract SmalltalkMentorReview'!
+!provides: 'SmalltalkMentor' 1 55!
 !requires: 'JSON' 1 29 nil!
 !requires: 'OSProcess' 1 36 nil!
 SystemOrganization addCategory: #SmalltalkMentor!
@@ -8,7 +8,7 @@ SystemOrganization addCategory: #SmalltalkMentor!
 
 !classDefinition: #SmalltalkMentorConversationTextModel category: #SmalltalkMentor!
 TextModel subclass: #SmalltalkMentorConversationTextModel
-	instanceVariableNames: 'review'
+	instanceVariableNames: 'conversation'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'SmalltalkMentor'!
@@ -506,44 +506,14 @@ Object subclass: #SmalltalkMentor
 SmalltalkMentor class
 	instanceVariableNames: ''!
 
-!classDefinition: #SmalltalkMentorClassReview category: #SmalltalkMentor!
-Object subclass: #SmalltalkMentorClassReview
-	instanceVariableNames: 'mentor targetClass window treeMorph detailHolder treeRoots methodReviewCache providerButton thinkingToast selectedIndex effortButton'
+!classDefinition: #SmalltalkMentorConversation category: #SmalltalkMentor!
+Object subclass: #SmalltalkMentorConversation
+	instanceVariableNames: 'targetClass selector category currentSource suggestedSource rationale suggestedMorph messages transcriptMorph inputMorph busy languageButton mentor contentMorph providerLabel effortButton'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'SmalltalkMentor'!
-!classDefinition: 'SmalltalkMentorClassReview class' category: #SmalltalkMentor!
-SmalltalkMentorClassReview class
-	instanceVariableNames: ''!
-
-!classDefinition: #SmalltalkMentorClassCategoryReview category: #SmalltalkMentor!
-SmalltalkMentorClassReview subclass: #SmalltalkMentorClassCategoryReview
-	instanceVariableNames: 'systemCategory'
-	classVariableNames: ''
-	poolDictionaries: ''
-	category: 'SmalltalkMentor'!
-!classDefinition: 'SmalltalkMentorClassCategoryReview class' category: #SmalltalkMentor!
-SmalltalkMentorClassCategoryReview class
-	instanceVariableNames: ''!
-
-!classDefinition: #SmalltalkMentorMethodCategoryReview category: #SmalltalkMentor!
-SmalltalkMentorClassReview subclass: #SmalltalkMentorMethodCategoryReview
-	instanceVariableNames: 'reviewedCategory'
-	classVariableNames: ''
-	poolDictionaries: ''
-	category: 'SmalltalkMentor'!
-!classDefinition: 'SmalltalkMentorMethodCategoryReview class' category: #SmalltalkMentor!
-SmalltalkMentorMethodCategoryReview class
-	instanceVariableNames: ''!
-
-!classDefinition: #SmalltalkMentorMethodReview category: #SmalltalkMentor!
-SmalltalkMentorClassReview subclass: #SmalltalkMentorMethodReview
-	instanceVariableNames: 'selector'
-	classVariableNames: ''
-	poolDictionaries: ''
-	category: 'SmalltalkMentor'!
-!classDefinition: 'SmalltalkMentorMethodReview class' category: #SmalltalkMentor!
-SmalltalkMentorMethodReview class
+!classDefinition: 'SmalltalkMentorConversation class' category: #SmalltalkMentor!
+SmalltalkMentorConversation class
 	instanceVariableNames: ''!
 
 !classDefinition: #SmalltalkMentorFinding category: #SmalltalkMentor!
@@ -558,12 +528,52 @@ SmalltalkMentorFinding class
 
 !classDefinition: #SmalltalkMentorReview category: #SmalltalkMentor!
 Object subclass: #SmalltalkMentorReview
-	instanceVariableNames: 'targetClass selector category currentSource suggestedSource rationale suggestedMorph messages transcriptMorph inputMorph busy languageButton mentor contentMorph providerLabel effortButton'
+	instanceVariableNames: 'mentor window treeMorph detailHolder treeRoots methodReviewCache providerButton thinkingToast selectedIndex effortButton'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'SmalltalkMentor'!
 !classDefinition: 'SmalltalkMentorReview class' category: #SmalltalkMentor!
 SmalltalkMentorReview class
+	instanceVariableNames: ''!
+
+!classDefinition: #SmalltalkMentorClassCategoryReview category: #SmalltalkMentor!
+SmalltalkMentorReview subclass: #SmalltalkMentorClassCategoryReview
+	instanceVariableNames: 'systemCategory'
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'SmalltalkMentor'!
+!classDefinition: 'SmalltalkMentorClassCategoryReview class' category: #SmalltalkMentor!
+SmalltalkMentorClassCategoryReview class
+	instanceVariableNames: ''!
+
+!classDefinition: #SmalltalkMentorClassReview category: #SmalltalkMentor!
+SmalltalkMentorReview subclass: #SmalltalkMentorClassReview
+	instanceVariableNames: 'targetClass'
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'SmalltalkMentor'!
+!classDefinition: 'SmalltalkMentorClassReview class' category: #SmalltalkMentor!
+SmalltalkMentorClassReview class
+	instanceVariableNames: ''!
+
+!classDefinition: #SmalltalkMentorMethodCategoryReview category: #SmalltalkMentor!
+SmalltalkMentorReview subclass: #SmalltalkMentorMethodCategoryReview
+	instanceVariableNames: 'reviewedCategory targetClass'
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'SmalltalkMentor'!
+!classDefinition: 'SmalltalkMentorMethodCategoryReview class' category: #SmalltalkMentor!
+SmalltalkMentorMethodCategoryReview class
+	instanceVariableNames: ''!
+
+!classDefinition: #SmalltalkMentorMethodReview category: #SmalltalkMentor!
+SmalltalkMentorReview subclass: #SmalltalkMentorMethodReview
+	instanceVariableNames: 'selector targetClass'
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'SmalltalkMentor'!
+!classDefinition: 'SmalltalkMentorMethodReview class' category: #SmalltalkMentor!
+SmalltalkMentorMethodReview class
 	instanceVariableNames: ''!
 
 !classDefinition: #SmalltalkMentorConversationEditor category: #SmalltalkMentor!
@@ -597,25 +607,25 @@ SmalltalkMentorNode class
 	instanceVariableNames: ''!
 
 
+!SmalltalkMentorConversationTextModel methodsFor: 'accessing' stamp: 'HAW 9/Sep/2026, 2:53:42 pm (UTC)'!
+conversation
+
+	^conversation! !
+
 !SmalltalkMentorConversationTextModel methodsFor: 'accessing' stamp: 'HAW 9/Sep/2026, 2:01:44 am (UTC)'!
 editorClass
 
 	^SmalltalkMentorConversationEditor! !
 
-!SmalltalkMentorConversationTextModel methodsFor: 'accessing' stamp: 'HAW 19/Aug/2026, 1:14:36 pm (UTC)'!
-review
+!SmalltalkMentorConversationTextModel methodsFor: 'initialization' stamp: 'HAW 9/Sep/2026, 2:53:42 pm (UTC)'!
+initializeConversation: aReview
 
-	^review! !
+	conversation := aReview! !
 
-!SmalltalkMentorConversationTextModel methodsFor: 'initialization' stamp: 'HAW 9/Sep/2026, 2:16:35 am (UTC)'!
-initializeReview: aReview
+!SmalltalkMentorConversationTextModel class methodsFor: 'instance creation' stamp: 'HAW 9/Sep/2026, 2:53:28 pm (UTC)'!
+withText: aText conversation: aReview
 
-	review := aReview! !
-
-!SmalltalkMentorConversationTextModel class methodsFor: 'instance creation' stamp: 'HAW 9/Sep/2026, 2:16:33 am (UTC)'!
-withText: aText review: aReview
-
-	^(self withText: aText) initializeReview: aReview! !
+	^(self withText: aText) initializeConversation: aReview! !
 
 !SmalltalkMentorNoCopyTextModel methodsFor: 'styling' stamp: 'HAW 9/Sep/2026, 2:01:45 am (UTC)'!
 aboutToStyleWith: anSHTextStyler
@@ -2369,7 +2379,7 @@ reviewClassCategoryFromMorph: aMorph
 	self announceReviewOf: 'class category ', systemCategory asString.
 	SmalltalkMentorClassCategoryReview openOn: systemCategory mentor: self copy! !
 
-!SmalltalkMentor methodsFor: 'reviewing' stamp: 'HAW 9/Sep/2026, 2:14:45 am (UTC)'!
+!SmalltalkMentor methodsFor: 'reviewing' stamp: 'HAW 9/Sep/2026, 2:55:07 pm (UTC)'!
 reviewClassFromMorph: aMorph
 
 	| aClass |
@@ -2857,14 +2867,380 @@ heuristicsFileCommandWritingTo: aPath
 		'if [ -s "$I" ]; then cat "$I"; elif [ -s "$H" ]; then cat "$H"; fi > ', aPath,
 		' 2>/dev/null || : > ', aPath, ''''! !
 
-!SmalltalkMentorClassReview methodsFor: 'initialization' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
-initializeClass: aClass mentor: aMentor
+!SmalltalkMentorConversation methodsFor: 'initialization' stamp: 'HAW 9/Sep/2026, 2:23:32 am (UTC)'!
+initializeClass: aClass selector: aSelector category: aCategory current: aCurrentSource suggested: aSuggestedSource rationale: aRationale messages: aMessagesCollection mentor: aMentor
 
-	targetClass := aClass theNonMetaClass.
+	targetClass := aClass.
+	selector := aSelector.
+	category := aCategory.
+	currentSource := aCurrentSource withCuisLineEndings.
+	suggestedSource := self formattedSource: aSuggestedSource.
+	rationale := aRationale.
+	messages := aMessagesCollection.
 	mentor := aMentor.
-	methodReviewCache := Dictionary new! !
+	busy := false! !
 
-!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 9/Sep/2026, 2:40:36 pm (UTC)'!
+!SmalltalkMentorConversation methodsFor: 'ui' stamp: 'HAW 9/Sep/2026, 2:16:46 am (UTC)'!
+buildContent
+
+	^contentMorph ifNil: [ contentMorph := self newContentColumn ]! !
+
+!SmalltalkMentorConversation methodsFor: 'ui' stamp: 'HAW 9/Sep/2026, 6:58:54 am (UTC)'!
+languageButtonLabel
+
+	^'Idioma: ', mentor language! !
+
+!SmalltalkMentorConversation methodsFor: 'ui' stamp: 'HAW 9/Sep/2026, 3:07:34 am (UTC)'!
+newButtonsRow
+
+	| buttonsRow |
+
+	buttonsRow := LayoutMorph newRow.
+	buttonsRow
+		addMorph: self newSendButton
+		layoutSpec: (LayoutSpec proportionalWidth: 0.45 proportionalHeight: 1.0).
+	buttonsRow
+		addMorph: self newEffortButton
+		layoutSpec: (LayoutSpec proportionalWidth: 0.25 proportionalHeight: 1.0).
+	buttonsRow
+		addMorph: self newLanguageButton
+		layoutSpec: (LayoutSpec proportionalWidth: 0.3 proportionalHeight: 1.0).
+	^buttonsRow! !
+
+!SmalltalkMentorConversation methodsFor: 'ui' stamp: 'HAW 9/Sep/2026, 2:16:48 am (UTC)'!
+newContentColumn
+
+	| column |
+
+	column := LayoutMorph newColumn.
+	column
+		addMorph: self newProviderLabel
+		layoutSpec: (LayoutSpec proportionalWidth: 1.0 fixedHeight: 20).
+	column
+		addMorph: self newTranscriptMorph
+		layoutSpec: (LayoutSpec proportionalWidth: 1.0 proportionalHeight: 0.28).
+	column addAdjusterAndMorph: self newPanesRow proportionalHeight: 0.57.
+	column addAdjusterAndMorph: self newInputGroup proportionalHeight: 0.15.
+	column
+		addMorph: self newButtonsRow
+		layoutSpec: (LayoutSpec proportionalWidth: 1.0 fixedHeight: 34).
+	^column! !
+
+!SmalltalkMentorConversation methodsFor: 'ui' stamp: 'HAW 9/Sep/2026, 3:07:39 am (UTC)'!
+newEffortButton
+
+	^effortButton := PluggableButtonMorph
+		model: self
+		action: #changeEffort
+		label: mentor provider effortButtonLabel! !
+
+!SmalltalkMentorConversation methodsFor: 'ui' stamp: 'HAW 9/Sep/2026, 2:53:25 pm (UTC)'!
+newInputGroup
+
+	| inputGroup conversationLabel inputModel |
+
+	conversationLabel := LabelMorph
+		contents: 'Tell the mentor (ask a follow-up or push back, then press cmd+Enter):'.
+	inputModel := SmalltalkMentorConversationTextModel
+		withText: '' asText
+		conversation: self.
+	inputMorph := SmalltalkMentorConversationTextMorph withModel: inputModel.
+	inputGroup := LayoutMorph newColumn.
+	inputGroup
+		addMorph: conversationLabel
+		layoutSpec: (LayoutSpec proportionalWidth: 1.0 fixedHeight: 18).
+	inputGroup
+		addMorph: inputMorph
+		layoutSpec: (LayoutSpec proportionalWidth: 1.0 proportionalHeight: 1.0).
+	^inputGroup! !
+
+!SmalltalkMentorConversation methodsFor: 'ui' stamp: 'HAW 9/Sep/2026, 6:58:57 am (UTC)'!
+newLanguageButton
+
+	^languageButton := PluggableButtonMorph
+		model: self
+		action: #switchLanguage
+		label: self languageButtonLabel! !
+
+!SmalltalkMentorConversation methodsFor: 'ui' stamp: 'HAW 9/Sep/2026, 2:16:58 am (UTC)'!
+newOriginalPane
+
+	| originalBrowser |
+
+	originalBrowser := Browser new.
+	originalBrowser setClass: targetClass selector: selector.
+	^originalBrowser newCodePaneMorph! !
+
+!SmalltalkMentorConversation methodsFor: 'ui' stamp: 'HAW 9/Sep/2026, 2:16:55 am (UTC)'!
+newPanesRow
+
+	| panesRow |
+
+	panesRow := LayoutMorph newRow.
+	panesRow
+		addMorph: self newOriginalPane
+		layoutSpec: (LayoutSpec proportionalWidth: 0.5 proportionalHeight: 1.0).
+	panesRow addAdjusterAndMorph: self newSuggestedPane proportionalWidth: 0.5.
+	^panesRow! !
+
+!SmalltalkMentorConversation methodsFor: 'ui' stamp: 'HAW 9/Sep/2026, 2:16:50 am (UTC)'!
+newProviderLabel
+
+	^providerLabel := LabelMorph contents: 'LLM: ', mentor provider labelDescription! !
+
+!SmalltalkMentorConversation methodsFor: 'ui' stamp: 'HAW 9/Sep/2026, 3:07:36 am (UTC)'!
+newSendButton
+
+	^PluggableButtonMorph model: self action: #sendFollowUp label: 'Send (cmd+Enter)'! !
+
+!SmalltalkMentorConversation methodsFor: 'ui' stamp: 'HAW 9/Sep/2026, 2:45:33 am (UTC)'!
+newSuggestedPane
+
+	| suggestedModel |
+
+	suggestedModel := SmalltalkMentorNoCopyTextModel
+		withText: self suggestedPaneText asText
+		styleClass: targetClass.
+	^suggestedMorph := TextModelMorph withModel: suggestedModel! !
+
+!SmalltalkMentorConversation methodsFor: 'ui' stamp: 'HAW 9/Sep/2026, 2:16:53 am (UTC)'!
+newTranscriptMorph
+
+	^transcriptMorph := TextModelMorph
+		withText: ('Smalltalk Mentor: ', rationale, String newLineString) asText! !
+
+!SmalltalkMentorConversation methodsFor: 'ui' stamp: 'HAW 9/Sep/2026, 2:45:35 am (UTC)'!
+suggestedPaneText
+
+	^suggestedSource ifEmpty: [ currentSource ] ifNotEmpty: [ :source | source ]! !
+
+!SmalltalkMentorConversation methodsFor: 'compiling' stamp: 'HAW 9/Sep/2026, 3:07:30 am (UTC)'!
+accept
+
+	| suggestedSourceText |
+
+	suggestedSourceText := suggestedMorph text asString.
+	suggestedSourceText ifEmpty: [ ^PopUpMenu inform: 'Nothing to compile.' ].
+	[ targetClass compile: suggestedSourceText classified: category ]
+		on: Error
+		do: [ :error | ^PopUpMenu inform: 'Compile failed: ', error messageText ].
+	self logCompiledSuggestion! !
+
+!SmalltalkMentorConversation methodsFor: 'conversation' stamp: 'HAW 9/Sep/2026, 2:44:52 am (UTC)'!
+appendTranscript: aString
+
+	| newText |
+
+	newText := transcriptMorph text asString, aString, String newLineString.
+	transcriptMorph model actualContents: newText asText.
+	self scrollTranscriptTo: newText size! !
+
+!SmalltalkMentorConversation methodsFor: 'conversation' stamp: 'HAW 9/Sep/2026, 11:41:43 am (UTC)'!
+askProvider
+
+	| answer proposal |
+
+	answer := mentor provider completionForMessages: messages.
+	messages add: (mentor assistantMessage: answer).
+	proposal := mentor parseProposalFrom: answer.
+	UISupervisor whenUIinSafeState: [ self showProposal: proposal ]! !
+
+!SmalltalkMentorConversation methodsFor: 'conversation' stamp: 'HAW 9/Sep/2026, 3:07:47 am (UTC)'!
+askProviderInBackground
+
+	[ [ self askProvider ]
+		on: Error
+		do: [ :error |
+			UISupervisor whenUIinSafeState: [ self showProviderError: error ] ] ] fork! !
+
+!SmalltalkMentorConversation methodsFor: 'conversation' stamp: 'HAW 9/Sep/2026, 2:44:58 am (UTC)'!
+changeEffort
+
+	mentor pickEffort ifTrue: [ self updateEffortLabels ]! !
+
+!SmalltalkMentorConversation methodsFor: 'conversation' stamp: 'HAW 9/Sep/2026, 2:45:20 am (UTC)'!
+clearInput
+
+	UISupervisor whenUIinSafeState: [
+		inputMorph model actualContents: '' asText.
+		inputMorph updateActualContents ]! !
+
+!SmalltalkMentorConversation methodsFor: 'conversation' stamp: 'HAW 9/Sep/2026, 2:45:18 am (UTC)'!
+followUpContentFor: aNote
+
+	^aNote, String newLineString, String newLineString,
+		'For reference, the current version of the method I am looking at is:', String newLineString,
+		suggestedMorph text asString, String newLineString, String newLineString,
+		'Reply again with ONLY the same JSON object {canImprove, suggestedSource, rationale}.'! !
+
+!SmalltalkMentorConversation methodsFor: 'conversation' stamp: 'HAW 9/Sep/2026, 7:04:43 am (UTC)'!
+languageChangeLabel
+
+	^'You: (idioma -> ', mentor language, ')'! !
+
+!SmalltalkMentorConversation methodsFor: 'conversation' stamp: 'HAW 9/Sep/2026, 3:07:32 am (UTC)'!
+logCompiledSuggestion
+
+	Transcript
+		show: 'Compiled Smalltalk Mentor suggestion into ', (targetClass -> selector) methodLocationString;
+		newLine! !
+
+!SmalltalkMentorConversation methodsFor: 'conversation' stamp: 'HAW 9/Sep/2026, 11:41:46 am (UTC)'!
+postUserContent: contentString transcriptLabel: aLabel
+
+	busy ifTrue: [ ^self ].
+	messages add: (mentor userMessage: contentString).
+	self appendTranscript: aLabel.
+	self appendTranscript: '(Smalltalk Mentor is thinking...)'.
+	busy := true.
+	self askProviderInBackground! !
+
+!SmalltalkMentorConversation methodsFor: 'conversation' stamp: 'HAW 9/Sep/2026, 11:41:38 am (UTC)'!
+rationaleOrDefaultOf: aProposal
+
+	^(mentor rationaleOf: aProposal) ifEmpty: [ '(no rationale)' ]! !
+
+!SmalltalkMentorConversation methodsFor: 'conversation' stamp: 'HAW 9/Sep/2026, 2:45:25 am (UTC)'!
+restateInCurrentLanguageContent
+
+	^'From now on, reply in ', mentor language, '. Restate your previous rationale in ', mentor language,
+		' without changing suggestedSource. Reply with ONLY the same JSON object {canImprove, suggestedSource, rationale}.'! !
+
+!SmalltalkMentorConversation methodsFor: 'conversation' stamp: 'HAW 9/Sep/2026, 2:44:55 am (UTC)'!
+scrollTranscriptTo: anEnd
+
+	[ transcriptMorph editor selectFrom: anEnd + 1 to: anEnd.
+	  transcriptMorph scrollSelectionIntoView ] on: Error do: [ :error | ]! !
+
+!SmalltalkMentorConversation methodsFor: 'conversation' stamp: 'HAW 9/Sep/2026, 2:45:15 am (UTC)'!
+sendFollowUp
+
+	| note |
+
+	busy ifTrue: [ ^self ].
+	note := inputMorph text asString withBlanksTrimmed.
+	note ifEmpty: [ ^self ].
+	self clearInput.
+	self postUserContent: (self followUpContentFor: note) transcriptLabel: 'You: ', note! !
+
+!SmalltalkMentorConversation methodsFor: 'conversation' stamp: 'HAW 9/Sep/2026, 11:41:35 am (UTC)'!
+showProposal: aProposal
+
+	(mentor suggestedSourceOf: aProposal)
+		ifNotEmpty: [ :suggestion | self showSuggestion: suggestion ].
+	self appendTranscript: 'Smalltalk Mentor: ', (self rationaleOrDefaultOf: aProposal).
+	busy := false! !
+
+!SmalltalkMentorConversation methodsFor: 'conversation' stamp: 'HAW 9/Sep/2026, 2:45:11 am (UTC)'!
+showProviderError: anError
+
+	self appendTranscript: 'Error: ', anError messageText.
+	busy := false! !
+
+!SmalltalkMentorConversation methodsFor: 'conversation' stamp: 'HAW 9/Sep/2026, 2:17:29 am (UTC)'!
+showSuggestion: aString
+
+	suggestedSource := self formattedSource: aString.
+	suggestedMorph ifNotNil: [
+		suggestedMorph model actualContents: suggestedSource asText ]! !
+
+!SmalltalkMentorConversation methodsFor: 'conversation' stamp: 'HAW 9/Sep/2026, 7:04:41 am (UTC)'!
+switchLanguage
+
+	busy ifTrue: [ ^self ].
+	mentor switchLanguage.
+	languageButton ifNotNil: [ languageButton label: self languageButtonLabel ].
+	self
+		postUserContent: self restateInCurrentLanguageContent
+		transcriptLabel: self languageChangeLabel! !
+
+!SmalltalkMentorConversation methodsFor: 'conversation' stamp: 'HAW 9/Sep/2026, 7:04:39 am (UTC)'!
+updateEffortLabels
+
+	| provider |
+
+	provider := mentor provider.
+	providerLabel ifNotNil: [
+		providerLabel contents: 'LLM: ', provider labelDescription ].
+	effortButton ifNotNil: [ effortButton label: provider effortButtonLabel ]! !
+
+!SmalltalkMentorConversation methodsFor: 'private' stamp: 'HAW 9/Sep/2026, 2:17:32 am (UTC)'!
+formattedSource: aString
+
+	aString withBlanksTrimmed ifEmpty: [ ^aString ].
+	^[ Compiler format: aString in: targetClass notifying: nil ]
+		on: Error do: [ :error | aString withCuisLineEndings ]! !
+
+!SmalltalkMentorConversation class methodsFor: 'instance creation' stamp: 'HAW 9/Sep/2026, 2:23:28 am (UTC)'!
+on: aClass selector: aSelector category: aCategory current: aCurrentSource suggested: aSuggestedSource rationale: aRationale messages: aMessagesCollection mentor: aMentor
+
+	^self new
+		initializeClass: aClass
+		selector: aSelector
+		category: aCategory
+		current: aCurrentSource
+		suggested: aSuggestedSource
+		rationale: aRationale
+		messages: aMessagesCollection
+		mentor: aMentor! !
+
+!SmalltalkMentorConversation class methodsFor: 'instance creation' stamp: 'HAW 9/Sep/2026, 11:41:49 am (UTC)'!
+on: aClassSelectorAssociation source: source prompt: prompt answer: answer mentor: aMentor
+
+	| proposal messages |
+
+	proposal := aMentor parseProposalFrom: answer.
+	messages := OrderedCollection
+		with: (aMentor userMessage: prompt)
+		with: (aMentor assistantMessage: answer).
+	^self
+		on: aClassSelectorAssociation key
+		selector: aClassSelectorAssociation value
+		category: aClassSelectorAssociation methodCategory
+		current: source
+		suggested: (aMentor suggestedSourceOf: proposal)
+		rationale: (aMentor rationaleOf: proposal)
+		messages: messages
+		mentor: aMentor! !
+
+!SmalltalkMentorFinding methodsFor: 'initialization' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
+initializeTitle: aTitle detail: aDetail editKind: anEditKind editTarget: anEditTarget
+
+	title := aTitle.
+	detail := aDetail.
+	editKind := anEditKind.
+	editTarget := anEditTarget! !
+
+!SmalltalkMentorFinding methodsFor: 'accessing' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
+detail
+
+	^detail! !
+
+!SmalltalkMentorFinding methodsFor: 'accessing' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
+editKind
+
+	^editKind! !
+
+!SmalltalkMentorFinding methodsFor: 'accessing' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
+editTarget
+
+	^editTarget! !
+
+!SmalltalkMentorFinding methodsFor: 'accessing' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
+title
+
+	^title! !
+
+!SmalltalkMentorFinding class methodsFor: 'instance creation' stamp: 'HAW 9/Sep/2026, 2:45:45 am (UTC)'!
+title: aTitle detail: aDetail editKind: anEditKind editTarget: anEditTarget
+
+	^self new
+		initializeTitle: aTitle
+		detail: aDetail
+		editKind: anEditKind
+		editTarget: anEditTarget! !
+
+!SmalltalkMentorReview methodsFor: 'verifications' stamp: 'HAW 9/Sep/2026, 2:40:36 pm (UTC)'!
 classHeuristicClasses
 
 	^{
@@ -2881,12 +3257,12 @@ classHeuristicClasses
 		ClassIsReferencedHeuristic.
 		SharedLeafSubclassProtocolHeuristic }! !
 
-!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 9/Sep/2026, 2:40:38 pm (UTC)'!
+!SmalltalkMentorReview methodsFor: 'verifications' stamp: 'HAW 9/Sep/2026, 2:40:38 pm (UTC)'!
 classHeuristicsFor: aClass
 
 	^self classHeuristicClasses collect: [ :each | each for: aClass ]! !
 
-!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 9/Sep/2026, 2:24:18 pm (UTC)'!
+!SmalltalkMentorReview methodsFor: 'verifications' stamp: 'HAW 9/Sep/2026, 2:24:18 pm (UTC)'!
 methodHeuristicClasses
 
 	^{
@@ -2915,12 +3291,12 @@ methodHeuristicClasses
 		SizeComparedWithZeroHeuristic.
 		NoExtraParenthesisHeuristic }! !
 
-!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 8/Sep/2026, 11:44:35 pm (UTC)'!
+!SmalltalkMentorReview methodsFor: 'verifications' stamp: 'HAW 8/Sep/2026, 11:44:35 pm (UTC)'!
 methodHeuristicsFor: aCompiledMethod
 
 	^self methodHeuristicClasses collect: [ :each | each for: aCompiledMethod ]! !
 
-!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 9/Sep/2026, 2:23:34 am (UTC)'!
+!SmalltalkMentorReview methodsFor: 'verifications' stamp: 'HAW 9/Sep/2026, 2:23:34 am (UTC)'!
 rootNodesFor: aClass
 
 	| roots |
@@ -2930,19 +3306,19 @@ rootNodesFor: aClass
 	roots add: (self methodsSideNodeFor: aClass class label: 'Class methods').
 	^roots! !
 
-!SmalltalkMentorClassReview methodsFor: 'tree' stamp: 'HAW 9/Sep/2026, 2:40:38 pm (UTC)'!
+!SmalltalkMentorReview methodsFor: 'tree' stamp: 'HAW 9/Sep/2026, 2:40:38 pm (UTC)'!
 addClassHeuristicRootsFor: aClass to: roots
 
 	(self classHeuristicsFor: aClass) do: [ :each |
 		self addRootFor: each findings: each value to: roots ]! !
 
-!SmalltalkMentorClassReview methodsFor: 'tree' stamp: 'HAW 8/Sep/2026, 11:44:40 pm (UTC)'!
+!SmalltalkMentorReview methodsFor: 'tree' stamp: 'HAW 8/Sep/2026, 11:44:40 pm (UTC)'!
 addMethodHeuristicRootsFor: aClass to: roots
 
 	self methodHeuristicClasses do: [ :each |
 		self addRootFor: each overMethodsOf: aClass to: roots ]! !
 
-!SmalltalkMentorClassReview methodsFor: 'tree' stamp: 'HAW 9/Sep/2026, 2:24:31 am (UTC)'!
+!SmalltalkMentorReview methodsFor: 'tree' stamp: 'HAW 9/Sep/2026, 2:24:31 am (UTC)'!
 addRootFor: aHeuristic findings: findings to: roots
 
 	findings ifEmpty: [ ^self ].
@@ -2953,7 +3329,7 @@ addRootFor: aHeuristic findings: findings to: roots
 		children: (self findingNodesFor: findings)
 		model: self)! !
 
-!SmalltalkMentorClassReview methodsFor: 'tree' stamp: 'HAW 8/Sep/2026, 11:44:47 pm (UTC)'!
+!SmalltalkMentorReview methodsFor: 'tree' stamp: 'HAW 8/Sep/2026, 11:44:47 pm (UTC)'!
 addRootFor: aHeuristicClass overMethodsOf: aClass to: roots
 
 	| methodHeuristics findings |
@@ -2965,13 +3341,13 @@ addRootFor: aHeuristicClass overMethodsOf: aClass to: roots
 	methodHeuristics do: [ :each | findings addAll: each value ].
 	self addRootFor: methodHeuristics first findings: findings to: roots! !
 
-!SmalltalkMentorClassReview methodsFor: 'tree' stamp: 'HAW 9/Sep/2026, 2:40:38 pm (UTC)'!
+!SmalltalkMentorReview methodsFor: 'tree' stamp: 'HAW 9/Sep/2026, 2:40:38 pm (UTC)'!
 allHeuristicsPassedNodeFor: aClass
 
 	^self allHeuristicsPassedNodeListing:
 		(self classHeuristicsFor: aClass), (self methodHeuristicsListedFor: aClass)! !
 
-!SmalltalkMentorClassReview methodsFor: 'tree' stamp: 'HAW 8/Sep/2026, 11:44:52 pm (UTC)'!
+!SmalltalkMentorReview methodsFor: 'tree' stamp: 'HAW 8/Sep/2026, 11:44:52 pm (UTC)'!
 allHeuristicsPassedNodeListing: heuristics
 
 	| listing |
@@ -2987,12 +3363,12 @@ allHeuristicsPassedNodeListing: heuristics
 		children: #()
 		model: self! !
 
-!SmalltalkMentorClassReview methodsFor: 'tree' stamp: 'HAW 9/Sep/2026, 2:23:34 am (UTC)'!
+!SmalltalkMentorReview methodsFor: 'tree' stamp: 'HAW 9/Sep/2026, 2:53:51 pm (UTC)'!
 buildRootNodes
 
-	^self rootNodesFor: targetClass! !
+	self subclassResponsibility! !
 
-!SmalltalkMentorClassReview methodsFor: 'tree' stamp: 'HAW 9/Sep/2026, 2:43:20 am (UTC)'!
+!SmalltalkMentorReview methodsFor: 'tree' stamp: 'HAW 9/Sep/2026, 2:43:20 am (UTC)'!
 categoryNodeFor: aCategoryName in: aClassOrMetaclass
 
 	| selectors methodNodes |
@@ -3007,13 +3383,13 @@ categoryNodeFor: aCategoryName in: aClassOrMetaclass
 		children: methodNodes
 		model: self! !
 
-!SmalltalkMentorClassReview methodsFor: 'tree' stamp: 'HAW 9/Sep/2026, 3:07:25 am (UTC)'!
+!SmalltalkMentorReview methodsFor: 'tree' stamp: 'HAW 9/Sep/2026, 3:07:25 am (UTC)'!
 categoryNodesFor: aClassOrMetaclass
 
 	^aClassOrMetaclass nonEmptyMethodCategories asSortedCollection
 		collect: [ :each | self categoryNodeFor: each in: aClassOrMetaclass ]! !
 
-!SmalltalkMentorClassReview methodsFor: 'tree' stamp: 'HAW 8/Sep/2026, 11:44:45 pm (UTC)'!
+!SmalltalkMentorReview methodsFor: 'tree' stamp: 'HAW 8/Sep/2026, 11:44:45 pm (UTC)'!
 findingNodesFor: findings
 
 	^findings collect: [ :each |
@@ -3024,7 +3400,7 @@ findingNodesFor: findings
 			children: #()
 			model: self ]! !
 
-!SmalltalkMentorClassReview methodsFor: 'tree' stamp: 'HAW 9/Sep/2026, 2:24:28 am (UTC)'!
+!SmalltalkMentorReview methodsFor: 'tree' stamp: 'HAW 9/Sep/2026, 2:24:28 am (UTC)'!
 heuristicRootNodesFor: aClass
 
 	| roots |
@@ -3035,7 +3411,7 @@ heuristicRootNodesFor: aClass
 	^roots ifEmpty: [
 		OrderedCollection with: (self allHeuristicsPassedNodeFor: aClass) ]! !
 
-!SmalltalkMentorClassReview methodsFor: 'tree' stamp: 'HAW 8/Sep/2026, 11:44:48 pm (UTC)'!
+!SmalltalkMentorReview methodsFor: 'tree' stamp: 'HAW 8/Sep/2026, 11:44:48 pm (UTC)'!
 methodHeuristicsListedFor: aClass
 
 	| methods |
@@ -3044,7 +3420,7 @@ methodHeuristicsListedFor: aClass
 	methods ifEmpty: [ ^#() ].
 	^self methodHeuristicsFor: methods first! !
 
-!SmalltalkMentorClassReview methodsFor: 'tree' stamp: 'HAW 9/Sep/2026, 2:24:49 am (UTC)'!
+!SmalltalkMentorReview methodsFor: 'tree' stamp: 'HAW 9/Sep/2026, 2:24:49 am (UTC)'!
 methodNodeFor: aSelector in: aClassOrMetaclass
 
 	^SmalltalkMentorNode
@@ -3054,7 +3430,7 @@ methodNodeFor: aSelector in: aClassOrMetaclass
 		children: #()
 		model: self! !
 
-!SmalltalkMentorClassReview methodsFor: 'tree' stamp: 'HAW 9/Sep/2026, 2:43:14 am (UTC)'!
+!SmalltalkMentorReview methodsFor: 'tree' stamp: 'HAW 9/Sep/2026, 2:43:14 am (UTC)'!
 methodsSideNodeFor: aClassOrMetaclass label: aLabel
 
 	^SmalltalkMentorNode
@@ -3064,7 +3440,7 @@ methodsSideNodeFor: aClassOrMetaclass label: aLabel
 		children: (self categoryNodesFor: aClassOrMetaclass)
 		model: self! !
 
-!SmalltalkMentorClassReview methodsFor: 'tree' stamp: 'HAW 9/Sep/2026, 2:01:43 am (UTC)'!
+!SmalltalkMentorReview methodsFor: 'tree' stamp: 'HAW 9/Sep/2026, 2:01:43 am (UTC)'!
 nodeSelected: aNode
 
 	aNode kind = #method ifTrue: [ ^self showMethodReview: aNode payload ].
@@ -3073,17 +3449,17 @@ nodeSelected: aNode
 	aNode kind = #allPassed ifTrue: [ ^self showText: aNode payload ].
 	self clearDetail! !
 
-!SmalltalkMentorClassReview methodsFor: 'tree' stamp: 'HAW 9/Sep/2026, 2:01:44 am (UTC)'!
+!SmalltalkMentorReview methodsFor: 'tree' stamp: 'HAW 9/Sep/2026, 2:01:44 am (UTC)'!
 rootNodes
 
 	^treeRoots ifNil: [ treeRoots := self buildRootNodes ]! !
 
-!SmalltalkMentorClassReview methodsFor: 'tree' stamp: 'HAW 9/Sep/2026, 2:01:44 am (UTC)'!
+!SmalltalkMentorReview methodsFor: 'tree' stamp: 'HAW 9/Sep/2026, 2:01:44 am (UTC)'!
 selectedIndex
 
 	^selectedIndex! !
 
-!SmalltalkMentorClassReview methodsFor: 'tree' stamp: 'HAW 9/Sep/2026, 2:24:26 am (UTC)'!
+!SmalltalkMentorReview methodsFor: 'tree' stamp: 'HAW 9/Sep/2026, 2:24:26 am (UTC)'!
 selectedIndex: aWrapper
 
 	selectedIndex := aWrapper.
@@ -3091,7 +3467,7 @@ selectedIndex: aWrapper
 	(aWrapper isKindOf: SmalltalkMentorNode) ifTrue: [
 		self nodeSelected: aWrapper ]! !
 
-!SmalltalkMentorClassReview methodsFor: 'detail' stamp: 'HAW 9/Sep/2026, 2:42:46 am (UTC)'!
+!SmalltalkMentorReview methodsFor: 'detail' stamp: 'HAW 9/Sep/2026, 2:42:46 am (UTC)'!
 analyzeInBackground: aClassSelectorAssociation
 
 	[ [ self showReviewOf: aClassSelectorAssociation ]
@@ -3101,19 +3477,19 @@ analyzeInBackground: aClassSelectorAssociation
 				self hideThinking.
 				self showText: 'Review failed: ', error messageText ] ] ] fork! !
 
-!SmalltalkMentorClassReview methodsFor: 'detail' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
+!SmalltalkMentorReview methodsFor: 'detail' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 clearDetail
 
 	detailHolder removeAllMorphs! !
 
-!SmalltalkMentorClassReview methodsFor: 'detail' stamp: 'HAW 9/Sep/2026, 2:01:44 am (UTC)'!
+!SmalltalkMentorReview methodsFor: 'detail' stamp: 'HAW 9/Sep/2026, 2:01:44 am (UTC)'!
 renderDetail: aMorph
 
 	detailHolder removeAllMorphs.
 	detailHolder addMorph: aMorph layoutSpec: LayoutSpec useAll.
 	window ifNotNil: [ aMorph adoptWidgetsColor: window widgetsColor ]! !
 
-!SmalltalkMentorClassReview methodsFor: 'detail' stamp: 'HAW 9/Sep/2026, 2:24:00 am (UTC)'!
+!SmalltalkMentorReview methodsFor: 'detail' stamp: 'HAW 9/Sep/2026, 2:24:00 am (UTC)'!
 showClassDefinitionEditorFor: aClassVariableAssociation
 
 	| browser codePane |
@@ -3125,7 +3501,7 @@ showClassDefinitionEditorFor: aClassVariableAssociation
 	self renderDetail: codePane.
 	codePane selectFirstOccurrenceOf: aClassVariableAssociation value! !
 
-!SmalltalkMentorClassReview methodsFor: 'detail' stamp: 'HAW 9/Sep/2026, 2:43:09 am (UTC)'!
+!SmalltalkMentorReview methodsFor: 'detail' stamp: 'HAW 9/Sep/2026, 2:43:09 am (UTC)'!
 showFinding: aFinding
 
 	aFinding editKind = #method ifTrue: [
@@ -3134,7 +3510,7 @@ showFinding: aFinding
 		^self showClassDefinitionEditorFor: aFinding editTarget ].
 	self showText: aFinding detail! !
 
-!SmalltalkMentorClassReview methodsFor: 'detail' stamp: 'HAW 9/Sep/2026, 2:43:11 am (UTC)'!
+!SmalltalkMentorReview methodsFor: 'detail' stamp: 'HAW 9/Sep/2026, 2:43:11 am (UTC)'!
 showMethodEditorFor: aClassSelectorAssociation
 
 	| browser |
@@ -3145,7 +3521,7 @@ showMethodEditorFor: aClassSelectorAssociation
 		selector: aClassSelectorAssociation value.
 	self renderDetail: browser newCodePaneMorph! !
 
-!SmalltalkMentorClassReview methodsFor: 'detail' stamp: 'HAW 9/Sep/2026, 2:42:44 am (UTC)'!
+!SmalltalkMentorReview methodsFor: 'detail' stamp: 'HAW 9/Sep/2026, 2:42:44 am (UTC)'!
 showMethodReview: aClassSelectorAssociation
 
 	methodReviewCache
@@ -3154,7 +3530,7 @@ showMethodReview: aClassSelectorAssociation
 	self showThinkingFor: aClassSelectorAssociation.
 	self analyzeInBackground: aClassSelectorAssociation! !
 
-!SmalltalkMentorClassReview methodsFor: 'detail' stamp: 'HAW 9/Sep/2026, 2:24:14 am (UTC)'!
+!SmalltalkMentorReview methodsFor: 'detail' stamp: 'HAW 9/Sep/2026, 2:24:14 am (UTC)'!
 showReviewOf: aClassSelectorAssociation
 
 	| review |
@@ -3165,17 +3541,17 @@ showReviewOf: aClassSelectorAssociation
 		methodReviewCache at: aClassSelectorAssociation put: review.
 		self showReviewPanel: review ]! !
 
-!SmalltalkMentorClassReview methodsFor: 'detail' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
+!SmalltalkMentorReview methodsFor: 'detail' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 showReviewPanel: aReview
 
 	self renderDetail: aReview buildContent! !
 
-!SmalltalkMentorClassReview methodsFor: 'detail' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
+!SmalltalkMentorReview methodsFor: 'detail' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 showText: aString
 
 	self renderDetail: (TextModelMorph withText: aString asText)! !
 
-!SmalltalkMentorClassReview methodsFor: 'reviewing' stamp: 'HAW 9/Sep/2026, 11:41:52 am (UTC)'!
+!SmalltalkMentorReview methodsFor: 'reviewing' stamp: 'HAW 9/Sep/2026, 2:53:00 pm (UTC)'!
 buildReviewFor: aClassSelectorAssociation
 
 	| reviewedClass reviewedSelector source methodMentor prompt answer |
@@ -3189,24 +3565,24 @@ buildReviewFor: aClassSelectorAssociation
 		isTestMethod: (reviewedClass isTestMethodAt: reviewedSelector).
 	answer := methodMentor provider
 		completionForMessages: { methodMentor userMessage: prompt }.
-	^SmalltalkMentorReview
+	^SmalltalkMentorConversation
 		on: aClassSelectorAssociation
 		source: source
 		prompt: prompt
 		answer: answer
 		mentor: methodMentor! !
 
-!SmalltalkMentorClassReview methodsFor: 'thinking' stamp: 'HAW 9/Sep/2026, 2:24:21 am (UTC)'!
+!SmalltalkMentorReview methodsFor: 'thinking' stamp: 'HAW 9/Sep/2026, 2:24:21 am (UTC)'!
 analysisOf: aLocation
 
 	^aLocation, ' with ', mentor provider name! !
 
-!SmalltalkMentorClassReview methodsFor: 'thinking' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
+!SmalltalkMentorReview methodsFor: 'thinking' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 hideThinking
 
 	thinkingToast ifNotNil: [ thinkingToast delete. thinkingToast := nil ]! !
 
-!SmalltalkMentorClassReview methodsFor: 'thinking' stamp: 'HAW 9/Sep/2026, 6:59:52 am (UTC)'!
+!SmalltalkMentorReview methodsFor: 'thinking' stamp: 'HAW 9/Sep/2026, 6:59:52 am (UTC)'!
 showThinkingFor: aClassSelectorAssociation
 
 	| location |
@@ -3216,30 +3592,35 @@ showThinkingFor: aClassSelectorAssociation
 		showToastLabeled: 'Smalltalk Mentor is analyzing ', (self analysisOf: location).
 	self showText: 'Analyzing ', (self analysisOf: location), ' ...'! !
 
-!SmalltalkMentorClassReview methodsFor: 'menu actions' stamp: 'HAW 9/Sep/2026, 6:58:40 am (UTC)'!
+!SmalltalkMentorReview methodsFor: 'menu actions' stamp: 'HAW 9/Sep/2026, 2:54:36 pm (UTC)'!
 browseFinding: aFinding
 
 	aFinding editKind = #method ifTrue: [ ^aFinding editTarget openMethodBrowser ].
 	aFinding editKind = #variable ifTrue: [
 		^aFinding editTarget key openClassBrowser ].
-	^targetClass openClassBrowser! !
+	^self browseTarget! !
 
-!SmalltalkMentorClassReview methodsFor: 'menu actions' stamp: 'HAW 9/Sep/2026, 2:42:55 am (UTC)'!
+!SmalltalkMentorReview methodsFor: 'menu actions' stamp: 'HAW 9/Sep/2026, 2:54:34 pm (UTC)'!
 browseNode: aNode
 
 	aNode kind = #method ifTrue: [ ^aNode payload openMethodBrowser ].
 	aNode kind = #finding ifTrue: [ ^self browseFinding: aNode payload ].
 	aNode kind = #classTop ifTrue: [ ^aNode payload openClassBrowser ].
-	^targetClass openClassBrowser! !
+	^self browseTarget! !
 
-!SmalltalkMentorClassReview methodsFor: 'menu actions' stamp: 'HAW 9/Sep/2026, 2:23:49 am (UTC)'!
+!SmalltalkMentorReview methodsFor: 'menu actions' stamp: 'HAW 9/Sep/2026, 2:54:39 pm (UTC)'!
+browseTarget
+
+	self subclassResponsibility! !
+
+!SmalltalkMentorReview methodsFor: 'menu actions' stamp: 'HAW 9/Sep/2026, 2:23:49 am (UTC)'!
 changeEffort
 
 	mentor pickEffort ifTrue: [
 		effortButton ifNotNil: [
 			effortButton label: mentor provider effortButtonLabel ] ]! !
 
-!SmalltalkMentorClassReview methodsFor: 'menu actions' stamp: 'HAW 9/Sep/2026, 2:43:01 am (UTC)'!
+!SmalltalkMentorReview methodsFor: 'menu actions' stamp: 'HAW 9/Sep/2026, 2:43:01 am (UTC)'!
 changeProvider
 
 	mentor pickProvider ifNotNil: [ :chosenProvider | | windowProvider |
@@ -3248,7 +3629,7 @@ changeProvider
 		mentor provider: windowProvider.
 		self updateProviderButtons ]! !
 
-!SmalltalkMentorClassReview methodsFor: 'menu actions' stamp: 'HAW 9/Sep/2026, 2:01:44 am (UTC)'!
+!SmalltalkMentorReview methodsFor: 'menu actions' stamp: 'HAW 9/Sep/2026, 2:01:44 am (UTC)'!
 runAgainNode: aNode
 
 	aNode kind = #method ifTrue: [
@@ -3257,7 +3638,7 @@ runAgainNode: aNode
 	treeRoots := nil.
 	self changed: #rootNodes! !
 
-!SmalltalkMentorClassReview methodsFor: 'menu actions' stamp: 'HAW 9/Sep/2026, 6:58:42 am (UTC)'!
+!SmalltalkMentorReview methodsFor: 'menu actions' stamp: 'HAW 9/Sep/2026, 6:58:42 am (UTC)'!
 updateProviderButtons
 
 	| provider |
@@ -3266,7 +3647,7 @@ updateProviderButtons
 	providerButton ifNotNil: [ providerButton label: 'LLM: ', provider printString ].
 	effortButton ifNotNil: [ effortButton label: provider effortButtonLabel ]! !
 
-!SmalltalkMentorClassReview methodsFor: 'ui' stamp: 'HAW 9/Sep/2026, 2:24:56 am (UTC)'!
+!SmalltalkMentorReview methodsFor: 'ui' stamp: 'HAW 9/Sep/2026, 2:24:56 am (UTC)'!
 newLeftColumn
 
 	| leftColumn |
@@ -3282,7 +3663,7 @@ newLeftColumn
 		addMorph: self newProviderRow fixedHeight: 30.
 	^leftColumn! !
 
-!SmalltalkMentorClassReview methodsFor: 'ui' stamp: 'HAW 9/Sep/2026, 2:43:28 am (UTC)'!
+!SmalltalkMentorReview methodsFor: 'ui' stamp: 'HAW 9/Sep/2026, 2:43:28 am (UTC)'!
 newMainRow
 
 	| row |
@@ -3294,7 +3675,7 @@ newMainRow
 		addAdjusterAndMorph: detailHolder proportionalWidth: 0.66.
 	^row! !
 
-!SmalltalkMentorClassReview methodsFor: 'ui' stamp: 'HAW 9/Sep/2026, 2:24:58 am (UTC)'!
+!SmalltalkMentorReview methodsFor: 'ui' stamp: 'HAW 9/Sep/2026, 2:24:58 am (UTC)'!
 newProviderRow
 
 	| providerRow |
@@ -3313,7 +3694,7 @@ newProviderRow
 		addMorph: effortButton proportionalWidth: 0.4.
 	^providerRow! !
 
-!SmalltalkMentorClassReview methodsFor: 'ui' stamp: 'HAW 9/Sep/2026, 2:43:24 am (UTC)'!
+!SmalltalkMentorReview methodsFor: 'ui' stamp: 'HAW 9/Sep/2026, 2:43:24 am (UTC)'!
 openWindow
 
 	window := SmalltalkMentorReviewWindow new.
@@ -3321,25 +3702,15 @@ openWindow
 	window layoutMorph addMorph: self newMainRow proportionalHeight: 1.0.
 	window openInWorld! !
 
-!SmalltalkMentorClassReview methodsFor: 'ui' stamp: 'HAW 9/Sep/2026, 2:01:44 am (UTC)'!
+!SmalltalkMentorReview methodsFor: 'ui' stamp: 'HAW 9/Sep/2026, 2:01:44 am (UTC)'!
 start
 
 	self openWindow! !
 
-!SmalltalkMentorClassReview methodsFor: 'ui' stamp: 'HAW 9/Sep/2026, 2:01:44 am (UTC)'!
+!SmalltalkMentorReview methodsFor: 'ui' stamp: 'HAW 9/Sep/2026, 2:53:54 pm (UTC)'!
 windowLabel
 
-	^'class ', targetClass name! !
-
-!SmalltalkMentorClassReview class methodsFor: 'instance creation' stamp: 'HAW 9/Sep/2026, 2:15:46 am (UTC)'!
-on: aClass mentor: aMentor
-
-	^self new initializeClass: aClass mentor: aMentor! !
-
-!SmalltalkMentorClassReview class methodsFor: 'instance creation' stamp: 'HAW 9/Sep/2026, 2:15:49 am (UTC)'!
-openOn: aClass mentor: aMentor
-
-	^(self on: aClass mentor: aMentor) start! !
+	self subclassResponsibility! !
 
 !SmalltalkMentorClassCategoryReview methodsFor: 'initialization' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 initializeSystemCategory: aString mentor: aMentor
@@ -3375,6 +3746,15 @@ windowLabel
 
 	^'class category ', systemCategory asString! !
 
+!SmalltalkMentorClassCategoryReview methodsFor: 'menu actions' stamp: 'HAW 9/Sep/2026, 2:54:51 pm (UTC)'!
+browseTarget
+
+	| browser |
+
+	browser := Browser new.
+	browser setSelectedSystemCategory: systemCategory.
+	^BrowserWindow open: browser label: 'System Browser: ', systemCategory asString! !
+
 !SmalltalkMentorClassCategoryReview class methodsFor: 'instance creation' stamp: 'HAW 9/Sep/2026, 2:15:56 am (UTC)'!
 on: aSystemCategory mentor: aMentor
 
@@ -3384,6 +3764,38 @@ on: aSystemCategory mentor: aMentor
 openOn: aSystemCategory mentor: aMentor
 
 	^(self on: aSystemCategory mentor: aMentor) start! !
+
+!SmalltalkMentorClassReview methodsFor: 'tree' stamp: 'HAW 9/Sep/2026, 2:53:51 pm (UTC)'!
+buildRootNodes
+
+	^self rootNodesFor: targetClass! !
+
+!SmalltalkMentorClassReview methodsFor: 'ui' stamp: 'HAW 9/Sep/2026, 2:53:54 pm (UTC)'!
+windowLabel
+
+	^'class ', targetClass name! !
+
+!SmalltalkMentorClassReview methodsFor: 'initialization' stamp: 'HAW 9/Sep/2026, 2:54:13 pm (UTC)'!
+initializeClass: aClass mentor: aMentor
+
+	targetClass := aClass theNonMetaClass.
+	mentor := aMentor.
+	methodReviewCache := Dictionary new! !
+
+!SmalltalkMentorClassReview methodsFor: 'menu actions' stamp: 'HAW 9/Sep/2026, 2:54:42 pm (UTC)'!
+browseTarget
+
+	^targetClass openClassBrowser! !
+
+!SmalltalkMentorClassReview class methodsFor: 'instance creation' stamp: 'HAW 9/Sep/2026, 2:54:13 pm (UTC)'!
+on: aClass mentor: aMentor
+
+	^self new initializeClass: aClass mentor: aMentor! !
+
+!SmalltalkMentorClassReview class methodsFor: 'instance creation' stamp: 'HAW 9/Sep/2026, 2:54:13 pm (UTC)'!
+openOn: aClass mentor: aMentor
+
+	^(self on: aClass mentor: aMentor) start! !
 
 !SmalltalkMentorMethodCategoryReview methodsFor: 'initialization' stamp: 'HAW 9/Sep/2026, 2:16:06 am (UTC)'!
 initializeClassOrMeta: aClassOrMeta category: aCategory mentor: aMentor
@@ -3416,6 +3828,11 @@ selectorsToReview
 windowLabel
 
 	^'method category ', reviewedCategory asString, ' of ', targetClass name! !
+
+!SmalltalkMentorMethodCategoryReview methodsFor: 'menu actions' stamp: 'HAW 9/Sep/2026, 2:54:48 pm (UTC)'!
+browseTarget
+
+	^targetClass openClassBrowser! !
 
 !SmalltalkMentorMethodCategoryReview class methodsFor: 'instance creation' stamp: 'HAW 9/Sep/2026, 2:43:40 am (UTC)'!
 on: aCategory of: aClassOrMetaclass mentor: aMentor
@@ -3475,6 +3892,11 @@ windowLabel
 
 	^'method ', targetClass name, '>>', selector asString! !
 
+!SmalltalkMentorMethodReview methodsFor: 'menu actions' stamp: 'HAW 9/Sep/2026, 2:54:45 pm (UTC)'!
+browseTarget
+
+	^(targetClass -> selector) openMethodBrowser! !
+
 !SmalltalkMentorMethodReview class methodsFor: 'instance creation' stamp: 'HAW 8/Sep/2026, 11:50:02 pm (UTC)'!
 on: aClassOrMetaclass selector: aSelector mentor: aMentor
 
@@ -3488,380 +3910,7 @@ openOn: aClassOrMetaclass selector: aSelector mentor: aMentor
 
 	^(self on: aClassOrMetaclass selector: aSelector mentor: aMentor) start! !
 
-!SmalltalkMentorFinding methodsFor: 'initialization' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
-initializeTitle: aTitle detail: aDetail editKind: anEditKind editTarget: anEditTarget
-
-	title := aTitle.
-	detail := aDetail.
-	editKind := anEditKind.
-	editTarget := anEditTarget! !
-
-!SmalltalkMentorFinding methodsFor: 'accessing' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
-detail
-
-	^detail! !
-
-!SmalltalkMentorFinding methodsFor: 'accessing' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
-editKind
-
-	^editKind! !
-
-!SmalltalkMentorFinding methodsFor: 'accessing' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
-editTarget
-
-	^editTarget! !
-
-!SmalltalkMentorFinding methodsFor: 'accessing' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
-title
-
-	^title! !
-
-!SmalltalkMentorFinding class methodsFor: 'instance creation' stamp: 'HAW 9/Sep/2026, 2:45:45 am (UTC)'!
-title: aTitle detail: aDetail editKind: anEditKind editTarget: anEditTarget
-
-	^self new
-		initializeTitle: aTitle
-		detail: aDetail
-		editKind: anEditKind
-		editTarget: anEditTarget! !
-
-!SmalltalkMentorReview methodsFor: 'initialization' stamp: 'HAW 9/Sep/2026, 2:23:32 am (UTC)'!
-initializeClass: aClass selector: aSelector category: aCategory current: aCurrentSource suggested: aSuggestedSource rationale: aRationale messages: aMessagesCollection mentor: aMentor
-
-	targetClass := aClass.
-	selector := aSelector.
-	category := aCategory.
-	currentSource := aCurrentSource withCuisLineEndings.
-	suggestedSource := self formattedSource: aSuggestedSource.
-	rationale := aRationale.
-	messages := aMessagesCollection.
-	mentor := aMentor.
-	busy := false! !
-
-!SmalltalkMentorReview methodsFor: 'ui' stamp: 'HAW 9/Sep/2026, 2:16:46 am (UTC)'!
-buildContent
-
-	^contentMorph ifNil: [ contentMorph := self newContentColumn ]! !
-
-!SmalltalkMentorReview methodsFor: 'ui' stamp: 'HAW 9/Sep/2026, 6:58:54 am (UTC)'!
-languageButtonLabel
-
-	^'Idioma: ', mentor language! !
-
-!SmalltalkMentorReview methodsFor: 'ui' stamp: 'HAW 9/Sep/2026, 3:07:34 am (UTC)'!
-newButtonsRow
-
-	| buttonsRow |
-
-	buttonsRow := LayoutMorph newRow.
-	buttonsRow
-		addMorph: self newSendButton
-		layoutSpec: (LayoutSpec proportionalWidth: 0.45 proportionalHeight: 1.0).
-	buttonsRow
-		addMorph: self newEffortButton
-		layoutSpec: (LayoutSpec proportionalWidth: 0.25 proportionalHeight: 1.0).
-	buttonsRow
-		addMorph: self newLanguageButton
-		layoutSpec: (LayoutSpec proportionalWidth: 0.3 proportionalHeight: 1.0).
-	^buttonsRow! !
-
-!SmalltalkMentorReview methodsFor: 'ui' stamp: 'HAW 9/Sep/2026, 2:16:48 am (UTC)'!
-newContentColumn
-
-	| column |
-
-	column := LayoutMorph newColumn.
-	column
-		addMorph: self newProviderLabel
-		layoutSpec: (LayoutSpec proportionalWidth: 1.0 fixedHeight: 20).
-	column
-		addMorph: self newTranscriptMorph
-		layoutSpec: (LayoutSpec proportionalWidth: 1.0 proportionalHeight: 0.28).
-	column addAdjusterAndMorph: self newPanesRow proportionalHeight: 0.57.
-	column addAdjusterAndMorph: self newInputGroup proportionalHeight: 0.15.
-	column
-		addMorph: self newButtonsRow
-		layoutSpec: (LayoutSpec proportionalWidth: 1.0 fixedHeight: 34).
-	^column! !
-
-!SmalltalkMentorReview methodsFor: 'ui' stamp: 'HAW 9/Sep/2026, 3:07:39 am (UTC)'!
-newEffortButton
-
-	^effortButton := PluggableButtonMorph
-		model: self
-		action: #changeEffort
-		label: mentor provider effortButtonLabel! !
-
-!SmalltalkMentorReview methodsFor: 'ui' stamp: 'HAW 9/Sep/2026, 6:58:44 am (UTC)'!
-newInputGroup
-
-	| inputGroup conversationLabel inputModel |
-
-	conversationLabel := LabelMorph
-		contents: 'Tell the mentor (ask a follow-up or push back, then press cmd+Enter):'.
-	inputModel := SmalltalkMentorConversationTextModel
-		withText: '' asText
-		review: self.
-	inputMorph := SmalltalkMentorConversationTextMorph withModel: inputModel.
-	inputGroup := LayoutMorph newColumn.
-	inputGroup
-		addMorph: conversationLabel
-		layoutSpec: (LayoutSpec proportionalWidth: 1.0 fixedHeight: 18).
-	inputGroup
-		addMorph: inputMorph
-		layoutSpec: (LayoutSpec proportionalWidth: 1.0 proportionalHeight: 1.0).
-	^inputGroup! !
-
-!SmalltalkMentorReview methodsFor: 'ui' stamp: 'HAW 9/Sep/2026, 6:58:57 am (UTC)'!
-newLanguageButton
-
-	^languageButton := PluggableButtonMorph
-		model: self
-		action: #switchLanguage
-		label: self languageButtonLabel! !
-
-!SmalltalkMentorReview methodsFor: 'ui' stamp: 'HAW 9/Sep/2026, 2:16:58 am (UTC)'!
-newOriginalPane
-
-	| originalBrowser |
-
-	originalBrowser := Browser new.
-	originalBrowser setClass: targetClass selector: selector.
-	^originalBrowser newCodePaneMorph! !
-
-!SmalltalkMentorReview methodsFor: 'ui' stamp: 'HAW 9/Sep/2026, 2:16:55 am (UTC)'!
-newPanesRow
-
-	| panesRow |
-
-	panesRow := LayoutMorph newRow.
-	panesRow
-		addMorph: self newOriginalPane
-		layoutSpec: (LayoutSpec proportionalWidth: 0.5 proportionalHeight: 1.0).
-	panesRow addAdjusterAndMorph: self newSuggestedPane proportionalWidth: 0.5.
-	^panesRow! !
-
-!SmalltalkMentorReview methodsFor: 'ui' stamp: 'HAW 9/Sep/2026, 2:16:50 am (UTC)'!
-newProviderLabel
-
-	^providerLabel := LabelMorph contents: 'LLM: ', mentor provider labelDescription! !
-
-!SmalltalkMentorReview methodsFor: 'ui' stamp: 'HAW 9/Sep/2026, 3:07:36 am (UTC)'!
-newSendButton
-
-	^PluggableButtonMorph model: self action: #sendFollowUp label: 'Send (cmd+Enter)'! !
-
-!SmalltalkMentorReview methodsFor: 'ui' stamp: 'HAW 9/Sep/2026, 2:45:33 am (UTC)'!
-newSuggestedPane
-
-	| suggestedModel |
-
-	suggestedModel := SmalltalkMentorNoCopyTextModel
-		withText: self suggestedPaneText asText
-		styleClass: targetClass.
-	^suggestedMorph := TextModelMorph withModel: suggestedModel! !
-
-!SmalltalkMentorReview methodsFor: 'ui' stamp: 'HAW 9/Sep/2026, 2:16:53 am (UTC)'!
-newTranscriptMorph
-
-	^transcriptMorph := TextModelMorph
-		withText: ('Smalltalk Mentor: ', rationale, String newLineString) asText! !
-
-!SmalltalkMentorReview methodsFor: 'ui' stamp: 'HAW 9/Sep/2026, 2:45:35 am (UTC)'!
-suggestedPaneText
-
-	^suggestedSource ifEmpty: [ currentSource ] ifNotEmpty: [ :source | source ]! !
-
-!SmalltalkMentorReview methodsFor: 'compiling' stamp: 'HAW 9/Sep/2026, 3:07:30 am (UTC)'!
-accept
-
-	| suggestedSourceText |
-
-	suggestedSourceText := suggestedMorph text asString.
-	suggestedSourceText ifEmpty: [ ^PopUpMenu inform: 'Nothing to compile.' ].
-	[ targetClass compile: suggestedSourceText classified: category ]
-		on: Error
-		do: [ :error | ^PopUpMenu inform: 'Compile failed: ', error messageText ].
-	self logCompiledSuggestion! !
-
-!SmalltalkMentorReview methodsFor: 'conversation' stamp: 'HAW 9/Sep/2026, 2:44:52 am (UTC)'!
-appendTranscript: aString
-
-	| newText |
-
-	newText := transcriptMorph text asString, aString, String newLineString.
-	transcriptMorph model actualContents: newText asText.
-	self scrollTranscriptTo: newText size! !
-
-!SmalltalkMentorReview methodsFor: 'conversation' stamp: 'HAW 9/Sep/2026, 11:41:43 am (UTC)'!
-askProvider
-
-	| answer proposal |
-
-	answer := mentor provider completionForMessages: messages.
-	messages add: (mentor assistantMessage: answer).
-	proposal := mentor parseProposalFrom: answer.
-	UISupervisor whenUIinSafeState: [ self showProposal: proposal ]! !
-
-!SmalltalkMentorReview methodsFor: 'conversation' stamp: 'HAW 9/Sep/2026, 3:07:47 am (UTC)'!
-askProviderInBackground
-
-	[ [ self askProvider ]
-		on: Error
-		do: [ :error |
-			UISupervisor whenUIinSafeState: [ self showProviderError: error ] ] ] fork! !
-
-!SmalltalkMentorReview methodsFor: 'conversation' stamp: 'HAW 9/Sep/2026, 2:44:58 am (UTC)'!
-changeEffort
-
-	mentor pickEffort ifTrue: [ self updateEffortLabels ]! !
-
-!SmalltalkMentorReview methodsFor: 'conversation' stamp: 'HAW 9/Sep/2026, 2:45:20 am (UTC)'!
-clearInput
-
-	UISupervisor whenUIinSafeState: [
-		inputMorph model actualContents: '' asText.
-		inputMorph updateActualContents ]! !
-
-!SmalltalkMentorReview methodsFor: 'conversation' stamp: 'HAW 9/Sep/2026, 2:45:18 am (UTC)'!
-followUpContentFor: aNote
-
-	^aNote, String newLineString, String newLineString,
-		'For reference, the current version of the method I am looking at is:', String newLineString,
-		suggestedMorph text asString, String newLineString, String newLineString,
-		'Reply again with ONLY the same JSON object {canImprove, suggestedSource, rationale}.'! !
-
-!SmalltalkMentorReview methodsFor: 'conversation' stamp: 'HAW 9/Sep/2026, 7:04:43 am (UTC)'!
-languageChangeLabel
-
-	^'You: (idioma -> ', mentor language, ')'! !
-
-!SmalltalkMentorReview methodsFor: 'conversation' stamp: 'HAW 9/Sep/2026, 3:07:32 am (UTC)'!
-logCompiledSuggestion
-
-	Transcript
-		show: 'Compiled Smalltalk Mentor suggestion into ', (targetClass -> selector) methodLocationString;
-		newLine! !
-
-!SmalltalkMentorReview methodsFor: 'conversation' stamp: 'HAW 9/Sep/2026, 11:41:46 am (UTC)'!
-postUserContent: contentString transcriptLabel: aLabel
-
-	busy ifTrue: [ ^self ].
-	messages add: (mentor userMessage: contentString).
-	self appendTranscript: aLabel.
-	self appendTranscript: '(Smalltalk Mentor is thinking...)'.
-	busy := true.
-	self askProviderInBackground! !
-
-!SmalltalkMentorReview methodsFor: 'conversation' stamp: 'HAW 9/Sep/2026, 11:41:38 am (UTC)'!
-rationaleOrDefaultOf: aProposal
-
-	^(mentor rationaleOf: aProposal) ifEmpty: [ '(no rationale)' ]! !
-
-!SmalltalkMentorReview methodsFor: 'conversation' stamp: 'HAW 9/Sep/2026, 2:45:25 am (UTC)'!
-restateInCurrentLanguageContent
-
-	^'From now on, reply in ', mentor language, '. Restate your previous rationale in ', mentor language,
-		' without changing suggestedSource. Reply with ONLY the same JSON object {canImprove, suggestedSource, rationale}.'! !
-
-!SmalltalkMentorReview methodsFor: 'conversation' stamp: 'HAW 9/Sep/2026, 2:44:55 am (UTC)'!
-scrollTranscriptTo: anEnd
-
-	[ transcriptMorph editor selectFrom: anEnd + 1 to: anEnd.
-	  transcriptMorph scrollSelectionIntoView ] on: Error do: [ :error | ]! !
-
-!SmalltalkMentorReview methodsFor: 'conversation' stamp: 'HAW 9/Sep/2026, 2:45:15 am (UTC)'!
-sendFollowUp
-
-	| note |
-
-	busy ifTrue: [ ^self ].
-	note := inputMorph text asString withBlanksTrimmed.
-	note ifEmpty: [ ^self ].
-	self clearInput.
-	self postUserContent: (self followUpContentFor: note) transcriptLabel: 'You: ', note! !
-
-!SmalltalkMentorReview methodsFor: 'conversation' stamp: 'HAW 9/Sep/2026, 11:41:35 am (UTC)'!
-showProposal: aProposal
-
-	(mentor suggestedSourceOf: aProposal)
-		ifNotEmpty: [ :suggestion | self showSuggestion: suggestion ].
-	self appendTranscript: 'Smalltalk Mentor: ', (self rationaleOrDefaultOf: aProposal).
-	busy := false! !
-
-!SmalltalkMentorReview methodsFor: 'conversation' stamp: 'HAW 9/Sep/2026, 2:45:11 am (UTC)'!
-showProviderError: anError
-
-	self appendTranscript: 'Error: ', anError messageText.
-	busy := false! !
-
-!SmalltalkMentorReview methodsFor: 'conversation' stamp: 'HAW 9/Sep/2026, 2:17:29 am (UTC)'!
-showSuggestion: aString
-
-	suggestedSource := self formattedSource: aString.
-	suggestedMorph ifNotNil: [
-		suggestedMorph model actualContents: suggestedSource asText ]! !
-
-!SmalltalkMentorReview methodsFor: 'conversation' stamp: 'HAW 9/Sep/2026, 7:04:41 am (UTC)'!
-switchLanguage
-
-	busy ifTrue: [ ^self ].
-	mentor switchLanguage.
-	languageButton ifNotNil: [ languageButton label: self languageButtonLabel ].
-	self
-		postUserContent: self restateInCurrentLanguageContent
-		transcriptLabel: self languageChangeLabel! !
-
-!SmalltalkMentorReview methodsFor: 'conversation' stamp: 'HAW 9/Sep/2026, 7:04:39 am (UTC)'!
-updateEffortLabels
-
-	| provider |
-
-	provider := mentor provider.
-	providerLabel ifNotNil: [
-		providerLabel contents: 'LLM: ', provider labelDescription ].
-	effortButton ifNotNil: [ effortButton label: provider effortButtonLabel ]! !
-
-!SmalltalkMentorReview methodsFor: 'private' stamp: 'HAW 9/Sep/2026, 2:17:32 am (UTC)'!
-formattedSource: aString
-
-	aString withBlanksTrimmed ifEmpty: [ ^aString ].
-	^[ Compiler format: aString in: targetClass notifying: nil ]
-		on: Error do: [ :error | aString withCuisLineEndings ]! !
-
-!SmalltalkMentorReview class methodsFor: 'instance creation' stamp: 'HAW 9/Sep/2026, 2:23:28 am (UTC)'!
-on: aClass selector: aSelector category: aCategory current: aCurrentSource suggested: aSuggestedSource rationale: aRationale messages: aMessagesCollection mentor: aMentor
-
-	^self new
-		initializeClass: aClass
-		selector: aSelector
-		category: aCategory
-		current: aCurrentSource
-		suggested: aSuggestedSource
-		rationale: aRationale
-		messages: aMessagesCollection
-		mentor: aMentor! !
-
-!SmalltalkMentorReview class methodsFor: 'instance creation' stamp: 'HAW 9/Sep/2026, 11:41:49 am (UTC)'!
-on: aClassSelectorAssociation source: source prompt: prompt answer: answer mentor: aMentor
-
-	| proposal messages |
-
-	proposal := aMentor parseProposalFrom: answer.
-	messages := OrderedCollection
-		with: (aMentor userMessage: prompt)
-		with: (aMentor assistantMessage: answer).
-	^self
-		on: aClassSelectorAssociation key
-		selector: aClassSelectorAssociation value
-		category: aClassSelectorAssociation methodCategory
-		current: source
-		suggested: (aMentor suggestedSourceOf: proposal)
-		rationale: (aMentor rationaleOf: proposal)
-		messages: messages
-		mentor: aMentor! !
-
-!SmalltalkMentorConversationEditor methodsFor: 'typing/selecting keys' stamp: 'HAW 9/Sep/2026, 3:07:59 am (UTC)'!
+!SmalltalkMentorConversationEditor methodsFor: 'typing/selecting keys' stamp: 'HAW 9/Sep/2026, 2:53:23 pm (UTC)'!
 returnKey: aKeyboardEvent
 
 	| sendsWithCommand |
@@ -3869,7 +3918,7 @@ returnKey: aKeyboardEvent
 	sendsWithCommand := aKeyboardEvent commandAltKeyPressed
 		and: [ model isKindOf: SmalltalkMentorConversationTextModel ].
 	sendsWithCommand ifTrue: [
-		model review ifNotNil: [ :review | review sendFollowUp ].
+		model conversation ifNotNil: [ :review | review sendFollowUp ].
 		^true ].
 	^super returnKey: aKeyboardEvent! !
 

@@ -1,6 +1,6 @@
-'From Cuis7.9 [latest update: #8158] on 9 September 2026 at 11:47:09 am'!
-'Description Root the heuristics in SmalltalkHeuristic and rename the class heuristic root'!
-!provides: 'SmalltalkMentorTests' 1 22!
+'From Cuis7.9 [latest update: #8158] on 9 September 2026 at 12:06:11 pm'!
+'Description Root the four reviews in an abstract SmalltalkMentorReview'!
+!provides: 'SmalltalkMentorTests' 1 23!
 !requires: 'SmalltalkMentor' nil nil nil!
 SystemOrganization addCategory: #SmalltalkMentorTests!
 
@@ -36,7 +36,7 @@ SmalltalkMentorMethodHeuristicTest class
 	instanceVariableNames: ''!
 
 
-!SmalltalkMentorFixedHeuristicTest methodsFor: 'running' stamp: 'HAW 9/Sep/2026, 2:01:36 am (UTC)'!
+!SmalltalkMentorFixedHeuristicTest methodsFor: 'running' stamp: 'HAW 9/Sep/2026, 2:55:10 pm (UTC)'!
 setUp
 
 	review := SmalltalkMentorClassReview new.
