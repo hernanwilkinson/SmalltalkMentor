@@ -1,6 +1,6 @@
-'From Cuis7.9 [latest update: #8158] on 9 September 2026 at 12:06:14 pm'!
-'Description Root the four reviews in an abstract SmalltalkMentorReview'!
-!provides: 'SmalltalkMentor' 1 55!
+'From Cuis7.9 [latest update: #8158] on 9 September 2026 at 12:10:03 pm'!
+'Description Name the conversation text model collaborator panel'!
+!provides: 'SmalltalkMentor' 1 56!
 !requires: 'JSON' 1 29 nil!
 !requires: 'OSProcess' 1 36 nil!
 SystemOrganization addCategory: #SmalltalkMentor!
@@ -8,7 +8,7 @@ SystemOrganization addCategory: #SmalltalkMentor!
 
 !classDefinition: #SmalltalkMentorConversationTextModel category: #SmalltalkMentor!
 TextModel subclass: #SmalltalkMentorConversationTextModel
-	instanceVariableNames: 'conversation'
+	instanceVariableNames: 'panel'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'SmalltalkMentor'!
@@ -607,25 +607,25 @@ SmalltalkMentorNode class
 	instanceVariableNames: ''!
 
 
-!SmalltalkMentorConversationTextModel methodsFor: 'accessing' stamp: 'HAW 9/Sep/2026, 2:53:42 pm (UTC)'!
-conversation
-
-	^conversation! !
-
 !SmalltalkMentorConversationTextModel methodsFor: 'accessing' stamp: 'HAW 9/Sep/2026, 2:01:44 am (UTC)'!
 editorClass
 
 	^SmalltalkMentorConversationEditor! !
 
-!SmalltalkMentorConversationTextModel methodsFor: 'initialization' stamp: 'HAW 9/Sep/2026, 2:53:42 pm (UTC)'!
-initializeConversation: aReview
+!SmalltalkMentorConversationTextModel methodsFor: 'accessing' stamp: 'HAW 9/Sep/2026, 3:07:04 pm (UTC)'!
+panel
 
-	conversation := aReview! !
+	^panel! !
 
-!SmalltalkMentorConversationTextModel class methodsFor: 'instance creation' stamp: 'HAW 9/Sep/2026, 2:53:28 pm (UTC)'!
-withText: aText conversation: aReview
+!SmalltalkMentorConversationTextModel methodsFor: 'initialization' stamp: 'HAW 9/Sep/2026, 3:07:10 pm (UTC)'!
+initializePanel: aReview
 
-	^(self withText: aText) initializeConversation: aReview! !
+	panel := aReview! !
+
+!SmalltalkMentorConversationTextModel class methodsFor: 'instance creation' stamp: 'HAW 9/Sep/2026, 3:07:10 pm (UTC)'!
+withText: aText panel: aReview
+
+	^(self withText: aText) initializePanel: aReview! !
 
 !SmalltalkMentorNoCopyTextModel methodsFor: 'styling' stamp: 'HAW 9/Sep/2026, 2:01:45 am (UTC)'!
 aboutToStyleWith: anSHTextStyler
@@ -2934,7 +2934,7 @@ newEffortButton
 		action: #changeEffort
 		label: mentor provider effortButtonLabel! !
 
-!SmalltalkMentorConversation methodsFor: 'ui' stamp: 'HAW 9/Sep/2026, 2:53:25 pm (UTC)'!
+!SmalltalkMentorConversation methodsFor: 'ui' stamp: 'HAW 9/Sep/2026, 3:07:06 pm (UTC)'!
 newInputGroup
 
 	| inputGroup conversationLabel inputModel |
@@ -2943,7 +2943,7 @@ newInputGroup
 		contents: 'Tell the mentor (ask a follow-up or push back, then press cmd+Enter):'.
 	inputModel := SmalltalkMentorConversationTextModel
 		withText: '' asText
-		conversation: self.
+		panel: self.
 	inputMorph := SmalltalkMentorConversationTextMorph withModel: inputModel.
 	inputGroup := LayoutMorph newColumn.
 	inputGroup
@@ -3910,7 +3910,7 @@ openOn: aClassOrMetaclass selector: aSelector mentor: aMentor
 
 	^(self on: aClassOrMetaclass selector: aSelector mentor: aMentor) start! !
 
-!SmalltalkMentorConversationEditor methodsFor: 'typing/selecting keys' stamp: 'HAW 9/Sep/2026, 2:53:23 pm (UTC)'!
+!SmalltalkMentorConversationEditor methodsFor: 'typing/selecting keys' stamp: 'HAW 9/Sep/2026, 3:07:34 pm (UTC)'!
 returnKey: aKeyboardEvent
 
 	| sendsWithCommand |
@@ -3918,7 +3918,7 @@ returnKey: aKeyboardEvent
 	sendsWithCommand := aKeyboardEvent commandAltKeyPressed
 		and: [ model isKindOf: SmalltalkMentorConversationTextModel ].
 	sendsWithCommand ifTrue: [
-		model conversation ifNotNil: [ :review | review sendFollowUp ].
+		model panel ifNotNil: [ :panel | panel sendFollowUp ].
 		^true ].
 	^super returnKey: aKeyboardEvent! !
 

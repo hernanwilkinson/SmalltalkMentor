@@ -1,6 +1,6 @@
-'From Cuis7.9 [latest update: #8158] on 9 September 2026 at 12:06:11 pm'!
-'Description Root the four reviews in an abstract SmalltalkMentorReview'!
-!provides: 'SmalltalkMentorTests' 1 23!
+'From Cuis7.9 [latest update: #8158] on 9 September 2026 at 12:10:00 pm'!
+'Description Name the conversation text model collaborator panel'!
+!provides: 'SmalltalkMentorTests' 1 24!
 !requires: 'SmalltalkMentor' nil nil nil!
 SystemOrganization addCategory: #SmalltalkMentorTests!
 
