@@ -1,6 +1,6 @@
-'From Cuis7.9 [latest update: #8158] on 9 September 2026 at 5:05:06 pm'!
-'Description Rename doesNotHold to fails and initialize the failing nodes lazily'!
-!provides: 'SmalltalkMentor' 1 62!
+'From Cuis7.9 [latest update: #8158] on 9 September 2026 at 5:58:51 pm'!
+'Description Keep the selection when expanding or collapsing a review tree node'!
+!provides: 'SmalltalkMentor' 1 63!
 !requires: 'JSON' 1 29 nil!
 !requires: 'OSProcess' 1 36 nil!
 SystemOrganization addCategory: #SmalltalkMentor!
@@ -700,6 +700,26 @@ on: aClassSelectorAssociation highlighting: failureRanges
 		setClass: aClassSelectorAssociation key
 		selector: aClassSelectorAssociation value.
 	^browser! !
+
+!SmalltalkMentorTreeMorph methodsFor: 'events' stamp: 'HAW 9/Sep/2026, 8:08:37 pm (UTC)'!
+isToggleOf: anItemMorph at: localEventPosition
+
+	| positionInItem |
+
+	anItemMorph ifNil: [ ^false ].
+	scroller isLocked ifTrue: [ ^false ].
+	positionInItem := anItemMorph internalize: (scroller internalize: localEventPosition).
+	^anItemMorph inToggleArea: positionInItem! !
+
+!SmalltalkMentorTreeMorph methodsFor: 'events' stamp: 'HAW 9/Sep/2026, 8:06:45 pm (UTC)'!
+mouseButton1Down: aMouseButtonEvent localPosition: localEventPosition
+
+	| itemMorph |
+
+	itemMorph := self itemFromPoint: localEventPosition.
+	(self isToggleOf: itemMorph at: localEventPosition) ifTrue: [
+		^self toggleExpandedState: itemMorph event: aMouseButtonEvent ].
+	^super mouseButton1Down: aMouseButtonEvent localPosition: localEventPosition! !
 
 !SmalltalkMentorTreeMorph methodsFor: 'events' stamp: 'HAW 9/Sep/2026, 3:07:57 am (UTC)'!
 mouseButton2Down: aMouseButtonEvent localPosition: localEventPosition

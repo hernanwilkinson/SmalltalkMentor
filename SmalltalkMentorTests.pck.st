@@ -1,6 +1,6 @@
-'From Cuis7.9 [latest update: #8158] on 9 September 2026 at 5:05:03 pm'!
-'Description Rename doesNotHold to fails and initialize the failing nodes lazily'!
-!provides: 'SmalltalkMentorTests' 1 30!
+'From Cuis7.9 [latest update: #8158] on 9 September 2026 at 5:58:48 pm'!
+'Description Keep the selection when expanding or collapsing a review tree node'!
+!provides: 'SmalltalkMentorTests' 1 31!
 !requires: 'SmalltalkMentor' nil nil nil!
 SystemOrganization addCategory: #SmalltalkMentorTests!
 
