@@ -1,6 +1,6 @@
-'From Cuis7.9 [latest update: #8158] on 8 September 2026 at 5:57:11 pm'!
-'Description Reify fixed heuristics as a SmalltalkDesignHeuristic hierarchy'!
-!provides: 'SmalltalkMentorTests' 1 18!
+'From Cuis7.9 [latest update: #8158] on 9 September 2026 at 10:09:47 am'!
+'Description Add per-method heuristics as method objects and review the code with them'!
+!provides: 'SmalltalkMentorTests' 1 19!
 !requires: 'SmalltalkMentor' nil nil nil!
 SystemOrganization addCategory: #SmalltalkMentorTests!
 
@@ -25,12 +25,19 @@ TestCase subclass: #SmalltalkMentorHeuristicTest
 SmalltalkMentorHeuristicTest class
 	instanceVariableNames: ''!
 
+!classDefinition: #SmalltalkMentorMethodHeuristicTest category: #SmalltalkMentorTests!
+TestCase subclass: #SmalltalkMentorMethodHeuristicTest
+	instanceVariableNames: 'fixture fixtureTestCase fixtureSubclass'
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'SmalltalkMentorTests'!
+!classDefinition: 'SmalltalkMentorMethodHeuristicTest class' category: #SmalltalkMentorTests!
+SmalltalkMentorMethodHeuristicTest class
+	instanceVariableNames: ''!
 
-!SmalltalkMentorFixedHeuristicTest methodsFor: 'running' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
+
+!SmalltalkMentorFixedHeuristicTest methodsFor: 'running' stamp: 'HAW 9/Sep/2026, 2:01:36 am (UTC)'!
 setUp
-
-	"The static verifications are pure (they take the class to check as an argument), so a bare
-	review instance is enough - no mentor or LLM is needed."
 
 	review := SmalltalkMentorClassReview new.
 	fixtures := OrderedCollection new! !
@@ -41,16 +48,13 @@ tearDown
 	fixtures reverse do: [ :eachFixtureClass | eachFixtureClass removeFromSystem ].
 	fixtures := OrderedCollection new! !
 
-!SmalltalkMentorFixedHeuristicTest methodsFor: 'support' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
-includesSubstring: aSubstring in: aString
+!SmalltalkMentorFixedHeuristicTest methodsFor: 'support' stamp: 'HAW 9/Sep/2026, 2:33:48 am (UTC)'!
+newFixture
 
-	^(review firstIndexOf: aSubstring in: aString) > 0! !
+	^self newFixtureInstanceVariableNames: '' classVariableNames: ''! !
 
-!SmalltalkMentorFixedHeuristicTest methodsFor: 'support' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
+!SmalltalkMentorFixedHeuristicTest methodsFor: 'support' stamp: 'HAW 9/Sep/2026, 2:01:37 am (UTC)'!
 newFixtureClassNamed: aClassNameSymbol superclass: aSuperclass
-
-	"A throwaway class (removed in tearDown) used to build small hierarchies. Its category is
-	outside every SmalltalkMentor package so no package ever claims it."
 
 	| createdClass |
 
@@ -62,11 +66,8 @@ newFixtureClassNamed: aClassNameSymbol superclass: aSuperclass
 	fixtures add: createdClass.
 	^createdClass! !
 
-!SmalltalkMentorFixedHeuristicTest methodsFor: 'support' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!SmalltalkMentorFixedHeuristicTest methodsFor: 'support' stamp: 'HAW 9/Sep/2026, 2:01:37 am (UTC)'!
 newFixtureInstanceVariableNames: instanceNames classVariableNames: classNames
-
-	"A throwaway class (removed in tearDown) used to exercise one static heuristic. Its category is
-	outside every SmalltalkMentor package so no package ever claims it."
 
 	| createdClass |
 
@@ -78,227 +79,353 @@ newFixtureInstanceVariableNames: instanceNames classVariableNames: classNames
 	fixtures add: createdClass.
 	^createdClass! !
 
-!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 8/Sep/2026, 2:37:25 pm (UTC)'!
+!SmalltalkMentorFixedHeuristicTest methodsFor: 'support' stamp: 'HAW 9/Sep/2026, 2:33:51 am (UTC)'!
+newFixtureWithInstanceVariableNames: aString
+
+	^self newFixtureInstanceVariableNames: aString classVariableNames: ''! !
+
+!SmalltalkMentorFixedHeuristicTest methodsFor: 'support' stamp: 'HAW 9/Sep/2026, 2:44:02 am (UTC)'!
+newTestCaseFixture
+
+	^self newFixtureClassNamed: #SMMentorSampleTest superclass: TestCase! !
+
+!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 9/Sep/2026, 2:33:58 am (UTC)'!
 testClassMustBeReferenced
 
-	| classToVerify findings |
+	| findings |
 
-	classToVerify := self newFixtureInstanceVariableNames: '' classVariableNames: ''.
-	findings := ClassIsReferencedHeuristic new findingsFor: classToVerify.
+	findings := ClassIsReferencedHeuristic new findingsFor: self newFixture.
 	self assert: findings notEmpty.
-	"a class that other classes reference is not flagged"
-	self assert: (ClassIsReferencedHeuristic new findingsFor: SmalltalkMentorFinding) isEmpty! !
+	self assert:
+		(ClassIsReferencedHeuristic new findingsFor: SmalltalkMentorFinding) isEmpty! !
 
-!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 8/Sep/2026, 2:36:17 pm (UTC)'!
+!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 9/Sep/2026, 2:34:50 am (UTC)'!
+testClassReviewListsOnlyFailingHeuristics
+
+	| classToVerify roots heuristicRoots |
+
+	classToVerify := self newFixtureWithInstanceVariableNames: 'unusedInstanceVariable'.
+	roots := review rootNodesFor: classToVerify.
+	heuristicRoots := roots select: [ :eachRoot | eachRoot kind = #heuristicRoot ].
+	self assert: heuristicRoots notEmpty.
+	self deny: (heuristicRoots anySatisfy: [ :eachRoot |
+		eachRoot asString includesSubString: '(0)' ]).
+	self assert: (heuristicRoots anySatisfy: [ :eachRoot |
+		eachRoot asString includesSubString: 'Instance variables' ])! !
+
+!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 9/Sep/2026, 2:34:00 am (UTC)'!
 testClassSideSelectorKeepsPrefixWhenUnprefixedNameIsReserved
 
 	| classToVerify findings |
 
-	classToVerify := self newFixtureInstanceVariableNames: '' classVariableNames: ''.
+	classToVerify := self newFixture.
 	classToVerify class compile: 'fixtureName ^1' classified: 'accessing'.
 	classToVerify class compile: 'fixtureOwner ^2' classified: 'accessing'.
-	findings := NoClassNamePrefixHeuristic new findingsFor: classToVerify.
-	self deny: (findings anySatisfy: [ :finding | self includesSubstring: 'fixtureName' in: finding title ]).
-	self assert: (findings anySatisfy: [ :finding | self includesSubstring: 'fixtureOwner' in: finding title ])! !
+	findings := RepeatedClassWordHeuristic new findingsFor: classToVerify.
+	self deny: (findings anySatisfy: [ :finding |
+		finding title includesSubString: 'fixtureName' ]).
+	self assert: (findings anySatisfy: [ :finding |
+		finding title includesSubString: 'fixtureOwner' ])! !
 
-!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 8/Sep/2026, 2:35:22 pm (UTC)'!
+!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 9/Sep/2026, 3:08:06 am (UTC)'!
 testClassVariableMustBeReadAndWritten
 
 	| classToVerify findings |
 
-	classToVerify := self newFixtureInstanceVariableNames: '' classVariableNames: 'UnusedClassVariable'.
-	findings := ClassVariablesReadAndWrittenHeuristic new findingsFor: classToVerify.
-	self assert: (findings anySatisfy: [ :finding | finding editKind = #variable and: [ finding editTarget value = 'UnusedClassVariable' ] ])! !
+	classToVerify := self
+		newFixtureInstanceVariableNames: ''
+		classVariableNames: 'UnusedClassVariable'.
+	findings := ClassVariablesReadAndWrittenHeuristic new
+		findingsFor: classToVerify.
+	self assert: (findings anySatisfy: [ :finding |
+		finding editKind = #variable
+			and: [ finding editTarget value = 'UnusedClassVariable' ] ])! !
 
-!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 8/Sep/2026, 2:36:27 pm (UTC)'!
+!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 9/Sep/2026, 3:08:08 am (UTC)'!
 testExplicitClassReferenceIsFlaggedForSelfOrSelfClass
 
 	| classToVerify findings |
 
-	classToVerify := self newFixtureInstanceVariableNames: '' classVariableNames: ''.
-	classToVerify compile: 'makeAnother ^SMMentorFixture new' classified: 'instance creation'.
+	classToVerify := self newFixture.
+	classToVerify
+		compile: 'makeAnother ^SMMentorFixture new'
+		classified: 'instance creation'.
 	classToVerify compile: 'harmless ^42' classified: 'accessing'.
-	classToVerify class compile: 'create ^SMMentorFixture new' classified: 'instance creation'.
-	findings := SelfOverExplicitClassReferenceHeuristic new findingsFor: classToVerify.
-	self assert: (findings anySatisfy: [ :finding | (self includesSubstring: '>>makeAnother' in: finding title) and: [ self includesSubstring: '(may be self class)' in: finding title ] ]).
-	self assert: (findings anySatisfy: [ :finding | (self includesSubstring: 'class>>create' in: finding title) and: [ self includesSubstring: '(may be self)' in: finding title ] ]).
-	self deny: (findings anySatisfy: [ :finding | self includesSubstring: '>>harmless' in: finding title ])! !
+	classToVerify class
+		compile: 'create ^SMMentorFixture new'
+		classified: 'instance creation'.
+	findings := SelfOverExplicitClassReferenceHeuristic new
+		findingsFor: classToVerify.
+	self assert: (findings anySatisfy: [ :finding |
+		(finding title includesSubString: '>>makeAnother')
+			and: [ finding title includesSubString: '(may be self class)' ] ]).
+	self assert: (findings anySatisfy: [ :finding |
+		(finding title includesSubString: 'class>>create')
+			and: [ finding title includesSubString: '(may be self)' ] ]).
+	self deny: (findings anySatisfy: [ :finding |
+		finding title includesSubString: '>>harmless' ])! !
 
-!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 8/Sep/2026, 2:36:34 pm (UTC)'!
-testIdentityComparisonIsFlagged
-
-	| classToVerify findings |
-
-	classToVerify := self newFixtureInstanceVariableNames: '' classVariableNames: ''.
-	classToVerify compile: 'sameAs: anObject ^self == anObject' classified: 'comparing'.
-	classToVerify compile: 'equalTo: anObject ^self = anObject' classified: 'comparing'.
-	findings := EqualityOverIdentityHeuristic new findingsFor: classToVerify.
-	self assert: (findings anySatisfy: [ :finding | self includesSubstring: '>>sameAs:' in: finding title ]).
-	self deny: (findings anySatisfy: [ :finding | self includesSubstring: '>>equalTo:' in: finding title ])! !
-
-!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 8/Sep/2026, 2:37:18 pm (UTC)'!
+!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 9/Sep/2026, 2:34:08 am (UTC)'!
 testInitializeWithNonAssignmentIsFlagged
 
 	| classToVerify findings |
 
-	classToVerify := self newFixtureInstanceVariableNames: 'value' classVariableNames: ''.
+	classToVerify := self newFixtureWithInstanceVariableNames: 'value'.
 	classToVerify compile: 'initializeValue: aValue
 	value := aValue.
 	self recompute' classified: 'initialization'.
 	findings := OneInitializeMessageHeuristic new findingsFor: classToVerify.
-	self assert: (findings anySatisfy: [ :finding | self includesSubstring: 'does more than assignments' in: finding title ])! !
+	self assert: (findings anySatisfy: [ :finding |
+		finding title includesSubString: 'does more than assignments' ])! !
 
-!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 8/Sep/2026, 2:35:07 pm (UTC)'!
+!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 9/Sep/2026, 2:43:52 am (UTC)'!
 testInstanceVariableMustBeReadAndWritten
 
 	| classToVerify findings |
 
-	classToVerify := self newFixtureInstanceVariableNames: 'unusedInstanceVariable' classVariableNames: ''.
-	findings := InstanceVariablesReadAndWrittenHeuristic new findingsFor: classToVerify.
-	self assert: (findings anySatisfy: [ :finding | finding editKind = #variable and: [ finding editTarget value = 'unusedInstanceVariable' ] ])! !
+	classToVerify := self newFixtureWithInstanceVariableNames: 'unusedInstanceVariable'.
+	findings := InstanceVariablesReadAndWrittenHeuristic new
+		findingsFor: classToVerify.
+	self assert: (findings anySatisfy: [ :finding |
+		finding editKind = #variable
+			and: [ finding editTarget value = 'unusedInstanceVariable' ] ])! !
 
-!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 8/Sep/2026, 2:35:15 pm (UTC)'!
+!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 9/Sep/2026, 2:43:55 am (UTC)'!
 testInstanceVariableReadAndWrittenOnlyInSubclassIsNotFlagged
 
 	| superclassToVerify subclass findings |
 
-	superclassToVerify := self newFixtureInstanceVariableNames: 'stateUsedInSubclass' classVariableNames: ''.
-	subclass := self newFixtureClassNamed: #SMMentorFixtureSubclass superclass: superclassToVerify.
+	superclassToVerify := self newFixtureWithInstanceVariableNames: 'stateUsedInSubclass'.
+	subclass := self
+		newFixtureClassNamed: #SMMentorFixtureSubclass
+		superclass: superclassToVerify.
 	subclass compile: 'storeState stateUsedInSubclass := 42' classified: 'accessing'.
 	subclass compile: 'state ^stateUsedInSubclass' classified: 'accessing'.
-	findings := InstanceVariablesReadAndWrittenHeuristic new findingsFor: superclassToVerify.
-	self deny: (findings anySatisfy: [ :finding | finding editTarget value = 'stateUsedInSubclass' ])! !
+	findings := InstanceVariablesReadAndWrittenHeuristic new
+		findingsFor: superclassToVerify.
+	self deny: (findings anySatisfy: [ :finding |
+		finding editTarget value = 'stateUsedInSubclass' ])! !
 
-!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 8/Sep/2026, 2:36:00 pm (UTC)'!
+!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 9/Sep/2026, 2:34:16 am (UTC)'!
 testMethodCategoryMustNotBeEmpty
 
 	| classToVerify findings |
 
-	classToVerify := self newFixtureInstanceVariableNames: '' classVariableNames: ''.
+	classToVerify := self newFixture.
 	classToVerify organization addCategory: 'unused protocol'.
 	findings := NoEmptyMethodCategoriesHeuristic new findingsFor: classToVerify.
-	self assert: (findings anySatisfy: [ :finding | self includesSubstring: 'unused protocol' in: finding title ])! !
+	self assert: (findings anySatisfy: [ :finding |
+		finding title includesSubString: 'unused protocol' ])! !
 
-!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 8/Sep/2026, 2:35:44 pm (UTC)'!
+!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 9/Sep/2026, 2:34:18 am (UTC)'!
 testMethodMustBeCategorized
 
 	| classToVerify findings |
 
-	classToVerify := self newFixtureInstanceVariableNames: '' classVariableNames: ''.
+	classToVerify := self newFixture.
 	classToVerify compile: 'looseMethod ^1' classified: 'as yet unclassified'.
 	findings := MethodsAreCategorizedHeuristic new findingsFor: classToVerify.
-	self assert: (findings anySatisfy: [ :finding | finding editTarget value asString = 'looseMethod' ])! !
+	self assert: (findings anySatisfy: [ :finding |
+		finding editTarget value asString = 'looseMethod' ])! !
 
-!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 8/Sep/2026, 2:35:29 pm (UTC)'!
+!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 9/Sep/2026, 2:34:21 am (UTC)'!
 testMethodMustHaveSenders
 
 	| classToVerify findings |
 
-	classToVerify := self newFixtureInstanceVariableNames: '' classVariableNames: ''.
+	classToVerify := self newFixture.
 	classToVerify compile: 'orphanMethodXyz ^42' classified: 'accessing'.
 	findings := MethodsHaveSendersHeuristic new findingsFor: classToVerify.
-	"Compare by asString, not the #orphanMethodXyz literal: a Symbol literal here would itself
-	count as a sender and defeat the heuristic."
-	self assert: (findings anySatisfy: [ :finding | finding editTarget value asString = 'orphanMethodXyz' ])! !
+	self assert: (findings anySatisfy: [ :finding |
+		finding editTarget value asString = 'orphanMethodXyz' ])! !
 
-!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 8/Sep/2026, 2:37:01 pm (UTC)'!
+!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 9/Sep/2026, 2:34:24 am (UTC)'!
+testMethodReviewListsAllHeuristicsPassedWhenNoneFails
+
+	| classToVerify roots |
+
+	classToVerify := self newFixture.
+	classToVerify compile: 'answer ^42' classified: 'accessing'.
+	roots := (SmalltalkMentorMethodReview
+		on: classToVerify
+		selector: #answer
+		mentor: SmalltalkMentor new) buildRootNodes.
+	self assert: roots size equals: 2.
+	self assert: roots first kind equals: #allPassed.
+	self assert: (roots first payload includesSubString: 'No extra parenthesis')! !
+
+!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 9/Sep/2026, 2:34:27 am (UTC)'!
+testMethodReviewListsOnlyFailingHeuristicsThenTheLLMReview
+
+	| classToVerify roots |
+
+	classToVerify := self newFixture.
+	classToVerify compile: 'sameAs: anObject ^self == anObject' classified: 'comparing'.
+	roots := (SmalltalkMentorMethodReview
+		on: classToVerify
+		selector: #sameAs:
+		mentor: SmalltalkMentor new) buildRootNodes.
+	self assert: roots size equals: 2.
+	self assert: (roots first asString includesSubString: 'Prefer = over ==').
+	self assert: roots last kind equals: #method! !
+
+!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 9/Sep/2026, 2:34:30 am (UTC)'!
 testMultipleInitializeMessagesAreFlagged
 
 	| classToVerify findings |
 
-	classToVerify := self newFixtureInstanceVariableNames: 'value' classVariableNames: ''.
+	classToVerify := self newFixtureWithInstanceVariableNames: 'value'.
 	classToVerify compile: 'initialize value := 0' classified: 'initialization'.
 	classToVerify compile: 'initializeValue: aValue value := aValue' classified: 'initialization'.
 	findings := OneInitializeMessageHeuristic new findingsFor: classToVerify.
-	self assert: (findings anySatisfy: [ :finding | (self includesSubstring: 'Multiple initialize' in: finding title) and: [ self includesSubstring: '>>initialize' in: finding title ] ]).
-	self assert: (findings anySatisfy: [ :finding | (self includesSubstring: 'Multiple initialize' in: finding title) and: [ self includesSubstring: '>>initializeValue:' in: finding title ] ])! !
+	self assert: (findings anySatisfy: [ :finding |
+		(finding title includesSubString: 'multiple initialize messages')
+			and: [ finding title includesSubString: '>>initialize' ] ]).
+	self assert: (findings anySatisfy: [ :finding |
+		(finding title includesSubString: 'multiple initialize messages')
+			and: [ finding title includesSubString: '>>initializeValue:' ] ])! !
 
-!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 8/Sep/2026, 2:36:44 pm (UTC)'!
+!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 9/Sep/2026, 2:34:32 am (UTC)'!
 testMultipleInstanceCreationFunnelsAreFlagged
 
 	| classToVerify findings |
 
-	classToVerify := self newFixtureInstanceVariableNames: 'value' classVariableNames: ''.
-	classToVerify class compile: 'withValue: aValue ^self new initializeValue: aValue' classified: 'instance creation'.
-	classToVerify class compile: 'empty ^self new initializeValue: 0' classified: 'instance creation'.
+	classToVerify := self newFixtureWithInstanceVariableNames: 'value'.
+	classToVerify class
+		compile: 'withValue: aValue ^self new initializeValue: aValue'
+		classified: 'instance creation'.
+	classToVerify class
+		compile: 'empty ^self new initializeValue: 0'
+		classified: 'instance creation'.
 	classToVerify class compile: 'sample ^OrderedCollection new' classified: 'instance creation'.
 	findings := InstanceCreationFunnelHeuristic new findingsFor: classToVerify.
-	self assert: (findings anySatisfy: [ :finding | self includesSubstring: '>>withValue:' in: finding title ]).
-	self assert: (findings anySatisfy: [ :finding | self includesSubstring: '>>empty' in: finding title ]).
-	self deny: (findings anySatisfy: [ :finding | self includesSubstring: '>>sample' in: finding title ])! !
+	self assert: (findings anySatisfy: [ :finding |
+		finding title includesSubString: '>>withValue:' ]).
+	self assert: (findings anySatisfy: [ :finding |
+		finding title includesSubString: '>>empty' ]).
+	self deny: (findings anySatisfy: [ :finding |
+		finding title includesSubString: '>>sample' ])! !
 
-!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 8/Sep/2026, 2:36:09 pm (UTC)'!
+!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 9/Sep/2026, 2:34:35 am (UTC)'!
 testNameRepeatingClassNameWordIsFlagged
 
 	| classToVerify findings |
 
-	classToVerify := self newFixtureInstanceVariableNames: 'fixtureName balance' classVariableNames: ''.
+	classToVerify := self newFixtureWithInstanceVariableNames: 'fixtureName balance'.
 	classToVerify compile: 'fixtureBalance ^balance' classified: 'accessing'.
 	classToVerify compile: 'balance ^balance' classified: 'accessing'.
-	findings := NoClassNamePrefixHeuristic new findingsFor: classToVerify.
-	self assert: (findings anySatisfy: [ :finding | self includesSubstring: 'fixtureName' in: finding title ]).
-	self assert: (findings anySatisfy: [ :finding | self includesSubstring: 'fixtureBalance' in: finding title ]).
-	self deny: (findings anySatisfy: [ :finding | self includesSubstring: ' - balance' in: finding title ]).
-	self deny: (findings anySatisfy: [ :finding | self includesSubstring: '>>balance' in: finding title ])! !
+	findings := RepeatedClassWordHeuristic new findingsFor: classToVerify.
+	self assert: (findings anySatisfy: [ :finding |
+		finding title includesSubString: 'fixtureName' ]).
+	self assert: (findings anySatisfy: [ :finding |
+		finding title includesSubString: 'fixtureBalance' ]).
+	self deny: (findings anySatisfy: [ :finding |
+		finding title includesSubString: ' - balance' ]).
+	self deny: (findings anySatisfy: [ :finding |
+		finding title includesSubString: '>>balance' ])! !
 
-!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 8/Sep/2026, 2:35:36 pm (UTC)'!
+!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 9/Sep/2026, 2:43:57 am (UTC)'!
+testOverridesDoNotRepeatTheClassName
+
+	| rootClass classToVerify findings |
+
+	rootClass := self newFixtureClassNamed: #SMFixtureRoot superclass: Object.
+	rootClass compile: 'fixtureLabel ^1' classified: 'accessing'.
+	classToVerify := self
+		newFixtureClassNamed: #SMMentorFixtureChild
+		superclass: rootClass.
+	classToVerify compile: 'fixtureLabel ^2' classified: 'accessing'.
+	findings := RepeatedClassWordHeuristic new findingsFor: classToVerify.
+	self deny: (findings anySatisfy: [ :finding |
+		finding title includesSubString: 'fixtureLabel' ])! !
+
+!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 9/Sep/2026, 2:34:37 am (UTC)'!
 testSentMessageMustHaveImplementer
 
 	| classToVerify findings |
 
-	classToVerify := self newFixtureInstanceVariableNames: '' classVariableNames: ''.
+	classToVerify := self newFixture.
 	classToVerify compile: 'callsMissing ^self zzzNoSuchSelectorXyz' classified: 'accessing'.
 	findings := MessagesHaveImplementersHeuristic new findingsFor: classToVerify.
-	self assert: (findings anySatisfy: [ :finding | self includesSubstring: 'zzzNoSuchSelectorXyz' in: finding title ])! !
+	self assert: (findings anySatisfy: [ :finding |
+		finding title includesSubString: 'zzzNoSuchSelectorXyz' ])! !
 
-!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 8/Sep/2026, 2:37:37 pm (UTC)'!
+!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 9/Sep/2026, 3:08:10 am (UTC)'!
 testSharedLeafSubclassProtocolMustBeInRoot
 
 	| rootClass firstLeaf secondLeaf findings |
 
 	rootClass := self newFixtureClassNamed: #SMFixtureRoot superclass: Object.
-	firstLeaf := self newFixtureClassNamed: #SMFixtureFirstLeaf superclass: rootClass.
-	secondLeaf := self newFixtureClassNamed: #SMFixtureSecondLeaf superclass: rootClass.
+	firstLeaf := self
+		newFixtureClassNamed: #SMFixtureFirstLeaf
+		superclass: rootClass.
+	secondLeaf := self
+		newFixtureClassNamed: #SMFixtureSecondLeaf
+		superclass: rootClass.
 	firstLeaf compile: 'sharedOperation ^1' classified: 'operations'.
 	secondLeaf compile: 'sharedOperation ^2' classified: 'operations'.
 	firstLeaf compile: 'onlyInOneLeaf ^0' classified: 'operations'.
 	findings := SharedLeafSubclassProtocolHeuristic new findingsFor: rootClass.
-	"answered by every leaf but missing in the root -> flagged"
-	self assert: (findings anySatisfy: [ :finding | self includesSubstring: 'sharedOperation' in: finding title ]).
-	"answered by only one leaf -> not flagged"
-	self deny: (findings anySatisfy: [ :finding | self includesSubstring: 'onlyInOneLeaf' in: finding title ]).
-	"once the root declares it (even as subclassResponsibility) it is no longer flagged"
-	rootClass compile: 'sharedOperation ^self subclassResponsibility' classified: 'operations'.
+	self assert: (findings anySatisfy: [ :finding |
+		finding title includesSubString: 'sharedOperation' ]).
+	self deny: (findings anySatisfy: [ :finding |
+		finding title includesSubString: 'onlyInOneLeaf' ]).
+	rootClass
+		compile: 'sharedOperation ^self subclassResponsibility'
+		classified: 'operations'.
 	findings := SharedLeafSubclassProtocolHeuristic new findingsFor: rootClass.
-	self deny: (findings anySatisfy: [ :finding | self includesSubstring: 'sharedOperation' in: finding title ])! !
+	self deny: (findings anySatisfy: [ :finding |
+		finding title includesSubString: 'sharedOperation' ])! !
 
-!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 8/Sep/2026, 2:37:11 pm (UTC)'!
+!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 9/Sep/2026, 2:34:52 am (UTC)'!
 testSingleAssignmentOnlyInitializeIsNotFlagged
 
 	| classToVerify findings |
 
-	classToVerify := self newFixtureInstanceVariableNames: 'value' classVariableNames: ''.
+	classToVerify := self newFixtureWithInstanceVariableNames: 'value'.
 	classToVerify compile: 'initializeValue: aValue value := aValue' classified: 'initialization'.
 	findings := OneInitializeMessageHeuristic new findingsFor: classToVerify.
 	self assert: findings isEmpty! !
 
-!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 8/Sep/2026, 2:36:53 pm (UTC)'!
+!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 9/Sep/2026, 2:34:55 am (UTC)'!
 testSingleInstanceCreationFunnelIsNotFlagged
 
 	| classToVerify findings |
 
-	classToVerify := self newFixtureInstanceVariableNames: 'value' classVariableNames: ''.
-	classToVerify class compile: 'withValue: aValue ^self new initializeValue: aValue' classified: 'instance creation'.
+	classToVerify := self newFixtureWithInstanceVariableNames: 'value'.
+	classToVerify class
+		compile: 'withValue: aValue ^self new initializeValue: aValue'
+		classified: 'instance creation'.
 	classToVerify class compile: 'empty ^self withValue: 0' classified: 'instance creation'.
 	findings := InstanceCreationFunnelHeuristic new findingsFor: classToVerify.
 	self assert: findings isEmpty! !
 
-!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 8/Sep/2026, 2:35:54 pm (UTC)'!
+!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 9/Sep/2026, 6:59:03 am (UTC)'!
+testTestCaseIsNotFlaggedAsUnreferenced
+
+	| findings |
+
+	findings := ClassIsReferencedHeuristic new
+		findingsFor: self newTestCaseFixture.
+	self assert: findings isEmpty! !
+
+!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 9/Sep/2026, 2:44:10 am (UTC)'!
+testTestSelectorsDoNotRepeatTheClassName
+
+	| classToVerify findings |
+
+	classToVerify := self newTestCaseFixture.
+	classToVerify compile: 'testSomething ^1' classified: 'tests'.
+	findings := RepeatedClassWordHeuristic new findingsFor: classToVerify.
+	self deny: (findings anySatisfy: [ :finding |
+		finding title includesSubString: 'testSomething' ])! !
+
+!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 9/Sep/2026, 2:34:48 am (UTC)'!
 testUnusedAndWriteOnlyTemporariesAreFlaggedButUsedAndCapturedAreNot
 
 	| classToVerify findings |
 
-	classToVerify := self newFixtureInstanceVariableNames: '' classVariableNames: ''.
+	classToVerify := self newFixture.
 	classToVerify compile: 'withTemporaries
 	| usedTemporary reallyUnused writeOnly |
 	usedTemporary := 1.
@@ -309,114 +436,75 @@ testUnusedAndWriteOnlyTemporariesAreFlaggedButUsedAndCapturedAreNot
 	[ shared := 5 ] value.
 	^shared' classified: 'accessing'.
 	findings := NoUnusedTemporariesHeuristic new findingsFor: classToVerify.
-	self assert: 2 equals: findings size.
-	self assert: (findings anySatisfy: [ :finding | self includesSubstring: 'reallyUnused' in: finding title ]).
-	self assert: (findings anySatisfy: [ :finding | self includesSubstring: 'writeOnly' in: finding title ]).
-	self deny: (findings anySatisfy: [ :finding | self includesSubstring: 'usedTemporary' in: finding title ]).
-	self deny: (findings anySatisfy: [ :finding | self includesSubstring: 'shared' in: finding title ])! !
+	self assert: findings size equals: 2.
+	self assert: (findings anySatisfy: [ :finding |
+		finding title includesSubString: 'reallyUnused' ]).
+	self assert: (findings anySatisfy: [ :finding |
+		finding title includesSubString: 'writeOnly' ]).
+	self deny: (findings anySatisfy: [ :finding |
+		finding title includesSubString: 'usedTemporary' ]).
+	self deny: (findings anySatisfy: [ :finding |
+		finding title includesSubString: 'shared' ])! !
 
-!SmalltalkMentorHeuristicTest methodsFor: 'support' stamp: 'HAW 19/Aug/2026, 2:36:18 pm (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'support' stamp: 'HAW 9/Sep/2026, 11:41:58 am (UTC)'!
 assertHeuristic: heuristicId caughtIn: methodSource fix: aFixBlock
 
-	"Best-of-3 (lenient): up to 3 Opus reviews of methodSource. A run counts if the suggested
-	code applies the heuristic (aFixBlock answers true for the suggestedSource) OR the rationale
-	cites the heuristic id. Passes if ANY of the 3 runs counts - robust to LLM non-determinism.
-	Stops early on the first success. A heuristic in a test-only category (## Testing) is only
-	sent for a test method, so its sample is reviewed as one."
-
-	| last caught reviewAsTestMethod |
+	| reviewAsTestMethod lastProposal caught |
 
 	reviewAsTestMethod := mentor isTestOnlyHeuristic: heuristicId.
 	caught := false.
-	1 to: 3 do: [ :attemptNumber |
-		caught ifFalse: [ | proposal suggested rationale |
-			proposal := self reviewOf: methodSource asTestMethod: reviewAsTestMethod.
-			last := proposal.
-			suggested := proposal at: 'suggestedSource' ifAbsent: [ '' ].
-			rationale := proposal at: 'rationale' ifAbsent: [ '' ].
-			caught := (aFixBlock value: suggested) or: [ self does: rationale include: heuristicId ] ] ].
-	self assert: caught description:
-		'Heuristic [', heuristicId, '] not caught in 3 Opus runs.', String newLineString,
-		'Last suggestion: ', (last ifNil: [ '' ] ifNotNil: [ :proposal | proposal at: 'suggestedSource' ifAbsent: [ '' ] ]), String newLineString,
-		'Last rationale: ', (last ifNil: [ '' ] ifNotNil: [ :proposal | proposal at: 'rationale' ifAbsent: [ '' ] ])! !
+	1 to: 3 do: [ :attempt |
+		caught ifFalse: [
+			lastProposal := self
+				reviewOf: methodSource
+				asTestMethod: reviewAsTestMethod.
+			caught := self proposal: lastProposal satisfies: aFixBlock orCites: heuristicId ] ].
+	self
+		assert: caught
+		description: (self failureDescriptionFor: heuristicId proposal: lastProposal)! !
 
-!SmalltalkMentorHeuristicTest methodsFor: 'support' stamp: 'HAW 18/Aug/2026, 6:56:15 pm (UTC)'!
-does: aString include: aSubstring
+!SmalltalkMentorHeuristicTest methodsFor: 'support' stamp: 'HAW 9/Sep/2026, 11:42:04 am (UTC)'!
+failureDescriptionFor: aHeuristicId proposal: aProposal
 
-	"Case-insensitive substring test."
+	^'Heuristic [', aHeuristicId, '] not caught in 3 Opus runs.', String newLineString,
+		'Last suggestion: ', (mentor suggestedSourceOf: aProposal), String newLineString,
+		'Last rationale: ', (mentor rationaleOf: aProposal)! !
 
-	| lowercaseString lowercaseSubstring |
+!SmalltalkMentorHeuristicTest methodsFor: 'support' stamp: 'HAW 9/Sep/2026, 11:42:00 am (UTC)'!
+proposal: aProposal satisfies: aFixBlock orCites: aHeuristicId
 
-	lowercaseString := aString asString asLowercase.
-	lowercaseSubstring := aSubstring asString asLowercase.
-	lowercaseSubstring isEmpty ifTrue: [ ^true ].
-	lowercaseSubstring size > lowercaseString size ifTrue: [ ^false ].
-	1 to: lowercaseString size - lowercaseSubstring size + 1 do: [ :scanIndex |
-		(lowercaseString copyFrom: scanIndex to: scanIndex + lowercaseSubstring size - 1) = lowercaseSubstring ifTrue: [ ^true ] ].
-	^false! !
+	^(aFixBlock value: (mentor suggestedSourceOf: aProposal))
+		or: [ (mentor rationaleOf: aProposal) includesCaseInsensitive: aHeuristicId ]! !
 
-!SmalltalkMentorHeuristicTest methodsFor: 'support' stamp: 'HAW 18/Aug/2026, 6:56:15 pm (UTC)'!
-firstIndexOf: aSubstring in: aString
-
-	"First 1-based index of aSubstring in aString (case-insensitive), or 0 if absent."
-
-	| lowercaseString lowercaseSubstring |
-
-	lowercaseString := aString asString asLowercase.
-	lowercaseSubstring := aSubstring asString asLowercase.
-	(lowercaseSubstring isEmpty or: [ lowercaseSubstring size > lowercaseString size ]) ifTrue: [ ^0 ].
-	1 to: lowercaseString size - lowercaseSubstring size + 1 do: [ :scanIndex |
-		(lowercaseString copyFrom: scanIndex to: scanIndex + lowercaseSubstring size - 1) = lowercaseSubstring ifTrue: [ ^scanIndex ] ].
-	^0! !
-
-!SmalltalkMentorHeuristicTest methodsFor: 'support' stamp: 'HAW 18/Aug/2026, 6:56:15 pm (UTC)'!
-firstLineOf: aString
-
-	"The first non-blank line of aString, trimmed - useful for reading a suggested method's
-	selector line."
-
-	| lines |
-
-	lines := aString lines select: [ :l | l withBlanksTrimmed notEmpty ].
-	^lines isEmpty ifTrue: [ '' ] ifFalse: [ lines first withBlanksTrimmed ]! !
-
-!SmalltalkMentorHeuristicTest methodsFor: 'support' stamp: 'HAW 18/Aug/2026, 6:56:15 pm (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'support' stamp: 'HAW 9/Sep/2026, 2:01:37 am (UTC)'!
 provider
-
-	"These tests pin Claude Opus, independent of the globally selected provider."
 
 	^AnthropicProvider new model: 'claude-opus-4-8'; yourself! !
 
-!SmalltalkMentorHeuristicTest methodsFor: 'support' stamp: 'HAW 19/Aug/2026, 2:36:08 pm (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'support' stamp: 'HAW 9/Sep/2026, 11:41:54 am (UTC)'!
 reviewOf: methodSource asTestMethod: isTestMethod
 
-	"Ask Claude Opus to review methodSource against the applicable heuristics (treating it as a
-	test method when isTestMethod, so the test-only heuristics are actually sent), and answer
-	the parsed {canImprove, suggestedSource, rationale} proposal. Blocks on the network call."
+	| prompt answer |
 
-	| answer |
-
-	answer := self provider completionForMessages: {
-		mentor userMessage: (mentor promptFor: methodSource isTestMethod: isTestMethod) }.
+	prompt := mentor promptFor: methodSource isTestMethod: isTestMethod.
+	answer := self provider completionForMessages: { mentor userMessage: prompt }.
 	^mentor parseProposalFrom: answer! !
 
-!SmalltalkMentorHeuristicTest methodsFor: 'running' stamp: 'HAW 18/Aug/2026, 6:56:15 pm (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'running' stamp: 'HAW 9/Sep/2026, 2:01:37 am (UTC)'!
 setUp
-
-	"A fresh mentor per test, used to build the prompt and parse replies."
 
 	mentor := SmalltalkMentor new! !
 
-!SmalltalkMentorHeuristicTest methodsFor: 'object design heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'object design heuristics tests' stamp: 'HAW 9/Sep/2026, 2:33:00 am (UTC)'!
 testAvoidBreakingEncapsulation
 
 	self
 		assertHeuristic: 'avoid-breaking-encapsulation'
 		caughtIn: 'canWithdraw: anAmount from: anAccount
 	^anAccount balance >= anAmount'
-		fix: [ :s | false ]! !
+		fix: [ :suggestedSource | false ]! !
 
-!SmalltalkMentorHeuristicTest methodsFor: 'object design heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'object design heuristics tests' stamp: 'HAW 9/Sep/2026, 2:33:03 am (UTC)'!
 testAvoidNil
 
 	self
@@ -424,18 +512,18 @@ testAvoidNil
 		caughtIn: 'ownerName
 	owner isNil ifTrue: [ ^nil ].
 	^owner name'
-		fix: [ :s | false ]! !
+		fix: [ :suggestedSource | false ]! !
 
-!SmalltalkMentorHeuristicTest methodsFor: 'object design heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'object design heuristics tests' stamp: 'HAW 9/Sep/2026, 2:32:17 am (UTC)'!
 testAvoidSettersUseSyncWith
 
 	self
 		assertHeuristic: 'avoid-setters-use-syncWith'
 		caughtIn: 'name: aName
 	name := aName'
-		fix: [ :s | self does: s include: 'syncWith:' ]! !
+		fix: [ :suggestedSource | suggestedSource includesCaseInsensitive: 'syncWith:' ]! !
 
-!SmalltalkMentorHeuristicTest methodsFor: 'object design heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'object design heuristics tests' stamp: 'HAW 9/Sep/2026, 2:33:05 am (UTC)'!
 testCompleteObjects
 
 	self
@@ -445,9 +533,9 @@ testCompleteObjects
 	account := Account new.
 	account balance: 0.
 	^account'
-		fix: [ :s | false ]! !
+		fix: [ :suggestedSource | false ]! !
 
-!SmalltalkMentorHeuristicTest methodsFor: 'object design heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'object design heuristics tests' stamp: 'HAW 9/Sep/2026, 2:33:08 am (UTC)'!
 testErrorMessagesAsClassMethods
 
 	self
@@ -455,18 +543,18 @@ testErrorMessagesAsClassMethods
 		caughtIn: 'withdraw: anAmount
 	anAmount > balance ifTrue: [ ^self error: ''Insufficient funds'' ].
 	balance := balance - anAmount'
-		fix: [ :s | false ]! !
+		fix: [ :suggestedSource | false ]! !
 
-!SmalltalkMentorHeuristicTest methodsFor: 'object design heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'object design heuristics tests' stamp: 'HAW 9/Sep/2026, 2:32:20 am (UTC)'!
 testGetterReturnsCopy
 
 	self
 		assertHeuristic: 'getter-returns-copy'
 		caughtIn: 'movements
 	^movements'
-		fix: [ :s | self does: s include: 'copy' ]! !
+		fix: [ :suggestedSource | suggestedSource includesCaseInsensitive: 'copy' ]! !
 
-!SmalltalkMentorHeuristicTest methodsFor: 'object design heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'object design heuristics tests' stamp: 'HAW 9/Sep/2026, 2:33:10 am (UTC)'!
 testInstanceCreationFormat
 
 	self
@@ -476,7 +564,7 @@ testInstanceCreationFormat
 	account := self new.
 	account setOwner: anOwner balance: aBalance.
 	^account'
-		fix: [ :s | false ]! !
+		fix: [ :suggestedSource | false ]! !
 
 !SmalltalkMentorHeuristicTest methodsFor: 'object design heuristics tests' stamp: 'HAW 19/Aug/2026, 11:24:57 am (UTC)'!
 testMethodComplexity
@@ -536,43 +624,43 @@ testNoTypePrecondition
 	^self new initializeWithBalance: aBalance'
 		fix: [ :suggestedSource | false ]! !
 
-!SmalltalkMentorHeuristicTest methodsFor: 'object design heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'object design heuristics tests' stamp: 'HAW 9/Sep/2026, 2:33:13 am (UTC)'!
 testPreferImmutable
 
 	self
 		assertHeuristic: 'prefer-immutable'
 		caughtIn: 'balance: aBalance
 	balance := aBalance'
-		fix: [ :s | false ]! !
+		fix: [ :suggestedSource | false ]! !
 
-!SmalltalkMentorHeuristicTest methodsFor: 'object design heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'object design heuristics tests' stamp: 'HAW 9/Sep/2026, 2:33:15 am (UTC)'!
 testReplaceIfWithPolymorphism
 
 	self
 		assertHeuristic: 'replace-if-with-polymorphism'
 		caughtIn: 'describe
 	type = #savings ifTrue: [ ^''Savings account'' ] ifFalse: [ ^''Checking account'' ]'
-		fix: [ :s | false ]! !
+		fix: [ :suggestedSource | false ]! !
 
-!SmalltalkMentorHeuristicTest methodsFor: 'object design heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'object design heuristics tests' stamp: 'HAW 9/Sep/2026, 2:32:23 am (UTC)'!
 testValidObjects
 
 	self
 		assertHeuristic: 'valid-objects'
 		caughtIn: 'withBalance: aBalance
 	^self new initializeWithBalance: aBalance'
-		fix: [ :s | self does: s include: 'assert' ]! !
+		fix: [ :suggestedSource | suggestedSource includesCaseInsensitive: 'assert' ]! !
 
-!SmalltalkMentorHeuristicTest methodsFor: 'testing heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'testing heuristics tests' stamp: 'HAW 9/Sep/2026, 2:32:25 am (UTC)'!
 testDenyOverAssertNot
 
 	self
 		assertHeuristic: 'deny-over-assert-not'
 		caughtIn: 'testNewAccountHasNoMovements
 	self assert: account hasMovements not'
-		fix: [ :s | self does: s include: 'deny:' ]! !
+		fix: [ :suggestedSource | suggestedSource includesCaseInsensitive: 'deny:' ]! !
 
-!SmalltalkMentorHeuristicTest methodsFor: 'testing heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'testing heuristics tests' stamp: 'HAW 9/Sep/2026, 2:33:18 am (UTC)'!
 testExceptionBlockShouldNotHaveAssignment
 
 	self
@@ -581,18 +669,18 @@ testExceptionBlockShouldNotHaveAssignment
 	| result |
 	result := [ account withdraw: 1000 ] on: Error do: [ :e | e ].
 	self assert: result isNil'
-		fix: [ :s | false ]! !
+		fix: [ :suggestedSource | false ]! !
 
-!SmalltalkMentorHeuristicTest methodsFor: 'testing heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'testing heuristics tests' stamp: 'HAW 9/Sep/2026, 2:33:20 am (UTC)'!
 testExceptionBlockSingleSend
 
 	self
 		assertHeuristic: 'exception-block-single-send'
 		caughtIn: 'testWithdrawMoreThanBalance
 	self should: [ | amount | amount := account balance + 1. account withdraw: amount ] raise: Error withMessageText: ''Insufficient funds'''
-		fix: [ :s | false ]! !
+		fix: [ :suggestedSource | false ]! !
 
-!SmalltalkMentorHeuristicTest methodsFor: 'testing heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'testing heuristics tests' stamp: 'HAW 9/Sep/2026, 2:33:22 am (UTC)'!
 testOneThingPerTest
 
 	self
@@ -604,9 +692,9 @@ testOneThingPerTest
 	account deposit: 50.
 	self assert: account balance equals: 150.
 	self deny: account isBlocked'
-		fix: [ :s | false ]! !
+		fix: [ :suggestedSource | false ]! !
 
-!SmalltalkMentorHeuristicTest methodsFor: 'testing heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'testing heuristics tests' stamp: 'HAW 9/Sep/2026, 2:32:55 am (UTC)'!
 testTestNPrefixPreserved
 
 	self
@@ -615,9 +703,11 @@ testTestNPrefixPreserved
 	| account |
 	account := Account withBalance: 100.
 	self assert: account balance equals: 100'
-		fix: [ :s | ((self firstLineOf: s) beginsWith: 'test1') and: [ (self firstLineOf: s) size > 5 ] ]! !
+		fix: [ :suggestedSource |
+			(suggestedSource firstNonBlankLine beginsWith: 'test1')
+				and: [ suggestedSource firstNonBlankLine size > 5 ] ]! !
 
-!SmalltalkMentorHeuristicTest methodsFor: 'testing heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'testing heuristics tests' stamp: 'HAW 9/Sep/2026, 2:33:29 am (UTC)'!
 testTestNameConvention
 
 	self
@@ -626,41 +716,37 @@ testTestNameConvention
 	| account |
 	account := Account withBalance: 100.
 	self assert: account balance equals: 100'
-		fix: [ :s | false ]! !
+		fix: [ :suggestedSource | false ]! !
 
-!SmalltalkMentorHeuristicTest methodsFor: 'testing heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'testing heuristics tests' stamp: 'HAW 9/Sep/2026, 2:32:27 am (UTC)'!
 testTestingForEquality
 
 	self
 		assertHeuristic: 'testing-for-equality'
 		caughtIn: 'testAddition
 	self assert: 3 = (1 + 2)'
-		fix: [ :s | self does: s include: 'equals:' ]! !
+		fix: [ :suggestedSource | suggestedSource includesCaseInsensitive: 'equals:' ]! !
 
-!SmalltalkMentorHeuristicTest methodsFor: 'testing heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'testing heuristics tests' stamp: 'HAW 9/Sep/2026, 2:32:30 am (UTC)'!
 testTestingForExceptionWithSideEffect
 
 	self
 		assertHeuristic: 'testing-for-exception-with-side-effect'
 		caughtIn: 'testWithdrawMoreThanBalance
 	self should: [ account withdraw: 1000 ] raise: Error'
-		fix: [ :s | self does: s include: 'withExceptionDo:' ]! !
+		fix: [ :suggestedSource | suggestedSource includesCaseInsensitive: 'withExceptionDo:' ]! !
 
-!SmalltalkMentorHeuristicTest methodsFor: 'testing heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'testing heuristics tests' stamp: 'HAW 9/Sep/2026, 2:32:33 am (UTC)'!
 testTestingForExceptionWithoutSideEffect
 
 	self
 		assertHeuristic: 'testing-for-exception-without-side-effect'
 		caughtIn: 'testCannotCreateWithNegativeBalance
 	[ Account withBalance: -100 ] on: Error do: [ :e | self assert: e messageText = ''Balance must be positive'' ]'
-		fix: [ :s | self does: s include: 'withMessageText:' ]! !
+		fix: [ :suggestedSource | suggestedSource includesCaseInsensitive: 'withMessageText:' ]! !
 
-!SmalltalkMentorHeuristicTest methodsFor: 'naming heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'naming heuristics tests' stamp: 'HAW 9/Sep/2026, 2:01:37 am (UTC)'!
 testDoNotUseAbbreviatedName
-
-	"The names reveal their roles, so this targets the abbreviation heuristic specifically rather
-	than [variable-name-reveals-role]: calc (calculate), aColl (a collection), tot (total),
-	elem (element)."
 
 	self
 		assertHeuristic: 'do-not-use-abbreviated-name'
@@ -671,43 +757,45 @@ testDoNotUseAbbreviatedName
 	^tot'
 		fix: [ :suggestedSource | false ]! !
 
-!SmalltalkMentorHeuristicTest methodsFor: 'naming heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'naming heuristics tests' stamp: 'HAW 9/Sep/2026, 2:33:31 am (UTC)'!
 testMessageKeywordsNames
 
 	self
 		assertHeuristic: 'message-keywords-names'
 		caughtIn: 'DepositAmount: anAmount
 	balance := balance + anAmount'
-		fix: [ :s | false ]! !
+		fix: [ :suggestedSource | false ]! !
 
-!SmalltalkMentorHeuristicTest methodsFor: 'naming heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'naming heuristics tests' stamp: 'HAW 9/Sep/2026, 2:33:34 am (UTC)'!
 testMessageNames
 
 	self
 		assertHeuristic: 'message-names'
 		caughtIn: 'calc: anAmount
 	^balance + anAmount'
-		fix: [ :s | false ]! !
+		fix: [ :suggestedSource | false ]! !
 
-!SmalltalkMentorHeuristicTest methodsFor: 'naming heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'naming heuristics tests' stamp: 'HAW 9/Sep/2026, 2:32:52 am (UTC)'!
 testNoSetGet
 
 	self
 		assertHeuristic: 'no-set-get'
 		caughtIn: 'getBalance
 	^balance'
-		fix: [ :s | (self firstLineOf: s) notEmpty and: [ ((self firstLineOf: s) asLowercase beginsWith: 'get') not ] ]! !
+		fix: [ :suggestedSource |
+			suggestedSource firstNonBlankLine notEmpty
+				and: [ (suggestedSource firstNonBlankLine asLowercase beginsWith: 'get') not ] ]! !
 
-!SmalltalkMentorHeuristicTest methodsFor: 'naming heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'naming heuristics tests' stamp: 'HAW 9/Sep/2026, 2:32:35 am (UTC)'!
 testParameterPrefix
 
 	self
 		assertHeuristic: 'parameter-prefix'
 		caughtIn: 'withBalance: balance
 	^self new initializeWithBalance: balance'
-		fix: [ :s | self does: s include: 'aBalance' ]! !
+		fix: [ :suggestedSource | suggestedSource includesCaseInsensitive: 'aBalance' ]! !
 
-!SmalltalkMentorHeuristicTest methodsFor: 'naming heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'naming heuristics tests' stamp: 'HAW 9/Sep/2026, 2:33:36 am (UTC)'!
 testVariableNameRevealsRole
 
 	self
@@ -716,27 +804,27 @@ testVariableNameRevealsRole
 	| aCollection |
 	aCollection := self movements.
 	^aCollection inject: 0 into: [ :acc :each | acc + each amount ]'
-		fix: [ :s | false ]! !
+		fix: [ :suggestedSource | false ]! !
 
-!SmalltalkMentorHeuristicTest methodsFor: 'boolean heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'boolean heuristics tests' stamp: 'HAW 9/Sep/2026, 2:32:37 am (UTC)'!
 testAndOrOverBooleanOperators
 
 	self
 		assertHeuristic: 'and-or-over-&&-||'
 		caughtIn: 'isValid
 	^(balance > 0) && (owner notNil)'
-		fix: [ :s | self does: s include: 'and:' ]! !
+		fix: [ :suggestedSource | suggestedSource includesCaseInsensitive: 'and:' ]! !
 
-!SmalltalkMentorHeuristicTest methodsFor: 'boolean heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'boolean heuristics tests' stamp: 'HAW 9/Sep/2026, 2:32:40 am (UTC)'!
 testAndOrTakeBlocks
 
 	self
 		assertHeuristic: 'and-or-take-blocks'
 		caughtIn: 'isValid
 	^balance > 0 and: owner notNil'
-		fix: [ :s | self does: s include: 'and: [' ]! !
+		fix: [ :suggestedSource | suggestedSource includesCaseInsensitive: 'and: [' ]! !
 
-!SmalltalkMentorHeuristicTest methodsFor: 'boolean heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'boolean heuristics tests' stamp: 'HAW 9/Sep/2026, 2:32:42 am (UTC)'!
 testIfEmptyOverIsEmptyIfTrue
 
 	self
@@ -744,9 +832,9 @@ testIfEmptyOverIsEmptyIfTrue
 		caughtIn: 'firstMovementOrDefault
 	movements isEmpty ifTrue: [ ^self defaultMovement ].
 	^movements first'
-		fix: [ :s | self does: s include: 'ifEmpty:' ]! !
+		fix: [ :suggestedSource | suggestedSource includesCaseInsensitive: 'ifEmpty:' ]! !
 
-!SmalltalkMentorHeuristicTest methodsFor: 'boolean heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'boolean heuristics tests' stamp: 'HAW 9/Sep/2026, 2:32:44 am (UTC)'!
 testIfNilOverIsNilIfTrue
 
 	self
@@ -754,39 +842,39 @@ testIfNilOverIsNilIfTrue
 		caughtIn: 'ownerName
 	owner isNil ifTrue: [ ^self defaultName ].
 	^owner name'
-		fix: [ :s | self does: s include: 'ifNil:' ]! !
+		fix: [ :suggestedSource | suggestedSource includesCaseInsensitive: 'ifNil:' ]! !
 
-!SmalltalkMentorHeuristicTest methodsFor: 'boolean heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'boolean heuristics tests' stamp: 'HAW 9/Sep/2026, 2:32:57 am (UTC)'!
 testIfTrueIfFalse
 
 	self
 		assertHeuristic: 'ifTrue-ifFalse'
 		caughtIn: 'label
 	^self isBlocked ifFalse: [ ''Active'' ] ifTrue: [ ''Blocked'' ]'
-		fix: [ :s | | t f |
-			t := self firstIndexOf: 'ifTrue:' in: s.
-			f := self firstIndexOf: 'ifFalse:' in: s.
-			t > 0 and: [ f = 0 or: [ t < f ] ] ]! !
+		fix: [ :suggestedSource | | trueIndex falseIndex |
+			trueIndex := suggestedSource indexOfCaseInsensitive: 'ifTrue:'.
+			falseIndex := suggestedSource indexOfCaseInsensitive: 'ifFalse:'.
+			trueIndex > 0 and: [ falseIndex = 0 or: [ trueIndex < falseIndex ] ] ]! !
 
-!SmalltalkMentorHeuristicTest methodsFor: 'boolean heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'boolean heuristics tests' stamp: 'HAW 9/Sep/2026, 2:32:46 am (UTC)'!
 testIsNilOverEqualNil
 
 	self
 		assertHeuristic: 'isNil-over-equal-nil'
 		caughtIn: 'hasNoOwner
 	^owner = nil'
-		fix: [ :s | self does: s include: 'isNil' ]! !
+		fix: [ :suggestedSource | suggestedSource includesCaseInsensitive: 'isNil' ]! !
 
-!SmalltalkMentorHeuristicTest methodsFor: 'boolean heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'boolean heuristics tests' stamp: 'HAW 9/Sep/2026, 2:33:39 am (UTC)'!
 testPreferEqualOverIdentity
 
 	self
 		assertHeuristic: 'prefer-equal-over-identity'
 		caughtIn: 'hasSameNameAs: anAccount
 	^name == anAccount name'
-		fix: [ :s | false ]! !
+		fix: [ :suggestedSource | false ]! !
 
-!SmalltalkMentorHeuristicTest methodsFor: 'boolean heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'boolean heuristics tests' stamp: 'HAW 9/Sep/2026, 2:33:41 am (UTC)'!
 testRedundantIfTrueCondition
 
 	self
@@ -794,34 +882,34 @@ testRedundantIfTrueCondition
 		caughtIn: 'currentBalance
 	self isActive = true ifTrue: [ ^self balance ].
 	^0'
-		fix: [ :s | false ]! !
+		fix: [ :suggestedSource | false ]! !
 
-!SmalltalkMentorHeuristicTest methodsFor: 'syntax heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'syntax heuristics tests' stamp: 'HAW 9/Sep/2026, 2:33:43 am (UTC)'!
 testNoExtraParenthesis
 
 	self
 		assertHeuristic: 'no-extra-parenthesis'
 		caughtIn: 'negatedBalance
 	^(self balance) negated'
-		fix: [ :s | false ]! !
+		fix: [ :suggestedSource | false ]! !
 
-!SmalltalkMentorHeuristicTest methodsFor: 'collection heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'collection heuristics tests' stamp: 'HAW 9/Sep/2026, 2:32:49 am (UTC)'!
 testIsEmptyOverSizeEqualZero
 
 	self
 		assertHeuristic: 'isEmpty-over-size-equal-zero'
 		caughtIn: 'hasNoMovements
 	^movements size = 0'
-		fix: [ :s | self does: s include: 'isEmpty' ]! !
+		fix: [ :suggestedSource | suggestedSource includesCaseInsensitive: 'isEmpty' ]! !
 
-!SmalltalkMentorHeuristicTest methodsFor: 'aconcagua heuristics tests' stamp: 'HAW 19/Aug/2026, 12:36:50 am (UTC)'!
+!SmalltalkMentorHeuristicTest methodsFor: 'aconcagua heuristics tests' stamp: 'HAW 9/Sep/2026, 2:33:46 am (UTC)'!
 testDoNotUseAmount
 
 	self
 		assertHeuristic: 'do-not-use-amount'
 		caughtIn: 'isPositiveBalance
 	^balance amount strictlyPositive'
-		fix: [ :s | false ]! !
+		fix: [ :suggestedSource | false ]! !
 
 !SmalltalkMentorHeuristicTest methodsFor: 'source code format heuristics tests' stamp: 'HAW 20/Aug/2026, 9:41:47 pm (UTC)'!
 testAvoidComments
@@ -844,3 +932,273 @@ testKeywordMessageSendFormat
 
 	^client callTool: ''smalltalk_define_class'' with: (self arguments: ''definition'' being: ''Object subclass: #Foo'')'
 		fix: [ :suggestedSource | false ]! !
+
+!SmalltalkMentorMethodHeuristicTest methodsFor: 'running' stamp: 'HAW 9/Sep/2026, 3:05:05 am (UTC)'!
+tearDown
+
+	fixtureSubclass ifNotNil: [ fixtureSubclass removeFromSystem ].
+	fixture ifNotNil: [ fixture removeFromSystem ].
+	fixtureTestCase ifNotNil: [ fixtureTestCase removeFromSystem ]! !
+
+!SmalltalkMentorMethodHeuristicTest methodsFor: 'support' stamp: 'HAW 8/Sep/2026, 11:57:19 pm (UTC)'!
+assert: aHeuristicClass flags: aSource
+
+	self assert: (aHeuristicClass flags: aSource compiledIn: self fixture)! !
+
+!SmalltalkMentorMethodHeuristicTest methodsFor: 'support' stamp: 'HAW 8/Sep/2026, 11:57:26 pm (UTC)'!
+assert: aHeuristicClass flagsInClassSide: aSource
+
+	self assert: (aHeuristicClass flags: aSource compiledIn: self fixture class)! !
+
+!SmalltalkMentorMethodHeuristicTest methodsFor: 'support' stamp: 'HAW 8/Sep/2026, 11:57:42 pm (UTC)'!
+assert: aHeuristicClass flagsInTest: aSource
+
+	self assert: (aHeuristicClass flags: aSource compiledIn: self fixtureTestCase)! !
+
+!SmalltalkMentorMethodHeuristicTest methodsFor: 'support' stamp: 'HAW 8/Sep/2026, 11:57:23 pm (UTC)'!
+deny: aHeuristicClass flags: aSource
+
+	self deny: (aHeuristicClass flags: aSource compiledIn: self fixture)! !
+
+!SmalltalkMentorMethodHeuristicTest methodsFor: 'support' stamp: 'HAW 8/Sep/2026, 11:57:28 pm (UTC)'!
+deny: aHeuristicClass flagsInClassSide: aSource
+
+	self deny: (aHeuristicClass flags: aSource compiledIn: self fixture class)! !
+
+!SmalltalkMentorMethodHeuristicTest methodsFor: 'support' stamp: 'HAW 8/Sep/2026, 11:57:44 pm (UTC)'!
+deny: aHeuristicClass flagsInTest: aSource
+
+	self deny: (aHeuristicClass flags: aSource compiledIn: self fixtureTestCase)! !
+
+!SmalltalkMentorMethodHeuristicTest methodsFor: 'support' stamp: 'HAW 8/Sep/2026, 11:22:17 pm (UTC)'!
+fixture
+
+	^fixture ifNil: [
+		fixture := Object subclass: #SMMentorMethodFixture
+			instanceVariableNames: 'value other'
+			classVariableNames: ''
+			poolDictionaries: ''
+			category: 'SMMentorFixtures' ]! !
+
+!SmalltalkMentorMethodHeuristicTest methodsFor: 'support' stamp: 'HAW 9/Sep/2026, 3:05:03 am (UTC)'!
+fixtureSubclass
+
+	^fixtureSubclass ifNil: [
+		fixtureSubclass := self fixture subclass: #SMMentorMethodFixtureSubclass
+			instanceVariableNames: ''
+			classVariableNames: ''
+			poolDictionaries: ''
+			category: 'SMMentorFixtures' ]! !
+
+!SmalltalkMentorMethodHeuristicTest methodsFor: 'support' stamp: 'HAW 8/Sep/2026, 11:50:23 pm (UTC)'!
+fixtureTestCase
+
+	^fixtureTestCase ifNil: [
+		fixtureTestCase := TestCase subclass: #SMMentorTestCaseFixture
+			instanceVariableNames: ''
+			classVariableNames: ''
+			poolDictionaries: ''
+			category: 'SMMentorFixtures' ]! !
+
+!SmalltalkMentorMethodHeuristicTest methodsFor: 'tests' stamp: 'HAW 8/Sep/2026, 11:23:06 pm (UTC)'!
+testAndWithoutBlockIsFlagged
+
+	self assert: AndOrTakeBlocksHeuristic flags: 'isValid ^value > 0 and: other notNil'.
+	self deny: AndOrTakeBlocksHeuristic flags: 'isValid ^value > 0 and: [ other notNil ]'! !
+
+!SmalltalkMentorMethodHeuristicTest methodsFor: 'tests' stamp: 'HAW 8/Sep/2026, 11:22:39 pm (UTC)'!
+testAssertNotIsFlagged
+
+	self assert: DenyOverAssertNotHeuristic flagsInTest: 'testEmpty self assert: OrderedCollection new notEmpty not'.
+	self deny: DenyOverAssertNotHeuristic flagsInTest: 'testEmpty self deny: OrderedCollection new notEmpty'! !
+
+!SmalltalkMentorMethodHeuristicTest methodsFor: 'tests' stamp: 'HAW 8/Sep/2026, 11:22:37 pm (UTC)'!
+testAssertWithEqualIsFlaggedOnlyInTests
+
+	self assert: TestingForEqualityHeuristic flagsInTest: 'testAddition self assert: 3 = (1 + 2)'.
+	self deny: TestingForEqualityHeuristic flagsInTest: 'testAddition self assert: 1 + 2 equals: 3'.
+	self deny: TestingForEqualityHeuristic flags: 'checkAddition self assert: 3 = (1 + 2)'! !
+
+!SmalltalkMentorMethodHeuristicTest methodsFor: 'tests' stamp: 'HAW 8/Sep/2026, 11:22:45 pm (UTC)'!
+testAssignedFailingSendIsFlagged
+
+	self assert: ExceptionBlockWithoutAssignmentHeuristic flagsInTest: 'testFails | result | result := [ self error: ''x'' ] on: Error do: [ :error | error ]. self assert: result isNil'.
+	self deny: ExceptionBlockWithoutAssignmentHeuristic flagsInTest: 'testFails self should: [ self error: ''x'' ] raise: Error withMessageText: ''x'''! !
+
+!SmalltalkMentorMethodHeuristicTest methodsFor: 'tests' stamp: 'HAW 8/Sep/2026, 11:23:10 pm (UTC)'!
+testBooleanOperatorsAreFlagged
+
+	self assert: AndOrOverBooleanOperatorsHeuristic flags: 'isValid ^(value > 0) & (other > 0)'.
+	self deny: AndOrOverBooleanOperatorsHeuristic flags: 'isValid ^value > 0 and: [ other > 0 ]'! !
+
+!SmalltalkMentorMethodHeuristicTest methodsFor: 'tests' stamp: 'HAW 8/Sep/2026, 11:23:12 pm (UTC)'!
+testComparisonWithTrueIsFlagged
+
+	self assert: RedundantIfTrueConditionHeuristic flags: 'current ^self isActive = true ifTrue: [ value ] ifFalse: [ 0 ]'.
+	self deny: RedundantIfTrueConditionHeuristic flags: 'current ^self isActive ifTrue: [ value ] ifFalse: [ 0 ]'! !
+
+!SmalltalkMentorMethodHeuristicTest methodsFor: 'tests' stamp: 'HAW 8/Sep/2026, 11:43:53 pm (UTC)'!
+testEqualNilIsFlagged
+
+	self assert: ComparisonWithNilHeuristic flags: 'hasNoOwner ^value = nil'.
+	self assert: ComparisonWithNilHeuristic flags: 'hasOwner ^value ~= nil'.
+	self deny: ComparisonWithNilHeuristic flags: 'hasNoOwner ^value isNil'.
+	self deny: ComparisonWithNilHeuristic flags: 'name ^value ifNil: [ 0 ]'! !
+
+!SmalltalkMentorMethodHeuristicTest methodsFor: 'tests' stamp: 'HAW 8/Sep/2026, 11:22:42 pm (UTC)'!
+testExceptionBlockWithMoreThanOneSendIsFlagged
+
+	self assert: ExceptionBlockSingleSendHeuristic flagsInTest: 'testFails self should: [ | amount | amount := 1. self error: amount ] raise: Error'.
+	self deny: ExceptionBlockSingleSendHeuristic flagsInTest: 'testFails self should: [ self error: ''x'' ] raise: Error'! !
+
+!SmalltalkMentorMethodHeuristicTest methodsFor: 'tests' stamp: 'HAW 8/Sep/2026, 11:22:49 pm (UTC)'!
+testGetSetAccessorsAreFlaggedButSetUpAndSettleAreNot
+
+	self assert: NoSetGetHeuristic flags: 'getValue ^value'.
+	self assert: NoSetGetHeuristic flags: 'setValue: aValue value := aValue'.
+	self deny: NoSetGetHeuristic flags: 'value ^value'.
+	self deny: NoSetGetHeuristic flags: 'setUp ^value'.
+	self deny: NoSetGetHeuristic flags: 'settle ^value'! !
+
+!SmalltalkMentorMethodHeuristicTest methodsFor: 'tests' stamp: 'HAW 9/Sep/2026, 2:13:17 am (UTC)'!
+testHelperMethodIsFlagged
+
+	self assert: MoveHelperMethodToRightClassHeuristic flags: 'descriptionFor: aProduct ^aProduct name , '' - '' , aProduct price printString'.
+	self deny: MoveHelperMethodToRightClassHeuristic flags: 'descriptionFor: aProduct ^self value , aProduct name'.
+	self deny: MoveHelperMethodToRightClassHeuristic flags: 'describe: aProduct ^value , aProduct name'.
+	self deny: MoveHelperMethodToRightClassHeuristic flags: 'total ^42'.
+	self deny: MoveHelperMethodToRightClassHeuristic flagsInClassSide: 'describe: aProduct ^aProduct name'.
+	self deny: MoveHelperMethodToRightClassHeuristic flags: 'printOn: aStream aStream nextPutAll: ''fixture'''! !
+
+!SmalltalkMentorMethodHeuristicTest methodsFor: 'tests' stamp: 'HAW 8/Sep/2026, 11:50:40 pm (UTC)'!
+testIdentityComparisonIsFlagged
+
+	self assert: EqualityOverIdentityHeuristic flags: 'sameAs: anObject ^self == anObject'.
+	self deny: EqualityOverIdentityHeuristic flags: 'equalTo: anObject ^self = anObject'.
+	self deny: EqualityOverIdentityHeuristic flags: 'name ^value ifNil: [ 0 ]'.
+	self deny: EqualityOverIdentityHeuristic flags: 'comparisons ^#(== ~~)'! !
+
+!SmalltalkMentorMethodHeuristicTest methodsFor: 'tests' stamp: 'HAW 8/Sep/2026, 11:23:08 pm (UTC)'!
+testIfFalseIfTrueIsFlagged
+
+	self assert: IfTrueIfFalseOrderHeuristic flags: 'label ^self isEmpty ifFalse: [ ''a'' ] ifTrue: [ ''b'' ]'.
+	self deny: IfTrueIfFalseOrderHeuristic flags: 'label ^self isEmpty ifTrue: [ ''b'' ] ifFalse: [ ''a'' ]'! !
+
+!SmalltalkMentorMethodHeuristicTest methodsFor: 'tests' stamp: 'HAW 8/Sep/2026, 11:23:02 pm (UTC)'!
+testInstanceCreationNotFollowingTheFormatIsFlagged
+
+	self assert: InstanceCreationFormatHeuristic flagsInClassSide: 'withValue: aValue | instance | instance := self new. instance value: aValue. ^instance'.
+	self deny: InstanceCreationFormatHeuristic flagsInClassSide: 'withValue: aValue self assertIsValid: aValue. ^self new initializeValue: aValue'.
+	self deny: InstanceCreationFormatHeuristic flagsInClassSide: 'current ^Smalltalk at: #SMMentorMethodFixture ifAbsent: [ self new ]'! !
+
+!SmalltalkMentorMethodHeuristicTest methodsFor: 'tests' stamp: 'HAW 8/Sep/2026, 11:44:02 pm (UTC)'!
+testIsEmptyIfTrueIsFlagged
+
+	self assert: ConditionalOnEmptyTestHeuristic flags: 'first ^value isEmpty ifTrue: [ 0 ] ifFalse: [ value first ]'.
+	self deny: ConditionalOnEmptyTestHeuristic flags: 'first ^value ifEmpty: [ 0 ] ifNotEmpty: [ value first ]'! !
+
+!SmalltalkMentorMethodHeuristicTest methodsFor: 'tests' stamp: 'HAW 8/Sep/2026, 11:43:59 pm (UTC)'!
+testIsNilIfTrueIsFlagged
+
+	self assert: ConditionalOnNilTestHeuristic flags: 'name ^value isNil ifTrue: [ ''none'' ] ifFalse: [ value ]'.
+	self deny: ConditionalOnNilTestHeuristic flags: 'name ^value ifNil: [ ''none'' ]'! !
+
+!SmalltalkMentorMethodHeuristicTest methodsFor: 'tests' stamp: 'HAW 9/Sep/2026, 2:23:08 am (UTC)'!
+testLongKeywordSendOnOneLineIsFlagged
+
+	self assert: KeywordMessageSendFormatHeuristic flags: 'callIt
+	^self value withFirstArgument: self other withSecondArgument: self value withThirdArgument: self other'.
+	self deny: KeywordMessageSendFormatHeuristic flags: 'callIt
+	^self value
+		withFirstArgument: self other
+		withSecondArgument: self value
+		withThirdArgument: self other'.
+	self deny: KeywordMessageSendFormatHeuristic flags: 'withFirstArgument: aFirst withSecondArgument: aSecond withThirdArgument: aThird withFourthArgument: aFourth
+	^aFirst'! !
+
+!SmalltalkMentorMethodHeuristicTest methodsFor: 'tests' stamp: 'HAW 8/Sep/2026, 11:22:58 pm (UTC)'!
+testMethodWithMoreThanTenSendsIsFlagged
+
+	self assert: MethodComplexityHeuristic flags: 'report ^self value size + self other size + self value size + self other size + self value size + self other size'.
+	self deny: MethodComplexityHeuristic flags: 'report ^self value size'! !
+
+!SmalltalkMentorMethodHeuristicTest methodsFor: 'tests' stamp: 'HAW 8/Sep/2026, 11:22:51 pm (UTC)'!
+testNilPreconditionIsFlaggedOnlyInClassSide
+
+	self assert: NoNilPreconditionHeuristic flagsInClassSide: 'withValue: aValue self assert: aValue notNil. ^self new'.
+	self deny: NoNilPreconditionHeuristic flagsInClassSide: 'withValue: aValue self assert: aValue > 0. ^self new'.
+	self deny: NoNilPreconditionHeuristic flags: 'checkValue self assert: value notNil'! !
+
+!SmalltalkMentorMethodHeuristicTest methodsFor: 'tests' stamp: 'HAW 9/Sep/2026, 3:05:07 am (UTC)'!
+testPolymorphicDefaultOverriddenInSubclassIsNotAHelper
+
+	self fixtureSubclass compile: 'isSpecial: anObject ^true' classified: 'fixture'.
+	self deny: MoveHelperMethodToRightClassHeuristic flags: 'isSpecial: anObject ^false'! !
+
+!SmalltalkMentorMethodHeuristicTest methodsFor: 'tests' stamp: 'HAW 9/Sep/2026, 6:51:52 am (UTC)'!
+testQuotedSymbolLiteralIsNotConfusedWithCode
+
+	self deny: EqualityOverIdentityHeuristic flags: 'identitySelector ^#''=='''.
+	self deny: IfTrueIfFalseOrderHeuristic flags: 'blockOpener ^#''['''! !
+
+!SmalltalkMentorMethodHeuristicTest methodsFor: 'tests' stamp: 'HAW 8/Sep/2026, 11:35:47 pm (UTC)'!
+testSetterIsFlagged
+
+	self assert: AvoidSettersHeuristic flags: 'value: aValue value := aValue'.
+	self deny: AvoidSettersHeuristic flags: 'value ^value'.
+	self deny: AvoidSettersHeuristic flags: 'syncWith: anInstance value := anInstance value'.
+	self deny: AvoidSettersHeuristic flags: 'initializeValue: aValue value := aValue'! !
+
+!SmalltalkMentorMethodHeuristicTest methodsFor: 'tests' stamp: 'HAW 8/Sep/2026, 11:43:55 pm (UTC)'!
+testSizeEqualZeroIsFlagged
+
+	self assert: SizeComparedWithZeroHeuristic flags: 'hasNone ^value size = 0'.
+	self deny: SizeComparedWithZeroHeuristic flags: 'hasNone ^value isEmpty'! !
+
+!SmalltalkMentorMethodHeuristicTest methodsFor: 'tests' stamp: 'HAW 8/Sep/2026, 11:22:54 pm (UTC)'!
+testTypePreconditionIsFlagged
+
+	self assert: NoTypePreconditionHeuristic flagsInClassSide: 'withValue: aValue self assert: (aValue isKindOf: Number). ^self new'.
+	self deny: NoTypePreconditionHeuristic flagsInClassSide: 'withValue: aValue self assert: aValue > 0. ^self new'! !
+
+!SmalltalkMentorMethodHeuristicTest methodsFor: 'tests' stamp: 'HAW 8/Sep/2026, 11:33:10 pm (UTC)'!
+testUnnecessaryParenthesisIsFlagged
+
+	self assert: NoExtraParenthesisHeuristic flags: 'valueSize ^(self value) size'.
+	self deny: NoExtraParenthesisHeuristic flags: 'valueSize ^self value size'.
+	self deny: NoExtraParenthesisHeuristic flags: 'total ^2 * (value + 1)'! !
+
+!SmalltalkMentorMethodHeuristicTest methodsFor: 'tests' stamp: 'HAW 8/Sep/2026, 11:22:47 pm (UTC)'!
+testUppercaseKeywordIsFlagged
+
+	self assert: MessageKeywordsLowercaseHeuristic flags: 'DepositAmount: anAmount ^anAmount'.
+	self deny: MessageKeywordsLowercaseHeuristic flags: 'deposit: anAmount ^anAmount'! !
+
+!Behavior methodsFor: '*SmalltalkMentorTests' stamp: 'HAW 8/Sep/2026, 11:50:31 pm (UTC)'!
+compiledMethodFor: aSource classified: aCategory
+
+	^self >> (self compile: aSource classified: aCategory)! !
+
+!CharacterSequence methodsFor: '*SmalltalkMentorTests' stamp: 'HAW 9/Sep/2026, 3:08:16 am (UTC)'!
+firstNonBlankLine
+
+	^(self lines detect: [ :each | each withBlanksTrimmed notEmpty ] ifNone: [ '' ])
+		withBlanksTrimmed! !
+
+!CharacterSequence methodsFor: '*SmalltalkMentorTests' stamp: 'HAW 9/Sep/2026, 2:31:46 am (UTC)'!
+includesCaseInsensitive: aSubstring
+
+	^self asLowercase includesSubString: aSubstring asLowercase! !
+
+!CharacterSequence methodsFor: '*SmalltalkMentorTests' stamp: 'HAW 9/Sep/2026, 2:31:49 am (UTC)'!
+indexOfCaseInsensitive: aSubstring
+
+	^self asLowercase findString: aSubstring asLowercase! !
+
+!SmalltalkMethodHeuristic class methodsFor: '*SmalltalkMentorTests' stamp: 'HAW 8/Sep/2026, 11:59:46 pm (UTC)'!
+flags: aSource compiledIn: aClassOrMetaclass
+
+	| method |
+
+	method := aClassOrMetaclass compiledMethodFor: aSource classified: 'fixture'.
+	^(self for: method) value notEmpty! !
