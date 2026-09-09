@@ -1,6 +1,6 @@
-'From Cuis7.9 [latest update: #8158] on 9 September 2026 at 11:16:10 am'!
-'Description Make class heuristics method objects and share variable heuristics in a superclass'!
-!provides: 'SmalltalkMentor' 1 52!
+'From Cuis7.9 [latest update: #8158] on 9 September 2026 at 11:32:22 am'!
+'Description Make the explicit class reference heuristic a method heuristic'!
+!provides: 'SmalltalkMentor' 1 53!
 !requires: 'JSON' 1 29 nil!
 !requires: 'OSProcess' 1 36 nil!
 SystemOrganization addCategory: #SmalltalkMentor!
@@ -194,16 +194,6 @@ SmalltalkDesignHeuristic subclass: #RepeatedClassWordHeuristic
 	category: 'SmalltalkMentor'!
 !classDefinition: 'RepeatedClassWordHeuristic class' category: #SmalltalkMentor!
 RepeatedClassWordHeuristic class
-	instanceVariableNames: ''!
-
-!classDefinition: #SelfOverExplicitClassReferenceHeuristic category: #SmalltalkMentor!
-SmalltalkDesignHeuristic subclass: #SelfOverExplicitClassReferenceHeuristic
-	instanceVariableNames: ''
-	classVariableNames: ''
-	poolDictionaries: ''
-	category: 'SmalltalkMentor'!
-!classDefinition: 'SelfOverExplicitClassReferenceHeuristic class' category: #SmalltalkMentor!
-SelfOverExplicitClassReferenceHeuristic class
 	instanceVariableNames: ''!
 
 !classDefinition: #SharedLeafSubclassProtocolHeuristic category: #SmalltalkMentor!
@@ -534,6 +524,16 @@ SmalltalkMethodHeuristic subclass: #RedundantIfTrueConditionHeuristic
 	category: 'SmalltalkMentor'!
 !classDefinition: 'RedundantIfTrueConditionHeuristic class' category: #SmalltalkMentor!
 RedundantIfTrueConditionHeuristic class
+	instanceVariableNames: ''!
+
+!classDefinition: #SelfOverExplicitClassReferenceHeuristic category: #SmalltalkMentor!
+SmalltalkMethodHeuristic subclass: #SelfOverExplicitClassReferenceHeuristic
+	instanceVariableNames: ''
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'SmalltalkMentor'!
+!classDefinition: 'SelfOverExplicitClassReferenceHeuristic class' category: #SmalltalkMentor!
+SelfOverExplicitClassReferenceHeuristic class
 	instanceVariableNames: ''!
 
 !classDefinition: #SizeComparedWithZeroHeuristic category: #SmalltalkMentor!
@@ -1451,50 +1451,6 @@ value
 		(self selectorFindingsFor: reviewedClass words: classNameWords),
 		(self selectorFindingsFor: reviewedClass class words: classNameWords)! !
 
-!SelfOverExplicitClassReferenceHeuristic methodsFor: 'accessing' stamp: 'HAW 8/Sep/2026, 2:29:47 pm (UTC)'!
-description
-
-	^'Inside a class''s own methods, do not name the class. Use self class in instance methods and self in class-side methods, so subclasses resolve to the right class. Name the class only when you mean that exact class regardless of subclass.'! !
-
-!SelfOverExplicitClassReferenceHeuristic methodsFor: 'accessing' stamp: 'HAW 8/Sep/2026, 2:29:40 pm (UTC)'!
-name
-
-	^'Prefer self / self class over explicit class reference'! !
-
-!SelfOverExplicitClassReferenceHeuristic methodsFor: 'private' stamp: 'HAW 9/Sep/2026, 1:48:19 pm (UTC)'!
-findingFor: aMethodReference
-
-	| replacement location |
-
-	replacement := self replacementFor: aMethodReference.
-	location := aMethodReference locationString.
-	^SmalltalkMentorFinding
-		title: (self titleFor: location replacement: replacement)
-		detail: 'Check whether ', location, ' can refer to its class as ', replacement, '.'
-		editKind: #method
-		editTarget: aMethodReference classSelectorAssociation! !
-
-!SelfOverExplicitClassReferenceHeuristic methodsFor: 'private' stamp: 'HAW 9/Sep/2026, 1:48:23 pm (UTC)'!
-replacementFor: aMethodReference
-
-	^aMethodReference actualClass = reviewedClass class
-		ifTrue: [ 'self' ]
-		ifFalse: [ 'self class' ]! !
-
-!SelfOverExplicitClassReferenceHeuristic methodsFor: 'private' stamp: 'HAW 9/Sep/2026, 2:46:39 am (UTC)'!
-titleFor: aLocation replacement: aReplacement
-
-	^self name, ': ', aLocation, ' (may be ', aReplacement, ')'! !
-
-!SelfOverExplicitClassReferenceHeuristic methodsFor: 'evaluating' stamp: 'HAW 9/Sep/2026, 1:48:17 pm (UTC)'!
-value
-
-	| ownReferences |
-
-	ownReferences := (Smalltalk allCallsOn: reviewedClass binding)
-		select: [ :each | each actualClass theNonMetaClass = reviewedClass ].
-	^ownReferences collect: [ :each | self findingFor: each ]! !
-
 !SharedLeafSubclassProtocolHeuristic methodsFor: 'accessing' stamp: 'HAW 8/Sep/2026, 2:32:32 pm (UTC)'!
 description
 
@@ -2232,7 +2188,7 @@ initializeClass: aClass mentor: aMentor
 	mentor := aMentor.
 	methodReviewCache := Dictionary new! !
 
-!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 9/Sep/2026, 1:49:47 pm (UTC)'!
+!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 9/Sep/2026, 2:24:15 pm (UTC)'!
 heuristicClasses
 
 	^{
@@ -2244,7 +2200,6 @@ heuristicClasses
 		NoUnusedTemporariesHeuristic.
 		NoEmptyMethodCategoriesHeuristic.
 		RepeatedClassWordHeuristic.
-		SelfOverExplicitClassReferenceHeuristic.
 		InstanceCreationFunnelHeuristic.
 		OneInitializeMessageHeuristic.
 		ClassIsReferencedHeuristic.
@@ -2255,7 +2210,7 @@ heuristicsFor: aClass
 
 	^self heuristicClasses collect: [ :each | each for: aClass ]! !
 
-!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 8/Sep/2026, 11:44:02 pm (UTC)'!
+!SmalltalkMentorClassReview methodsFor: 'verifications' stamp: 'HAW 9/Sep/2026, 2:24:18 pm (UTC)'!
 methodHeuristicClasses
 
 	^{
@@ -2270,6 +2225,7 @@ methodHeuristicClasses
 		AvoidSettersHeuristic.
 		MethodComplexityHeuristic.
 		MoveHelperMethodToRightClassHeuristic.
+		SelfOverExplicitClassReferenceHeuristic.
 		InstanceCreationFormatHeuristic.
 		KeywordMessageSendFormatHeuristic.
 		AndOrTakeBlocksHeuristic.
@@ -3855,6 +3811,31 @@ isViolated
 		(each isSendOfAnyOf: #(= == ~= ~~))
 			and: [ each arguments first isBooleanPseudoVariable ] ]! !
 
+!SelfOverExplicitClassReferenceHeuristic methodsFor: 'accessing' stamp: 'HAW 8/Sep/2026, 2:29:47 pm (UTC)'!
+description
+
+	^'Inside a class''s own methods, do not name the class. Use self class in instance methods and self in class-side methods, so subclasses resolve to the right class. Name the class only when you mean that exact class regardless of subclass.'! !
+
+!SelfOverExplicitClassReferenceHeuristic methodsFor: 'accessing' stamp: 'HAW 8/Sep/2026, 2:29:40 pm (UTC)'!
+name
+
+	^'Prefer self / self class over explicit class reference'! !
+
+!SelfOverExplicitClassReferenceHeuristic methodsFor: 'private' stamp: 'HAW 9/Sep/2026, 2:24:13 pm (UTC)'!
+replacement
+
+	^self isClassSide ifTrue: [ 'self' ] ifFalse: [ 'self class' ]! !
+
+!SelfOverExplicitClassReferenceHeuristic methodsFor: 'evaluating' stamp: 'HAW 9/Sep/2026, 2:24:06 pm (UTC)'!
+isViolated
+
+	^compiledMethod hasLiteral: self reviewedClass theNonMetaClass binding! !
+
+!SelfOverExplicitClassReferenceHeuristic methodsFor: 'evaluating' stamp: 'HAW 9/Sep/2026, 2:24:09 pm (UTC)'!
+violationDetail
+
+	^'Check whether ', self location, ' can refer to its class as ', self replacement, '.'! !
+
 !SizeComparedWithZeroHeuristic methodsFor: 'accessing' stamp: 'HAW 8/Sep/2026, 11:18:23 pm (UTC)'!
 description
 
@@ -4321,10 +4302,10 @@ addElementsFlattenedTo: aStream
 			ifTrue: [ each addElementsFlattenedTo: aStream ]
 			ifFalse: [ aStream nextPut: each ] ]! !
 
-!Array methodsFor: '*SmalltalkMentor' stamp: 'HAW 8/Sep/2026, 11:15:29 pm (UTC)'!
+!Array methodsFor: '*SmalltalkMentor' stamp: 'HAW 9/Sep/2026, 2:25:41 pm (UTC)'!
 withNestedArraysFlattened
 
-	^Array streamContents: [ :stream | self addElementsFlattenedTo: stream ]! !
+	^self class streamContents: [ :stream | self addElementsFlattenedTo: stream ]! !
 
 !CompiledMethod methodsFor: '*SmalltalkMentor' stamp: 'HAW 9/Sep/2026, 2:25:30 am (UTC)'!
 classSelectorAssociation

@@ -1,6 +1,6 @@
-'From Cuis7.9 [latest update: #8158] on 9 September 2026 at 11:16:07 am'!
-'Description Make class heuristics method objects and share variable heuristics in a superclass'!
-!provides: 'SmalltalkMentorTests' 1 20!
+'From Cuis7.9 [latest update: #8158] on 9 September 2026 at 11:32:19 am'!
+'Description Make the explicit class reference heuristic a method heuristic'!
+!provides: 'SmalltalkMentorTests' 1 21!
 !requires: 'SmalltalkMentor' nil nil nil!
 SystemOrganization addCategory: #SmalltalkMentorTests!
 
@@ -139,29 +139,6 @@ testClassVariableMustBeReadAndWritten
 	self assert: (findings anySatisfy: [ :finding |
 		finding editKind = #variable
 			and: [ finding editTarget value = 'UnusedClassVariable' ] ])! !
-
-!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 9/Sep/2026, 1:50:04 pm (UTC)'!
-testExplicitClassReferenceIsFlaggedForSelfOrSelfClass
-
-	| classToVerify findings |
-
-	classToVerify := self newFixture.
-	classToVerify
-		compile: 'makeAnother ^SMMentorFixture new'
-		classified: 'instance creation'.
-	classToVerify compile: 'harmless ^42' classified: 'accessing'.
-	classToVerify class
-		compile: 'create ^SMMentorFixture new'
-		classified: 'instance creation'.
-	findings := (SelfOverExplicitClassReferenceHeuristic for: classToVerify) value.
-	self assert: (findings anySatisfy: [ :finding |
-		(finding title includesSubString: '>>makeAnother')
-			and: [ finding title includesSubString: '(may be self class)' ] ]).
-	self assert: (findings anySatisfy: [ :finding |
-		(finding title includesSubString: 'class>>create')
-			and: [ finding title includesSubString: '(may be self)' ] ]).
-	self deny: (findings anySatisfy: [ :finding |
-		finding title includesSubString: '>>harmless' ])! !
 
 !SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 9/Sep/2026, 1:50:04 pm (UTC)'!
 testInitializeWithNonAssignmentIsFlagged
@@ -952,6 +929,11 @@ assert: aHeuristicClass flagsInTest: aSource
 
 	self assert: (aHeuristicClass flags: aSource compiledIn: self fixtureTestCase)! !
 
+!SmalltalkMentorMethodHeuristicTest methodsFor: 'support' stamp: 'HAW 9/Sep/2026, 2:25:29 pm (UTC)'!
+assert: aString includesSubString: aSubstring
+
+	self assert: (aString includesSubString: aSubstring)! !
+
 !SmalltalkMentorMethodHeuristicTest methodsFor: 'support' stamp: 'HAW 8/Sep/2026, 11:57:23 pm (UTC)'!
 deny: aHeuristicClass flags: aSource
 
@@ -966,6 +948,16 @@ deny: aHeuristicClass flagsInClassSide: aSource
 deny: aHeuristicClass flagsInTest: aSource
 
 	self deny: (aHeuristicClass flags: aSource compiledIn: self fixtureTestCase)! !
+
+!SmalltalkMentorMethodHeuristicTest methodsFor: 'support' stamp: 'HAW 9/Sep/2026, 2:25:26 pm (UTC)'!
+detailOfExplicitClassReferenceIn: aClassOrMetaclass
+
+	| method |
+
+	method := aClassOrMetaclass
+		compiledMethodFor: 'makeAnother ^SMMentorMethodFixture new'
+		classified: 'fixture'.
+	^(SelfOverExplicitClassReferenceHeuristic for: method) finding detail! !
 
 !SmalltalkMentorMethodHeuristicTest methodsFor: 'support' stamp: 'HAW 8/Sep/2026, 11:22:17 pm (UTC)'!
 fixture
@@ -1047,6 +1039,25 @@ testExceptionBlockWithMoreThanOneSendIsFlagged
 
 	self assert: ExceptionBlockSingleSendHeuristic flagsInTest: 'testFails self should: [ | amount | amount := 1. self error: amount ] raise: Error'.
 	self deny: ExceptionBlockSingleSendHeuristic flagsInTest: 'testFails self should: [ self error: ''x'' ] raise: Error'! !
+
+!SmalltalkMentorMethodHeuristicTest methodsFor: 'tests' stamp: 'HAW 9/Sep/2026, 2:25:23 pm (UTC)'!
+testExplicitClassReferenceDetailSuggestsSelfClassOrSelf
+
+	self
+		assert: (self detailOfExplicitClassReferenceIn: self fixture)
+		includesSubString: 'as self class.'.
+	self
+		assert: (self detailOfExplicitClassReferenceIn: self fixture class)
+		includesSubString: 'as self.'! !
+
+!SmalltalkMentorMethodHeuristicTest methodsFor: 'tests' stamp: 'HAW 9/Sep/2026, 2:24:26 pm (UTC)'!
+testExplicitClassReferenceIsFlaggedForSelfOrSelfClass
+
+	self assert: SelfOverExplicitClassReferenceHeuristic flags: 'makeAnother ^SMMentorMethodFixture new'.
+	self assert: SelfOverExplicitClassReferenceHeuristic flags: 'makeLater ^[ SMMentorMethodFixture new ]'.
+	self assert: SelfOverExplicitClassReferenceHeuristic flagsInClassSide: 'create ^SMMentorMethodFixture new'.
+	self deny: SelfOverExplicitClassReferenceHeuristic flags: 'other ^Object new'.
+	self deny: SelfOverExplicitClassReferenceHeuristic flags: 'harmless ^42'! !
 
 !SmalltalkMentorMethodHeuristicTest methodsFor: 'tests' stamp: 'HAW 8/Sep/2026, 11:22:49 pm (UTC)'!
 testGetSetAccessorsAreFlaggedButSetUpAndSettleAreNot
