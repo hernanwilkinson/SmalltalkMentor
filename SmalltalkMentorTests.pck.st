@@ -1,6 +1,6 @@
-'From Cuis7.9 [latest update: #8158] on 9 September 2026 at 11:32:19 am'!
-'Description Make the explicit class reference heuristic a method heuristic'!
-!provides: 'SmalltalkMentorTests' 1 21!
+'From Cuis7.9 [latest update: #8158] on 9 September 2026 at 11:47:09 am'!
+'Description Root the heuristics in SmalltalkHeuristic and rename the class heuristic root'!
+!provides: 'SmalltalkMentorTests' 1 22!
 !requires: 'SmalltalkMentor' nil nil nil!
 SystemOrganization addCategory: #SmalltalkMentorTests!
 
