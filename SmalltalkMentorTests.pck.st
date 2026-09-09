@@ -1,6 +1,6 @@
-'From Cuis7.9 [latest update: #8158] on 9 September 2026 at 3:19:07 pm'!
-'Description List violated heuristics flat in the method review with description over source'!
-!provides: 'SmalltalkMentorTests' 1 25!
+'From Cuis7.9 [latest update: #8158] on 9 September 2026 at 3:33:26 pm'!
+'Description Show each method of a category review with its violated heuristics and the LLM entry'!
+!provides: 'SmalltalkMentorTests' 1 26!
 !requires: 'SmalltalkMentor' nil nil nil!
 SystemOrganization addCategory: #SmalltalkMentorTests!
 
@@ -191,6 +191,27 @@ testMethodCategoryMustNotBeEmpty
 	findings := (NoEmptyMethodCategoriesHeuristic for: classToVerify) value.
 	self assert: (findings anySatisfy: [ :finding |
 		finding title includesSubString: 'unused protocol' ])! !
+
+!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 9/Sep/2026, 6:23:56 pm (UTC)'!
+testMethodCategoryReviewListsEachMethodWithItsViolatedHeuristicsThenTheLLMReview
+
+	| classToVerify roots methodNode children |
+
+	classToVerify := self newFixture.
+	classToVerify compile: 'sameAs: anObject ^self == anObject' classified: 'comparing'.
+	roots := (SmalltalkMentorMethodCategoryReview
+		on: 'comparing'
+		of: classToVerify
+		mentor: SmalltalkMentor new) buildRootNodes.
+	self assert: roots size equals: 1.
+	methodNode := roots first.
+	self assert: methodNode asString equals: 'sameAs:'.
+	self assert: methodNode kind equals: #methodRoot.
+	children := methodNode contents.
+	self assert: children size equals: 2.
+	self assert: children first kind equals: #violatedHeuristic.
+	self assert: (children first asString includesSubString: 'Prefer = over ==').
+	self assert: children last kind equals: #method! !
 
 !SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 9/Sep/2026, 1:50:04 pm (UTC)'!
 testMethodMustBeCategorized

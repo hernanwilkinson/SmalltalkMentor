@@ -1,6 +1,6 @@
-'From Cuis7.9 [latest update: #8158] on 9 September 2026 at 3:19:09 pm'!
-'Description List violated heuristics flat in the method review with description over source'!
-!provides: 'SmalltalkMentor' 1 57!
+'From Cuis7.9 [latest update: #8158] on 9 September 2026 at 3:33:29 pm'!
+'Description Show each method of a category review with its violated heuristics and the LLM entry'!
+!provides: 'SmalltalkMentor' 1 58!
 !requires: 'JSON' 1 29 nil!
 !requires: 'OSProcess' 1 36 nil!
 SystemOrganization addCategory: #SmalltalkMentor!
@@ -1767,6 +1767,11 @@ tokens
 	^(Scanner new scanTokens: self sourceCode withoutSmalltalkLiterals)
 		withNestedArraysFlattened! !
 
+!SmalltalkMethodHeuristic methodsFor: 'accessing' stamp: 'HAW 9/Sep/2026, 6:23:06 pm (UTC)'!
+classSelectorAssociation
+
+	^compiledMethod classSelectorAssociation! !
+
 !AndOrOverBooleanOperatorsHeuristic methodsFor: 'accessing' stamp: 'HAW 8/Sep/2026, 11:17:41 pm (UTC)'!
 description
 
@@ -3363,6 +3368,11 @@ allHeuristicsPassedNodeListing: heuristics
 		children: #()
 		model: self! !
 
+!SmalltalkMentorReview methodsFor: 'tree' stamp: 'HAW 9/Sep/2026, 6:25:56 pm (UTC)'!
+allHeuristicsPassedNodesFor: heuristics
+
+	^OrderedCollection with: (self allHeuristicsPassedNodeListing: heuristics)! !
+
 !SmalltalkMentorReview methodsFor: 'tree' stamp: 'HAW 9/Sep/2026, 2:53:51 pm (UTC)'!
 buildRootNodes
 
@@ -3411,6 +3421,16 @@ heuristicRootNodesFor: aClass
 	^roots ifEmpty: [
 		OrderedCollection with: (self allHeuristicsPassedNodeFor: aClass) ]! !
 
+!SmalltalkMentorReview methodsFor: 'tree' stamp: 'HAW 9/Sep/2026, 6:23:17 pm (UTC)'!
+llmReviewNodeFor: aClassSelectorAssociation
+
+	^SmalltalkMentorNode
+		label: 'Ask the LLM for a better version'
+		kind: #method
+		payload: aClassSelectorAssociation
+		children: #()
+		model: self! !
+
 !SmalltalkMentorReview methodsFor: 'tree' stamp: 'HAW 8/Sep/2026, 11:44:48 pm (UTC)'!
 methodHeuristicsListedFor: aClass
 
@@ -3430,6 +3450,16 @@ methodNodeFor: aSelector in: aClassOrMetaclass
 		children: #()
 		model: self! !
 
+!SmalltalkMentorReview methodsFor: 'tree' stamp: 'HAW 9/Sep/2026, 6:25:50 pm (UTC)'!
+methodReviewNodesFor: aClassSelectorAssociation
+
+	| nodes |
+
+	nodes := self
+		violatedHeuristicNodesFor: aClassSelectorAssociation compiledMethod.
+	nodes add: (self llmReviewNodeFor: aClassSelectorAssociation).
+	^nodes! !
+
 !SmalltalkMentorReview methodsFor: 'tree' stamp: 'HAW 9/Sep/2026, 2:43:14 am (UTC)'!
 methodsSideNodeFor: aClassOrMetaclass label: aLabel
 
@@ -3440,10 +3470,13 @@ methodsSideNodeFor: aClassOrMetaclass label: aLabel
 		children: (self categoryNodesFor: aClassOrMetaclass)
 		model: self! !
 
-!SmalltalkMentorReview methodsFor: 'tree' stamp: 'HAW 9/Sep/2026, 2:01:43 am (UTC)'!
+!SmalltalkMentorReview methodsFor: 'tree' stamp: 'HAW 9/Sep/2026, 6:24:57 pm (UTC)'!
 nodeSelected: aNode
 
 	aNode kind = #method ifTrue: [ ^self showMethodReview: aNode payload ].
+	aNode kind = #methodRoot ifTrue: [ ^self showMethodEditorFor: aNode payload ].
+	aNode kind = #violatedHeuristic ifTrue: [
+		^self showViolatedHeuristic: aNode payload ].
 	aNode kind = #finding ifTrue: [ ^self showFinding: aNode payload ].
 	aNode kind = #heuristicRoot ifTrue: [ ^self showText: aNode payload ].
 	aNode kind = #allPassed ifTrue: [ ^self showText: aNode payload ].
@@ -3467,6 +3500,28 @@ selectedIndex: aWrapper
 	(aWrapper isKindOf: SmalltalkMentorNode) ifTrue: [
 		self nodeSelected: aWrapper ]! !
 
+!SmalltalkMentorReview methodsFor: 'tree' stamp: 'HAW 9/Sep/2026, 6:22:59 pm (UTC)'!
+violatedHeuristicNodeFor: aMethodHeuristic
+
+	^SmalltalkMentorNode
+		label: aMethodHeuristic name
+		kind: #violatedHeuristic
+		payload: aMethodHeuristic
+		children: #()
+		model: self! !
+
+!SmalltalkMentorReview methodsFor: 'tree' stamp: 'HAW 9/Sep/2026, 6:25:53 pm (UTC)'!
+violatedHeuristicNodesFor: aCompiledMethod
+
+	| methodHeuristics violatedNodes |
+
+	methodHeuristics := self methodHeuristicsFor: aCompiledMethod.
+	violatedNodes := (methodHeuristics select: [ :each | each isViolated ])
+		collect: [ :each | self violatedHeuristicNodeFor: each ].
+	^violatedNodes
+		ifEmpty: [ self allHeuristicsPassedNodesFor: methodHeuristics ]
+		ifNotEmpty: [ :nodes | nodes asOrderedCollection ]! !
+
 !SmalltalkMentorReview methodsFor: 'detail' stamp: 'HAW 9/Sep/2026, 2:42:46 am (UTC)'!
 analyzeInBackground: aClassSelectorAssociation
 
@@ -3482,6 +3537,13 @@ clearDetail
 
 	detailHolder removeAllMorphs! !
 
+!SmalltalkMentorReview methodsFor: 'detail' stamp: 'HAW 9/Sep/2026, 6:26:28 pm (UTC)'!
+descriptionPaneLayoutSpec
+
+	^LayoutSpec
+		proportionalWidth: 1.0
+		fixedHeight: FontFamily defaultLineSpacing * 6! !
+
 !SmalltalkMentorReview methodsFor: 'detail' stamp: 'HAW 9/Sep/2026, 4:56:29 pm (UTC)'!
 methodEditorFor: aClassSelectorAssociation
 
@@ -3492,6 +3554,11 @@ methodEditorFor: aClassSelectorAssociation
 		setClass: aClassSelectorAssociation key
 		selector: aClassSelectorAssociation value.
 	^browser newCodePaneMorph! !
+
+!SmalltalkMentorReview methodsFor: 'detail' stamp: 'HAW 9/Sep/2026, 6:25:02 pm (UTC)'!
+newDescriptionPaneFor: aHeuristic
+
+	^TextModelMorph withText: aHeuristic description asText! !
 
 !SmalltalkMentorReview methodsFor: 'detail' stamp: 'HAW 9/Sep/2026, 2:01:44 am (UTC)'!
 renderDetail: aMorph
@@ -3556,6 +3623,19 @@ showText: aString
 
 	self renderDetail: (TextModelMorph withText: aString asText)! !
 
+!SmalltalkMentorReview methodsFor: 'detail' stamp: 'HAW 9/Sep/2026, 6:26:42 pm (UTC)'!
+showViolatedHeuristic: aMethodHeuristic
+
+	| column methodEditor |
+
+	methodEditor := self methodEditorFor: aMethodHeuristic classSelectorAssociation.
+	column := LayoutMorph newColumn.
+	column
+		addMorph: (self newDescriptionPaneFor: aMethodHeuristic)
+		layoutSpec: self descriptionPaneLayoutSpec.
+	column addAdjusterAndMorph: methodEditor proportionalHeight: 1.0.
+	self renderDetail: column! !
+
 !SmalltalkMentorReview methodsFor: 'reviewing' stamp: 'HAW 9/Sep/2026, 2:53:00 pm (UTC)'!
 buildReviewFor: aClassSelectorAssociation
 
@@ -3605,10 +3685,11 @@ browseFinding: aFinding
 		^aFinding editTarget key openClassBrowser ].
 	^self browseTarget! !
 
-!SmalltalkMentorReview methodsFor: 'menu actions' stamp: 'HAW 9/Sep/2026, 2:54:34 pm (UTC)'!
+!SmalltalkMentorReview methodsFor: 'menu actions' stamp: 'HAW 9/Sep/2026, 6:23:22 pm (UTC)'!
 browseNode: aNode
 
 	aNode kind = #method ifTrue: [ ^aNode payload openMethodBrowser ].
+	aNode kind = #methodRoot ifTrue: [ ^aNode payload openMethodBrowser ].
 	aNode kind = #finding ifTrue: [ ^self browseFinding: aNode payload ].
 	aNode kind = #classTop ifTrue: [ ^aNode payload openClassBrowser ].
 	^self browseTarget! !
@@ -3810,14 +3891,24 @@ initializeClassOrMeta: aClassOrMeta category: aCategory mentor: aMentor
 	mentor := aMentor.
 	methodReviewCache := Dictionary new! !
 
-!SmalltalkMentorMethodCategoryReview methodsFor: 'tree' stamp: 'HAW 9/Sep/2026, 3:08:01 am (UTC)'!
+!SmalltalkMentorMethodCategoryReview methodsFor: 'tree' stamp: 'HAW 9/Sep/2026, 6:26:33 pm (UTC)'!
 buildRootNodes
 
 	| methodNodes |
 
 	methodNodes := self selectorsToReview
-		collect: [ :each | self methodNodeFor: each in: targetClass ].
+		collect: [ :each | self rootNodeFor: each ].
 	^methodNodes asOrderedCollection! !
+
+!SmalltalkMentorMethodCategoryReview methodsFor: 'tree' stamp: 'HAW 9/Sep/2026, 6:25:10 pm (UTC)'!
+rootNodeFor: aSelector
+
+	^SmalltalkMentorNode
+		label: aSelector asString
+		kind: #methodRoot
+		payload: targetClass -> aSelector
+		childrenBlock: [ self methodReviewNodesFor: targetClass -> aSelector ]
+		model: self! !
 
 !SmalltalkMentorMethodCategoryReview methodsFor: 'tree' stamp: 'HAW 9/Sep/2026, 3:08:03 am (UTC)'!
 selectorsToReview
@@ -3860,52 +3951,10 @@ initializeClass: aClassOrMetaclass selector: aSelector mentor: aMentor
 	mentor := aMentor.
 	methodReviewCache := Dictionary new! !
 
-!SmalltalkMentorMethodReview methodsFor: 'tree' stamp: 'HAW 8/Sep/2026, 11:45:07 pm (UTC)'!
+!SmalltalkMentorMethodReview methodsFor: 'tree' stamp: 'HAW 9/Sep/2026, 6:23:44 pm (UTC)'!
 buildRootNodes
 
-	| methodHeuristics roots |
-
-	methodHeuristics := self methodHeuristicsFor: targetClass >> selector.
-	roots := self rootsFor: methodHeuristics.
-	roots add: self llmReviewNode.
-	^roots! !
-
-!SmalltalkMentorMethodReview methodsFor: 'tree' stamp: 'HAW 8/Sep/2026, 11:45:11 pm (UTC)'!
-llmReviewNode
-
-	^SmalltalkMentorNode
-		label: 'Ask the LLM for a better version'
-		kind: #method
-		payload: targetClass -> selector
-		children: #()
-		model: self! !
-
-!SmalltalkMentorMethodReview methodsFor: 'tree' stamp: 'HAW 9/Sep/2026, 4:56:23 pm (UTC)'!
-nodeSelected: aNode
-
-	aNode kind = #violatedHeuristic ifTrue: [ ^self showViolatedHeuristic: aNode payload ].
-	^super nodeSelected: aNode! !
-
-!SmalltalkMentorMethodReview methodsFor: 'tree' stamp: 'HAW 9/Sep/2026, 4:56:16 pm (UTC)'!
-rootsFor: methodHeuristics
-
-	| roots |
-
-	roots := (methodHeuristics select: [ :each | each isViolated ])
-		collect: [ :each | self violatedHeuristicNodeFor: each ].
-	^roots
-		ifEmpty: [ OrderedCollection with: (self allHeuristicsPassedNodeListing: methodHeuristics) ]
-		ifNotEmpty: [ :violatedNodes | violatedNodes asOrderedCollection ]! !
-
-!SmalltalkMentorMethodReview methodsFor: 'tree' stamp: 'HAW 9/Sep/2026, 4:56:21 pm (UTC)'!
-violatedHeuristicNodeFor: aMethodHeuristic
-
-	^SmalltalkMentorNode
-		label: aMethodHeuristic name
-		kind: #violatedHeuristic
-		payload: aMethodHeuristic
-		children: #()
-		model: self! !
+	^self methodReviewNodesFor: targetClass -> selector! !
 
 !SmalltalkMentorMethodReview methodsFor: 'ui' stamp: 'HAW 8/Sep/2026, 11:22:00 pm (UTC)'!
 windowLabel
@@ -3916,25 +3965,6 @@ windowLabel
 browseTarget
 
 	^(targetClass -> selector) openMethodBrowser! !
-
-!SmalltalkMentorMethodReview methodsFor: 'detail' stamp: 'HAW 9/Sep/2026, 6:12:41 pm (UTC)'!
-descriptionPaneHeight
-
-	^FontFamily defaultLineSpacing * 6! !
-
-!SmalltalkMentorMethodReview methodsFor: 'detail' stamp: 'HAW 9/Sep/2026, 6:12:14 pm (UTC)'!
-showViolatedHeuristic: aMethodHeuristic
-
-	| column |
-
-	column := LayoutMorph newColumn.
-	column
-		addMorph: (TextModelMorph withText: aMethodHeuristic description asText)
-		layoutSpec: (LayoutSpec proportionalWidth: 1.0 fixedHeight: self descriptionPaneHeight).
-	column
-		addAdjusterAndMorph: (self methodEditorFor: targetClass -> selector)
-		proportionalHeight: 1.0.
-	self renderDetail: column! !
 
 !SmalltalkMentorMethodReview class methodsFor: 'instance creation' stamp: 'HAW 8/Sep/2026, 11:50:02 pm (UTC)'!
 on: aClassOrMetaclass selector: aSelector mentor: aMentor
@@ -4598,6 +4628,11 @@ newCodePaneMorph
 		textGetter: #acceptedContents
 		textSetter: #contents:notifying:
 		selectionGetter: #contentsSelection! !
+
+!Association methodsFor: '*SmalltalkMentor' stamp: 'HAW 9/Sep/2026, 6:24:47 pm (UTC)'!
+compiledMethod
+
+	^self key >> self value! !
 
 !Association methodsFor: '*SmalltalkMentor' stamp: 'HAW 9/Sep/2026, 3:07:51 am (UTC)'!
 methodCategory
