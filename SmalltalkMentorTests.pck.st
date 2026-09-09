@@ -1,6 +1,6 @@
-'From Cuis7.9 [latest update: #8158] on 9 September 2026 at 4:42:54 pm'!
-'Description Highlight every AST based heuristic and review unused temporaries per method'!
-!provides: 'SmalltalkMentorTests' 1 29!
+'From Cuis7.9 [latest update: #8158] on 9 September 2026 at 5:05:03 pm'!
+'Description Rename doesNotHold to fails and initialize the failing nodes lazily'!
+!provides: 'SmalltalkMentorTests' 1 30!
 !requires: 'SmalltalkMentor' nil nil nil!
 SystemOrganization addCategory: #SmalltalkMentorTests!
 
