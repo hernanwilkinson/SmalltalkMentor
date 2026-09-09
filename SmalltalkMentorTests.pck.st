@@ -1,6 +1,6 @@
-'From Cuis7.9 [latest update: #8158] on 9 September 2026 at 12:10:00 pm'!
-'Description Name the conversation text model collaborator panel'!
-!provides: 'SmalltalkMentorTests' 1 24!
+'From Cuis7.9 [latest update: #8158] on 9 September 2026 at 3:19:07 pm'!
+'Description List violated heuristics flat in the method review with description over source'!
+!provides: 'SmalltalkMentorTests' 1 25!
 !requires: 'SmalltalkMentor' nil nil nil!
 SystemOrganization addCategory: #SmalltalkMentorTests!
 
@@ -229,7 +229,7 @@ testMethodReviewListsAllHeuristicsPassedWhenNoneFails
 	self assert: roots first kind equals: #allPassed.
 	self assert: (roots first payload includesSubString: 'No extra parenthesis')! !
 
-!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 9/Sep/2026, 2:34:27 am (UTC)'!
+!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 9/Sep/2026, 4:56:44 pm (UTC)'!
 testMethodReviewListsOnlyFailingHeuristicsThenTheLLMReview
 
 	| classToVerify roots |
@@ -241,7 +241,9 @@ testMethodReviewListsOnlyFailingHeuristicsThenTheLLMReview
 		selector: #sameAs:
 		mentor: SmalltalkMentor new) buildRootNodes.
 	self assert: roots size equals: 2.
+	self assert: roots first kind equals: #violatedHeuristic.
 	self assert: (roots first asString includesSubString: 'Prefer = over ==').
+	self deny: roots first hasContents.
 	self assert: roots last kind equals: #method! !
 
 !SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 9/Sep/2026, 1:50:04 pm (UTC)'!

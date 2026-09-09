@@ -1,6 +1,6 @@
-'From Cuis7.9 [latest update: #8158] on 9 September 2026 at 12:10:03 pm'!
-'Description Name the conversation text model collaborator panel'!
-!provides: 'SmalltalkMentor' 1 56!
+'From Cuis7.9 [latest update: #8158] on 9 September 2026 at 3:19:09 pm'!
+'Description List violated heuristics flat in the method review with description over source'!
+!provides: 'SmalltalkMentor' 1 57!
 !requires: 'JSON' 1 29 nil!
 !requires: 'OSProcess' 1 36 nil!
 SystemOrganization addCategory: #SmalltalkMentor!
@@ -3482,6 +3482,17 @@ clearDetail
 
 	detailHolder removeAllMorphs! !
 
+!SmalltalkMentorReview methodsFor: 'detail' stamp: 'HAW 9/Sep/2026, 4:56:29 pm (UTC)'!
+methodEditorFor: aClassSelectorAssociation
+
+	| browser |
+
+	browser := Browser new.
+	browser
+		setClass: aClassSelectorAssociation key
+		selector: aClassSelectorAssociation value.
+	^browser newCodePaneMorph! !
+
 !SmalltalkMentorReview methodsFor: 'detail' stamp: 'HAW 9/Sep/2026, 2:01:44 am (UTC)'!
 renderDetail: aMorph
 
@@ -3510,16 +3521,10 @@ showFinding: aFinding
 		^self showClassDefinitionEditorFor: aFinding editTarget ].
 	self showText: aFinding detail! !
 
-!SmalltalkMentorReview methodsFor: 'detail' stamp: 'HAW 9/Sep/2026, 2:43:11 am (UTC)'!
+!SmalltalkMentorReview methodsFor: 'detail' stamp: 'HAW 9/Sep/2026, 4:56:32 pm (UTC)'!
 showMethodEditorFor: aClassSelectorAssociation
 
-	| browser |
-
-	browser := Browser new.
-	browser
-		setClass: aClassSelectorAssociation key
-		selector: aClassSelectorAssociation value.
-	self renderDetail: browser newCodePaneMorph! !
+	self renderDetail: (self methodEditorFor: aClassSelectorAssociation)! !
 
 !SmalltalkMentorReview methodsFor: 'detail' stamp: 'HAW 9/Sep/2026, 2:42:44 am (UTC)'!
 showMethodReview: aClassSelectorAssociation
@@ -3875,17 +3880,32 @@ llmReviewNode
 		children: #()
 		model: self! !
 
-!SmalltalkMentorMethodReview methodsFor: 'tree' stamp: 'HAW 8/Sep/2026, 11:50:00 pm (UTC)'!
+!SmalltalkMentorMethodReview methodsFor: 'tree' stamp: 'HAW 9/Sep/2026, 4:56:23 pm (UTC)'!
+nodeSelected: aNode
+
+	aNode kind = #violatedHeuristic ifTrue: [ ^self showViolatedHeuristic: aNode payload ].
+	^super nodeSelected: aNode! !
+
+!SmalltalkMentorMethodReview methodsFor: 'tree' stamp: 'HAW 9/Sep/2026, 4:56:16 pm (UTC)'!
 rootsFor: methodHeuristics
 
 	| roots |
 
-	roots := OrderedCollection new.
-	methodHeuristics do: [ :each |
-		self addRootFor: each findings: each value to: roots ].
-	^roots ifEmpty: [
-		OrderedCollection with:
-			(self allHeuristicsPassedNodeListing: methodHeuristics) ]! !
+	roots := (methodHeuristics select: [ :each | each isViolated ])
+		collect: [ :each | self violatedHeuristicNodeFor: each ].
+	^roots
+		ifEmpty: [ OrderedCollection with: (self allHeuristicsPassedNodeListing: methodHeuristics) ]
+		ifNotEmpty: [ :violatedNodes | violatedNodes asOrderedCollection ]! !
+
+!SmalltalkMentorMethodReview methodsFor: 'tree' stamp: 'HAW 9/Sep/2026, 4:56:21 pm (UTC)'!
+violatedHeuristicNodeFor: aMethodHeuristic
+
+	^SmalltalkMentorNode
+		label: aMethodHeuristic name
+		kind: #violatedHeuristic
+		payload: aMethodHeuristic
+		children: #()
+		model: self! !
 
 !SmalltalkMentorMethodReview methodsFor: 'ui' stamp: 'HAW 8/Sep/2026, 11:22:00 pm (UTC)'!
 windowLabel
@@ -3896,6 +3916,25 @@ windowLabel
 browseTarget
 
 	^(targetClass -> selector) openMethodBrowser! !
+
+!SmalltalkMentorMethodReview methodsFor: 'detail' stamp: 'HAW 9/Sep/2026, 6:12:41 pm (UTC)'!
+descriptionPaneHeight
+
+	^FontFamily defaultLineSpacing * 6! !
+
+!SmalltalkMentorMethodReview methodsFor: 'detail' stamp: 'HAW 9/Sep/2026, 6:12:14 pm (UTC)'!
+showViolatedHeuristic: aMethodHeuristic
+
+	| column |
+
+	column := LayoutMorph newColumn.
+	column
+		addMorph: (TextModelMorph withText: aMethodHeuristic description asText)
+		layoutSpec: (LayoutSpec proportionalWidth: 1.0 fixedHeight: self descriptionPaneHeight).
+	column
+		addAdjusterAndMorph: (self methodEditorFor: targetClass -> selector)
+		proportionalHeight: 1.0.
+	self renderDetail: column! !
 
 !SmalltalkMentorMethodReview class methodsFor: 'instance creation' stamp: 'HAW 8/Sep/2026, 11:50:02 pm (UTC)'!
 on: aClassOrMetaclass selector: aSelector mentor: aMentor
