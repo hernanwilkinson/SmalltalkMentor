@@ -1,6 +1,6 @@
-'From Cuis7.9 [latest update: #8158] on 9 September 2026 at 4:15:48 pm'!
-'Description Highlight the source that fails a heuristic, starting with ==, = nil and long keyword lines'!
-!provides: 'SmalltalkMentor' 1 60!
+'From Cuis7.9 [latest update: #8158] on 9 September 2026 at 4:42:57 pm'!
+'Description Highlight every AST based heuristic and review unused temporaries per method'!
+!provides: 'SmalltalkMentor' 1 61!
 !requires: 'JSON' 1 29 nil!
 !requires: 'OSProcess' 1 36 nil!
 SystemOrganization addCategory: #SmalltalkMentor!
@@ -186,16 +186,6 @@ SmalltalkClassHeuristic subclass: #NoEmptyMethodCategoriesHeuristic
 NoEmptyMethodCategoriesHeuristic class
 	instanceVariableNames: ''!
 
-!classDefinition: #NoUnusedTemporariesHeuristic category: #SmalltalkMentor!
-SmalltalkClassHeuristic subclass: #NoUnusedTemporariesHeuristic
-	instanceVariableNames: ''
-	classVariableNames: ''
-	poolDictionaries: ''
-	category: 'SmalltalkMentor'!
-!classDefinition: 'NoUnusedTemporariesHeuristic class' category: #SmalltalkMentor!
-NoUnusedTemporariesHeuristic class
-	instanceVariableNames: ''!
-
 !classDefinition: #OneInitializeMessageHeuristic category: #SmalltalkMentor!
 SmalltalkClassHeuristic subclass: #OneInitializeMessageHeuristic
 	instanceVariableNames: ''
@@ -258,7 +248,7 @@ InstanceVariablesReadAndWrittenHeuristic class
 
 !classDefinition: #SmalltalkMethodHeuristic category: #SmalltalkMentor!
 SmalltalkHeuristic subclass: #SmalltalkMethodHeuristic
-	instanceVariableNames: 'compiledMethod'
+	instanceVariableNames: 'compiledMethod parseTree'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'SmalltalkMentor'!
@@ -464,6 +454,16 @@ SmalltalkMethodHeuristic subclass: #NoTypePreconditionHeuristic
 	category: 'SmalltalkMentor'!
 !classDefinition: 'NoTypePreconditionHeuristic class' category: #SmalltalkMentor!
 NoTypePreconditionHeuristic class
+	instanceVariableNames: ''!
+
+!classDefinition: #NoUnusedTemporariesHeuristic category: #SmalltalkMentor!
+SmalltalkMethodHeuristic subclass: #NoUnusedTemporariesHeuristic
+	instanceVariableNames: ''
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'SmalltalkMentor'!
+!classDefinition: 'NoUnusedTemporariesHeuristic class' category: #SmalltalkMentor!
+NoUnusedTemporariesHeuristic class
 	instanceVariableNames: ''!
 
 !classDefinition: #RedundantIfTrueConditionHeuristic category: #SmalltalkMentor!
@@ -1310,49 +1310,6 @@ value
 		into: [ :findings :eachSide |
 			findings addAll: (self findingsIn: eachSide); yourself ]! !
 
-!NoUnusedTemporariesHeuristic methodsFor: 'accessing' stamp: 'HAW 8/Sep/2026, 2:27:39 pm (UTC)'!
-description
-
-	^'A method should not declare a temporary variable that is never read, whether it is unreferenced or only assigned.'! !
-
-!NoUnusedTemporariesHeuristic methodsFor: 'accessing' stamp: 'HAW 8/Sep/2026, 2:27:33 pm (UTC)'!
-name
-
-	^'No unused or write-only temporaries'! !
-
-!NoUnusedTemporariesHeuristic methodsFor: 'private' stamp: 'HAW 9/Sep/2026, 11:38:29 am (UTC)'!
-descriptionOf: aTemporaryNode
-
-	^aTemporaryNode name, ' ', (aTemporaryNode isAssignedTemporary
-		ifTrue: [ 'is assigned but never read' ]
-		ifFalse: [ 'is declared but never used' ])! !
-
-!NoUnusedTemporariesHeuristic methodsFor: 'private' stamp: 'HAW 9/Sep/2026, 11:38:32 am (UTC)'!
-findingFor: aTemporaryNode in: aCompiledMethod
-
-	| description |
-
-	description := self descriptionOf: aTemporaryNode.
-	^SmalltalkMentorFinding
-		title: self name, ': ', description, ' in ', aCompiledMethod locationString
-		detail: 'The temporary variable ', description, '.'
-		editKind: #method
-		editTarget: aCompiledMethod classSelectorAssociation! !
-
-!NoUnusedTemporariesHeuristic methodsFor: 'private' stamp: 'HAW 9/Sep/2026, 2:46:14 am (UTC)'!
-findingsIn: aCompiledMethod
-
-	^[ aCompiledMethod unusedTemporaryNodes
-		collect: [ :each | self findingFor: each in: aCompiledMethod ] ]
-			on: Error do: [ :error | #() ]! !
-
-!NoUnusedTemporariesHeuristic methodsFor: 'evaluating' stamp: 'HAW 9/Sep/2026, 1:47:47 pm (UTC)'!
-value
-
-	^reviewedClass compiledMethodsOnBothSides
-		inject: OrderedCollection new
-		into: [ :findings :each | findings addAll: (self findingsIn: each); yourself ]! !
-
 !OneInitializeMessageHeuristic methodsFor: 'accessing' stamp: 'HAW 8/Sep/2026, 2:31:19 pm (UTC)'!
 description
 
@@ -1684,20 +1641,25 @@ initializeFor: aCompiledMethod
 
 	compiledMethod := aCompiledMethod! !
 
-!SmalltalkMethodHeuristic methodsFor: 'evaluating' stamp: 'HAW 9/Sep/2026, 6:53:53 pm (UTC)'!
+!SmalltalkMethodHeuristic methodsFor: 'evaluating' stamp: 'HAW 9/Sep/2026, 7:20:49 pm (UTC)'!
 doesNotHold
 
-	^self subclassResponsibility! !
+	^self failingNodes notEmpty! !
+
+!SmalltalkMethodHeuristic methodsFor: 'evaluating' stamp: 'HAW 9/Sep/2026, 7:20:52 pm (UTC)'!
+failingNodes
+
+	^#()! !
 
 !SmalltalkMethodHeuristic methodsFor: 'evaluating' stamp: 'HAW 9/Sep/2026, 6:53:57 pm (UTC)'!
 failureDetail
 
 	^'The method ', self location, ' does not follow the heuristic: ', self description! !
 
-!SmalltalkMethodHeuristic methodsFor: 'evaluating' stamp: 'HAW 9/Sep/2026, 6:56:13 pm (UTC)'!
+!SmalltalkMethodHeuristic methodsFor: 'evaluating' stamp: 'HAW 9/Sep/2026, 7:20:55 pm (UTC)'!
 failureRanges
 
-	^#()! !
+	^self rangesOf: self failingNodes! !
 
 !SmalltalkMethodHeuristic methodsFor: 'evaluating' stamp: 'HAW 9/Sep/2026, 6:53:57 pm (UTC)'!
 finding
@@ -1715,11 +1677,13 @@ value
 		ifTrue: [ OrderedCollection with: self finding ]
 		ifFalse: [ OrderedCollection new ]! !
 
-!SmalltalkMethodHeuristic methodsFor: 'private' stamp: 'HAW 8/Sep/2026, 11:38:59 pm (UTC)'!
-anyAssertionArgumentSends: selectors
+!SmalltalkMethodHeuristic methodsFor: 'private' stamp: 'HAW 9/Sep/2026, 7:27:57 pm (UTC)'!
+assertionArgumentSendsOf: selectors
 
-	^self assertionArguments anySatisfy: [ :eachArgument |
-		eachArgument allNodes anySatisfy: [ :each | each isSendOfAnyOf: selectors ] ]! !
+	^self assertionArguments
+		inject: OrderedCollection new
+		into: [ :sends :eachArgument |
+			sends addAll: (self sendsOf: selectors in: eachArgument); yourself ]! !
 
 !SmalltalkMethodHeuristic methodsFor: 'private' stamp: 'HAW 8/Sep/2026, 11:38:58 pm (UTC)'!
 assertionArguments
@@ -1784,10 +1748,10 @@ overridesAnInheritedMethod
 
 	^compiledMethod overridesInheritedMethod! !
 
-!SmalltalkMethodHeuristic methodsFor: 'private' stamp: 'HAW 9/Sep/2026, 6:56:10 pm (UTC)'!
+!SmalltalkMethodHeuristic methodsFor: 'private' stamp: 'HAW 9/Sep/2026, 7:20:47 pm (UTC)'!
 parseTree
 
-	^compiledMethod notOptimizedMethodNode! !
+	^parseTree ifNil: [ parseTree := compiledMethod notOptimizedMethodNode ]! !
 
 !SmalltalkMethodHeuristic methodsFor: 'private' stamp: 'HAW 9/Sep/2026, 6:56:17 pm (UTC)'!
 rangesOf: parseNodes
@@ -1809,10 +1773,10 @@ selector
 
 	^compiledMethod selector! !
 
-!SmalltalkMethodHeuristic methodsFor: 'private' stamp: 'HAW 8/Sep/2026, 11:13:20 pm (UTC)'!
-sendsAnyMessageSatisfying: aBlock
+!SmalltalkMethodHeuristic methodsFor: 'private' stamp: 'HAW 9/Sep/2026, 7:28:00 pm (UTC)'!
+sendsOf: selectors in: aParseNode
 
-	^self messageNodes anySatisfy: aBlock! !
+	^aParseNode allNodes select: [ :each | each isSendOfAnyOf: selectors ]! !
 
 !SmalltalkMethodHeuristic methodsFor: 'private' stamp: 'HAW 8/Sep/2026, 11:13:05 pm (UTC)'!
 sourceCode
@@ -1845,10 +1809,10 @@ name
 
 	^'and:/or: over & and |'! !
 
-!AndOrOverBooleanOperatorsHeuristic methodsFor: 'evaluating' stamp: 'HAW 9/Sep/2026, 6:53:52 pm (UTC)'!
-doesNotHold
+!AndOrOverBooleanOperatorsHeuristic methodsFor: 'evaluating' stamp: 'HAW 9/Sep/2026, 7:21:07 pm (UTC)'!
+failingNodes
 
-	^self sendsAnyMessageSatisfying: [ :each | each isSendOfAnyOf: { #&. #| } ]! !
+	^self messageNodes select: [ :each | each isSendOfAnyOf: { #&. #| } ]! !
 
 !AndOrTakeBlocksHeuristic methodsFor: 'accessing' stamp: 'HAW 8/Sep/2026, 11:17:28 pm (UTC)'!
 description
@@ -1860,13 +1824,17 @@ name
 
 	^'and:/or: take blocks'! !
 
-!AndOrTakeBlocksHeuristic methodsFor: 'evaluating' stamp: 'HAW 9/Sep/2026, 6:53:53 pm (UTC)'!
-doesNotHold
+!AndOrTakeBlocksHeuristic methodsFor: 'private' stamp: 'HAW 9/Sep/2026, 7:27:04 pm (UTC)'!
+isAndOrWithoutBlock: aMessageNode
 
-	^self sendsAnyMessageSatisfying: [ :each |
-		(each isSendOfAnyOf: #(and: or: and:and: or:or: and:and:and: or:or:or:))
-			and: [ each arguments anySatisfy: [ :eachArgument |
-				(eachArgument isKindOf: BlockNode) not ] ] ]! !
+	^(aMessageNode isSendOfAnyOf: #(and: or: and:and: or:or: and:and:and: or:or:or:))
+		and: [ aMessageNode arguments
+			anySatisfy: [ :each | (each isKindOf: BlockNode) not ] ]! !
+
+!AndOrTakeBlocksHeuristic methodsFor: 'evaluating' stamp: 'HAW 9/Sep/2026, 7:21:15 pm (UTC)'!
+failingNodes
+
+	^self messageNodes select: [ :each | self isAndOrWithoutBlock: each ]! !
 
 !AvoidSettersHeuristic methodsFor: 'accessing' stamp: 'HAW 8/Sep/2026, 11:16:34 pm (UTC)'!
 description
@@ -1909,18 +1877,8 @@ name
 
 	^'isNil over = nil'! !
 
-!ComparisonWithNilHeuristic methodsFor: 'evaluating' stamp: 'HAW 9/Sep/2026, 7:00:25 pm (UTC)'!
-doesNotHold
-
-	^self sendsComparingWithNil notEmpty! !
-
-!ComparisonWithNilHeuristic methodsFor: 'evaluating' stamp: 'HAW 9/Sep/2026, 7:00:25 pm (UTC)'!
-failureRanges
-
-	^self rangesOf: self sendsComparingWithNil! !
-
-!ComparisonWithNilHeuristic methodsFor: 'private' stamp: 'HAW 9/Sep/2026, 7:00:25 pm (UTC)'!
-sendsComparingWithNil
+!ComparisonWithNilHeuristic methodsFor: 'evaluating' stamp: 'HAW 9/Sep/2026, 7:22:49 pm (UTC)'!
+failingNodes
 
 	^self messageNodes select: [ :each | each isComparisonWithNil ]! !
 
@@ -1934,12 +1892,13 @@ name
 
 	^'ifEmpty: over isEmpty ifTrue:'! !
 
-!ConditionalOnEmptyTestHeuristic methodsFor: 'evaluating' stamp: 'HAW 9/Sep/2026, 6:53:53 pm (UTC)'!
-doesNotHold
+!ConditionalOnEmptyTestHeuristic methodsFor: 'evaluating' stamp: 'HAW 9/Sep/2026, 7:21:29 pm (UTC)'!
+failingNodes
 
-	^self sendsAnyMessageSatisfying: [ :each |
+	^(self messageNodes select: [ :each |
 		each isConditionalSend
-			and: [ each receiver isSendOfAnyOf: #(isEmpty notEmpty isEmptyOrNil) ] ]! !
+			and: [ each receiver isSendOfAnyOf: #(isEmpty notEmpty isEmptyOrNil) ] ])
+		collect: [ :each | each receiver ]! !
 
 !ConditionalOnNilTestHeuristic methodsFor: 'accessing' stamp: 'HAW 8/Sep/2026, 11:18:17 pm (UTC)'!
 description
@@ -1951,12 +1910,13 @@ name
 
 	^'ifNil: over isNil ifTrue:'! !
 
-!ConditionalOnNilTestHeuristic methodsFor: 'evaluating' stamp: 'HAW 9/Sep/2026, 6:53:53 pm (UTC)'!
-doesNotHold
+!ConditionalOnNilTestHeuristic methodsFor: 'evaluating' stamp: 'HAW 9/Sep/2026, 7:21:35 pm (UTC)'!
+failingNodes
 
-	^self sendsAnyMessageSatisfying: [ :each |
+	^(self messageNodes select: [ :each |
 		each isConditionalSend
-			and: [ each receiver isSendOfAnyOf: #(isNil notNil isNotNil) ] ]! !
+			and: [ each receiver isSendOfAnyOf: #(isNil notNil isNotNil) ] ])
+		collect: [ :each | each receiver ]! !
 
 !DenyOverAssertNotHeuristic methodsFor: 'accessing' stamp: 'HAW 8/Sep/2026, 11:15:43 pm (UTC)'!
 description
@@ -1968,12 +1928,12 @@ name
 
 	^'Prefer deny: over assert: not'! !
 
-!DenyOverAssertNotHeuristic methodsFor: 'evaluating' stamp: 'HAW 9/Sep/2026, 6:53:53 pm (UTC)'!
-doesNotHold
+!DenyOverAssertNotHeuristic methodsFor: 'evaluating' stamp: 'HAW 9/Sep/2026, 7:21:40 pm (UTC)'!
+failingNodes
 
-	^self isTestMethod and: [
-		(self firstArgumentsOfSendsOf: #(assert: assert:description:))
-			anySatisfy: [ :each | each isSendOfAnyOf: #(not) ] ]! !
+	self isTestMethod ifFalse: [ ^#() ].
+	^(self firstArgumentsOfSendsOf: #(assert: assert:description:))
+		select: [ :each | each isSendOfAnyOf: #(not) ]! !
 
 !EqualityOverIdentityHeuristic methodsFor: 'accessing' stamp: 'HAW 8/Sep/2026, 2:30:14 pm (UTC)'!
 description
@@ -1985,18 +1945,8 @@ name
 
 	^'Prefer = over =='! !
 
-!EqualityOverIdentityHeuristic methodsFor: 'evaluating' stamp: 'HAW 9/Sep/2026, 7:00:22 pm (UTC)'!
-doesNotHold
-
-	^self comparisonsByIdentity notEmpty! !
-
-!EqualityOverIdentityHeuristic methodsFor: 'evaluating' stamp: 'HAW 9/Sep/2026, 7:00:22 pm (UTC)'!
-failureRanges
-
-	^self rangesOf: self comparisonsByIdentity! !
-
-!EqualityOverIdentityHeuristic methodsFor: 'private' stamp: 'HAW 9/Sep/2026, 7:00:22 pm (UTC)'!
-comparisonsByIdentity
+!EqualityOverIdentityHeuristic methodsFor: 'evaluating' stamp: 'HAW 9/Sep/2026, 7:23:01 pm (UTC)'!
+failingNodes
 
 	^self messageNodes select: [ :each | each isSendOfAnyOf: #(== ~~) ]! !
 
@@ -2010,11 +1960,11 @@ name
 
 	^'Exception block with a single send'! !
 
-!ExceptionBlockSingleSendHeuristic methodsFor: 'evaluating' stamp: 'HAW 9/Sep/2026, 6:53:53 pm (UTC)'!
-doesNotHold
+!ExceptionBlockSingleSendHeuristic methodsFor: 'evaluating' stamp: 'HAW 9/Sep/2026, 7:21:45 pm (UTC)'!
+failingNodes
 
-	^self isTestMethod and: [
-		self exceptionBlocks anySatisfy: [ :each | each statements size ~= 1 ] ]! !
+	self isTestMethod ifFalse: [ ^#() ].
+	^self exceptionBlocks select: [ :each | each statements size ~= 1 ]! !
 
 !ExceptionBlockWithoutAssignmentHeuristic methodsFor: 'accessing' stamp: 'HAW 8/Sep/2026, 11:15:57 pm (UTC)'!
 description
@@ -2026,28 +1976,29 @@ name
 
 	^'No assignment of a failing send'! !
 
-!ExceptionBlockWithoutAssignmentHeuristic methodsFor: 'evaluating' stamp: 'HAW 9/Sep/2026, 6:53:53 pm (UTC)'!
-doesNotHold
+!ExceptionBlockWithoutAssignmentHeuristic methodsFor: 'private' stamp: 'HAW 9/Sep/2026, 7:27:02 pm (UTC)'!
+assignmentsInsideExceptionBlocks
 
-	^self isTestMethod and: [
-		self assignsAFailingSend or: [ self anyAssertionArgumentSends: #(isNil) ] ]! !
+	^self exceptionBlocks
+		inject: OrderedCollection new
+		into: [ :assignments :eachBlock |
+			assignments
+				addAll: (eachBlock allNodes select: [ :each | each isAssignmentNode ]);
+				yourself ]! !
 
-!ExceptionBlockWithoutAssignmentHeuristic methodsFor: 'private' stamp: 'HAW 8/Sep/2026, 11:49:23 pm (UTC)'!
-assignsAFailingSend
+!ExceptionBlockWithoutAssignmentHeuristic methodsFor: 'private' stamp: 'HAW 9/Sep/2026, 7:21:56 pm (UTC)'!
+assignmentsOfOnDo
 
-	^self assignsInsideAnExceptionBlock or: [ self assignsTheResultOfOnDo ]! !
-
-!ExceptionBlockWithoutAssignmentHeuristic methodsFor: 'private' stamp: 'HAW 8/Sep/2026, 11:49:25 pm (UTC)'!
-assignsInsideAnExceptionBlock
-
-	^self exceptionBlocks anySatisfy: [ :eachBlock |
-		eachBlock allNodes anySatisfy: [ :each | each isAssignmentNode ] ]! !
-
-!ExceptionBlockWithoutAssignmentHeuristic methodsFor: 'private' stamp: 'HAW 8/Sep/2026, 11:49:26 pm (UTC)'!
-assignsTheResultOfOnDo
-
-	^self parseTree allNodes anySatisfy: [ :each |
+	^self parseTree allNodes select: [ :each |
 		each isAssignmentNode and: [ each value isSendOfAnyOf: #(on:do:) ] ]! !
+
+!ExceptionBlockWithoutAssignmentHeuristic methodsFor: 'evaluating' stamp: 'HAW 9/Sep/2026, 7:21:51 pm (UTC)'!
+failingNodes
+
+	self isTestMethod ifFalse: [ ^#() ].
+	^self assignmentsInsideExceptionBlocks,
+		self assignmentsOfOnDo,
+		(self assertionArgumentSendsOf: #(isNil))! !
 
 !IfTrueIfFalseOrderHeuristic methodsFor: 'accessing' stamp: 'HAW 8/Sep/2026, 11:17:34 pm (UTC)'!
 description
@@ -2059,10 +2010,10 @@ name
 
 	^'ifTrue:ifFalse: over ifFalse:ifTrue:'! !
 
-!IfTrueIfFalseOrderHeuristic methodsFor: 'evaluating' stamp: 'HAW 9/Sep/2026, 6:57:21 pm (UTC)'!
-doesNotHold
+!IfTrueIfFalseOrderHeuristic methodsFor: 'evaluating' stamp: 'HAW 9/Sep/2026, 7:22:12 pm (UTC)'!
+failingNodes
 
-	^self sendsAnyMessageSatisfying: [ :each | each isSendOfAnyOf: #(ifFalse:ifTrue:) ]! !
+	^self messageNodes select: [ :each | each isSendOfAnyOf: #(ifFalse:ifTrue:) ]! !
 
 !InstanceCreationFormatHeuristic methodsFor: 'accessing' stamp: 'HAW 8/Sep/2026, 11:17:00 pm (UTC)'!
 description
@@ -2238,11 +2189,11 @@ name
 
 	^'No nil precondition'! !
 
-!NoNilPreconditionHeuristic methodsFor: 'evaluating' stamp: 'HAW 9/Sep/2026, 6:53:53 pm (UTC)'!
-doesNotHold
+!NoNilPreconditionHeuristic methodsFor: 'evaluating' stamp: 'HAW 9/Sep/2026, 7:22:18 pm (UTC)'!
+failingNodes
 
-	^self isClassSide and: [
-		self anyAssertionArgumentSends: #(isNil notNil isNotNil ifNil: ifNotNil:) ]! !
+	self isClassSide ifFalse: [ ^#() ].
+	^self assertionArgumentSendsOf: #(isNil notNil isNotNil ifNil: ifNotNil:)! !
 
 !NoSetGetHeuristic methodsFor: 'accessing' stamp: 'HAW 8/Sep/2026, 11:16:12 pm (UTC)'!
 description
@@ -2279,16 +2230,65 @@ name
 
 	^'No type precondition'! !
 
-!NoTypePreconditionHeuristic methodsFor: 'evaluating' stamp: 'HAW 9/Sep/2026, 6:53:53 pm (UTC)'!
-doesNotHold
-
-	^self isClassSide
-		and: [ self anyAssertionArgumentSends: self selectorsTestingType ]! !
-
 !NoTypePreconditionHeuristic methodsFor: 'private' stamp: 'HAW 8/Sep/2026, 11:57:51 pm (UTC)'!
 selectorsTestingType
 
 	^#(isKindOf: isMemberOf: respondsTo: class isString isNumber isInteger isSymbol isCollection isBlock isFloat isArray)! !
+
+!NoTypePreconditionHeuristic methodsFor: 'evaluating' stamp: 'HAW 9/Sep/2026, 7:22:23 pm (UTC)'!
+failingNodes
+
+	self isClassSide ifFalse: [ ^#() ].
+	^self assertionArgumentSendsOf: self selectorsTestingType! !
+
+!NoUnusedTemporariesHeuristic methodsFor: 'accessing' stamp: 'HAW 8/Sep/2026, 2:27:39 pm (UTC)'!
+description
+
+	^'A method should not declare a temporary variable that is never read, whether it is unreferenced or only assigned.'! !
+
+!NoUnusedTemporariesHeuristic methodsFor: 'accessing' stamp: 'HAW 8/Sep/2026, 2:27:33 pm (UTC)'!
+name
+
+	^'No unused or write-only temporaries'! !
+
+!NoUnusedTemporariesHeuristic methodsFor: 'private' stamp: 'HAW 9/Sep/2026, 7:23:31 pm (UTC)'!
+declaredTemporaryNodes
+
+	| temporaryNodes |
+
+	self parseTree ensureClosureAnalysisDone.
+	temporaryNodes := IdentitySet new.
+	self parseTree accept: (ParseNodeEnumerator
+		ofBlock: [ :each | each addDeclaredTemporariesTo: temporaryNodes ]).
+	^temporaryNodes! !
+
+!NoUnusedTemporariesHeuristic methodsFor: 'private' stamp: 'HAW 9/Sep/2026, 11:38:29 am (UTC)'!
+descriptionOf: aTemporaryNode
+
+	^aTemporaryNode name, ' ', (aTemporaryNode isAssignedTemporary
+		ifTrue: [ 'is assigned but never read' ]
+		ifFalse: [ 'is declared but never used' ])! !
+
+!NoUnusedTemporariesHeuristic methodsFor: 'private' stamp: 'HAW 9/Sep/2026, 7:26:56 pm (UTC)'!
+neverReadTemporaryNodes
+
+	^(self declaredTemporaryNodes select: [ :each | each isUnusedTemp ])
+		asSortedCollection: [ :first :second | first name <= second name ]! !
+
+!NoUnusedTemporariesHeuristic methodsFor: 'evaluating' stamp: 'HAW 9/Sep/2026, 7:26:56 pm (UTC)'!
+failingNodes
+
+	^[ self neverReadTemporaryNodes ] on: Error do: [ :error | #() ]! !
+
+!NoUnusedTemporariesHeuristic methodsFor: 'evaluating' stamp: 'HAW 9/Sep/2026, 7:23:34 pm (UTC)'!
+failureDetail
+
+	^String streamContents: [ :stream |
+		stream nextPutAll: 'In ', self location, ' the temporary variable '.
+		self failingNodes
+			do: [ :each | stream nextPutAll: (self descriptionOf: each) ]
+			separatedBy: [ stream nextPutAll: ', ' ].
+		stream nextPut: $. ]! !
 
 !RedundantIfTrueConditionHeuristic methodsFor: 'accessing' stamp: 'HAW 8/Sep/2026, 11:17:48 pm (UTC)'!
 description
@@ -2300,10 +2300,10 @@ name
 
 	^'No comparison with true or false'! !
 
-!RedundantIfTrueConditionHeuristic methodsFor: 'evaluating' stamp: 'HAW 9/Sep/2026, 6:53:53 pm (UTC)'!
-doesNotHold
+!RedundantIfTrueConditionHeuristic methodsFor: 'evaluating' stamp: 'HAW 9/Sep/2026, 7:22:28 pm (UTC)'!
+failingNodes
 
-	^self sendsAnyMessageSatisfying: [ :each |
+	^self messageNodes select: [ :each |
 		(each isSendOfAnyOf: #(= == ~= ~~))
 			and: [ each arguments first isBooleanPseudoVariable ] ]! !
 
@@ -2322,10 +2322,11 @@ replacement
 
 	^self isClassSide ifTrue: [ 'self' ] ifFalse: [ 'self class' ]! !
 
-!SelfOverExplicitClassReferenceHeuristic methodsFor: 'evaluating' stamp: 'HAW 9/Sep/2026, 6:53:53 pm (UTC)'!
-doesNotHold
+!SelfOverExplicitClassReferenceHeuristic methodsFor: 'evaluating' stamp: 'HAW 9/Sep/2026, 7:23:20 pm (UTC)'!
+failingNodes
 
-	^compiledMethod hasLiteral: self reviewedClass theNonMetaClass binding! !
+	^self parseTree allNodes
+		select: [ :each | each isReferenceTo: self reviewedClass theNonMetaClass ]! !
 
 !SelfOverExplicitClassReferenceHeuristic methodsFor: 'evaluating' stamp: 'HAW 9/Sep/2026, 6:53:57 pm (UTC)'!
 failureDetail
@@ -2342,13 +2343,17 @@ name
 
 	^'isEmpty over size = 0'! !
 
-!SizeComparedWithZeroHeuristic methodsFor: 'evaluating' stamp: 'HAW 9/Sep/2026, 6:53:53 pm (UTC)'!
-doesNotHold
+!SizeComparedWithZeroHeuristic methodsFor: 'private' stamp: 'HAW 9/Sep/2026, 7:22:36 pm (UTC)'!
+isSizeComparedWithZero: aMessageNode
 
-	^self sendsAnyMessageSatisfying: [ :each |
-		(each isSendOfAnyOf: #(= == ~= ~~ > <=))
-			and: [ (each receiver isSendOfAnyOf: #(size))
-			and: [ each arguments first isZeroLiteral ] ] ]! !
+	^(aMessageNode isSendOfAnyOf: #(= == ~= ~~ > <=))
+		and: [ (aMessageNode receiver isSendOfAnyOf: #(size))
+		and: [ aMessageNode arguments first isZeroLiteral ] ]! !
+
+!SizeComparedWithZeroHeuristic methodsFor: 'evaluating' stamp: 'HAW 9/Sep/2026, 7:22:34 pm (UTC)'!
+failingNodes
+
+	^self messageNodes select: [ :each | self isSizeComparedWithZero: each ]! !
 
 !TestingForEqualityHeuristic methodsFor: 'accessing' stamp: 'HAW 8/Sep/2026, 11:15:37 pm (UTC)'!
 description
@@ -2360,12 +2365,11 @@ name
 
 	^'Prefer assert:equals: over assert: with ='! !
 
-!TestingForEqualityHeuristic methodsFor: 'evaluating' stamp: 'HAW 9/Sep/2026, 6:53:53 pm (UTC)'!
-doesNotHold
+!TestingForEqualityHeuristic methodsFor: 'evaluating' stamp: 'HAW 9/Sep/2026, 7:22:44 pm (UTC)'!
+failingNodes
 
-	^self isTestMethod and: [
-		self assertionArguments anySatisfy: [ :each |
-			each isSendOfAnyOf: #(= == ~= ~~) ] ]! !
+	self isTestMethod ifFalse: [ ^#() ].
+	^self assertionArguments select: [ :each | each isSendOfAnyOf: #(= == ~= ~~) ]! !
 
 !SmalltalkMentor methodsFor: 'initialization' stamp: 'HAW 9/Sep/2026, 2:14:20 am (UTC)'!
 initialize
@@ -3315,7 +3319,7 @@ title: aTitle detail: aDetail editKind: anEditKind editTarget: anEditTarget
 		editKind: anEditKind
 		editTarget: anEditTarget! !
 
-!SmalltalkMentorReview methodsFor: 'verifications' stamp: 'HAW 9/Sep/2026, 2:40:36 pm (UTC)'!
+!SmalltalkMentorReview methodsFor: 'verifications' stamp: 'HAW 9/Sep/2026, 7:23:56 pm (UTC)'!
 classHeuristicClasses
 
 	^{
@@ -3324,7 +3328,6 @@ classHeuristicClasses
 		MethodsHaveSendersHeuristic.
 		MessagesHaveImplementersHeuristic.
 		MethodsAreCategorizedHeuristic.
-		NoUnusedTemporariesHeuristic.
 		NoEmptyMethodCategoriesHeuristic.
 		RepeatedClassWordHeuristic.
 		InstanceCreationFunnelHeuristic.
@@ -3337,7 +3340,7 @@ classHeuristicsFor: aClass
 
 	^self classHeuristicClasses collect: [ :each | each for: aClass ]! !
 
-!SmalltalkMentorReview methodsFor: 'verifications' stamp: 'HAW 9/Sep/2026, 2:24:18 pm (UTC)'!
+!SmalltalkMentorReview methodsFor: 'verifications' stamp: 'HAW 9/Sep/2026, 7:23:59 pm (UTC)'!
 methodHeuristicClasses
 
 	^{
@@ -3351,6 +3354,7 @@ methodHeuristicClasses
 		NoTypePreconditionHeuristic.
 		AvoidSettersHeuristic.
 		MethodComplexityHeuristic.
+		NoUnusedTemporariesHeuristic.
 		MoveHelperMethodToRightClassHeuristic.
 		SelfOverExplicitClassReferenceHeuristic.
 		InstanceCreationFormatHeuristic.
@@ -4255,6 +4259,11 @@ isPseudoVariableNamed: aName
 
 	^false! !
 
+!ParseNode methodsFor: '*SmalltalkMentor' stamp: 'HAW 9/Sep/2026, 7:23:11 pm (UTC)'!
+isReferenceTo: aClass
+
+	^false! !
+
 !ParseNode methodsFor: '*SmalltalkMentor' stamp: 'HAW 8/Sep/2026, 11:38:20 pm (UTC)'!
 isReturnOfInitializedInstance
 
@@ -4321,6 +4330,11 @@ isNilLiteral
 isPseudoVariableNamed: aName
 
 	^self name = aName! !
+
+!LiteralVariableNode methodsFor: '*SmalltalkMentor' stamp: 'HAW 9/Sep/2026, 7:23:13 pm (UTC)'!
+isReferenceTo: aClass
+
+	^self name = aClass name! !
 
 !TempVariableNode methodsFor: '*SmalltalkMentor' stamp: 'HAW 9/Sep/2026, 2:25:55 am (UTC)'!
 isAssignedTemporary
@@ -4554,18 +4568,6 @@ classSelectorAssociation
 
 	^self methodClass -> self selector! !
 
-!CompiledMethod methodsFor: '*SmalltalkMentor' stamp: 'HAW 9/Sep/2026, 3:09:01 am (UTC)'!
-declaredTemporaryNodes
-
-	| parseTree temporaryNodes |
-
-	parseTree := self methodNode.
-	parseTree ensureClosureAnalysisDone.
-	temporaryNodes := IdentitySet new.
-	parseTree accept: (ParseNodeEnumerator
-		ofBlock: [ :each | each addDeclaredTemporariesTo: temporaryNodes ]).
-	^temporaryNodes! !
-
 !CompiledMethod methodsFor: '*SmalltalkMentor' stamp: 'HAW 9/Sep/2026, 3:08:56 am (UTC)'!
 doesOnlyAssignments
 
@@ -4612,12 +4614,6 @@ sendsNewToSelf
 statements
 
 	^self methodNode block statements! !
-
-!CompiledMethod methodsFor: '*SmalltalkMentor' stamp: 'HAW 9/Sep/2026, 3:09:00 am (UTC)'!
-unusedTemporaryNodes
-
-	^(self declaredTemporaryNodes select: [ :each | each isUnusedTemp ])
-		asSortedCollection: [ :first :second | first name <= second name ]! !
 
 !CharacterSequence methodsFor: '*SmalltalkMentor' stamp: 'HAW 9/Sep/2026, 3:08:25 am (UTC)'!
 assignmentCountTo: aVariableName
