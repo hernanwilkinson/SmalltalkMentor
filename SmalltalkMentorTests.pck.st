@@ -1,6 +1,6 @@
-'From Cuis7.9 [latest update: #8158] on 9 September 2026 at 3:33:26 pm'!
-'Description Show each method of a category review with its violated heuristics and the LLM entry'!
-!provides: 'SmalltalkMentorTests' 1 26!
+'From Cuis7.9 [latest update: #8158] on 9 September 2026 at 3:47:53 pm'!
+'Description Show violated heuristics per method in every review and summarize categories and sides'!
+!provides: 'SmalltalkMentorTests' 1 27!
 !requires: 'SmalltalkMentor' nil nil nil!
 SystemOrganization addCategory: #SmalltalkMentorTests!
 
@@ -89,6 +89,19 @@ newTestCaseFixture
 
 	^self newFixtureClassNamed: #SMMentorSampleTest superclass: TestCase! !
 
+!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 9/Sep/2026, 6:40:12 pm (UTC)'!
+testCategorySummaryListsTheMethodsWithErrorsAndTheirHeuristics
+
+	| classToVerify summary |
+
+	classToVerify := self newFixture.
+	classToVerify compile: 'sameAs: anObject ^self == anObject' classified: 'comparing'.
+	classToVerify compile: 'answer ^42' classified: 'comparing'.
+	summary := review categorySummaryOf: classToVerify category: 'comparing'.
+	self assert: (summary includesSubString: 'sameAs:').
+	self assert: (summary includesSubString: 'Prefer = over ==').
+	self deny: (summary includesSubString: 'answer')! !
+
 !SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 9/Sep/2026, 1:50:04 pm (UTC)'!
 testClassMustBeReferenced
 
@@ -98,6 +111,23 @@ testClassMustBeReferenced
 	self assert: findings notEmpty.
 	self assert:
 		((ClassIsReferencedHeuristic for: SmalltalkMentorFinding) value) isEmpty! !
+
+!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 9/Sep/2026, 6:40:08 pm (UTC)'!
+testClassReviewListsEachMethodWithItsViolatedHeuristicsThenTheLLMReview
+
+	| classToVerify instanceMethodsNode methodNode children |
+
+	classToVerify := self newFixture.
+	classToVerify compile: 'sameAs: anObject ^self == anObject' classified: 'comparing'.
+	instanceMethodsNode := (review rootNodesFor: classToVerify)
+		detect: [ :each | each kind = #side ].
+	methodNode := instanceMethodsNode contents first contents first.
+	self assert: methodNode kind equals: #methodRoot.
+	self assert: methodNode asString equals: 'sameAs:'.
+	children := methodNode contents.
+	self assert: children first kind equals: #violatedHeuristic.
+	self assert: (children first asString includesSubString: 'Prefer = over ==').
+	self assert: children last kind equals: #method! !
 
 !SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 9/Sep/2026, 2:34:50 am (UTC)'!
 testClassReviewListsOnlyFailingHeuristics
@@ -374,6 +404,20 @@ testSharedLeafSubclassProtocolMustBeInRoot
 	findings := (SharedLeafSubclassProtocolHeuristic for: rootClass) value.
 	self deny: (findings anySatisfy: [ :finding |
 		finding title includesSubString: 'sharedOperation' ])! !
+
+!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 9/Sep/2026, 6:40:15 pm (UTC)'!
+testSideSummaryGroupsTheMethodsWithErrorsByCategory
+
+	| classToVerify summary |
+
+	classToVerify := self newFixture.
+	classToVerify compile: 'sameAs: anObject ^self == anObject' classified: 'comparing'.
+	classToVerify compile: 'answer ^42' classified: 'accessing'.
+	summary := review sideSummaryOf: classToVerify.
+	self assert: (summary includesSubString: 'comparing').
+	self assert: (summary includesSubString: 'sameAs:').
+	self deny: (summary includesSubString: 'accessing').
+	self assert: (review sideSummaryOf: classToVerify class) equals: 'All methods pass the heuristics.'! !
 
 !SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 9/Sep/2026, 1:50:04 pm (UTC)'!
 testSingleAssignmentOnlyInitializeIsNotFlagged

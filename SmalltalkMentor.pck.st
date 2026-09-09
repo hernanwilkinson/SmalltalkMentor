@@ -1,6 +1,6 @@
-'From Cuis7.9 [latest update: #8158] on 9 September 2026 at 3:33:29 pm'!
-'Description Show each method of a category review with its violated heuristics and the LLM entry'!
-!provides: 'SmalltalkMentor' 1 58!
+'From Cuis7.9 [latest update: #8158] on 9 September 2026 at 3:47:56 pm'!
+'Description Show violated heuristics per method in every review and summarize categories and sides'!
+!provides: 'SmalltalkMentor' 1 59!
 !requires: 'JSON' 1 29 nil!
 !requires: 'OSProcess' 1 36 nil!
 SystemOrganization addCategory: #SmalltalkMentor!
@@ -3317,12 +3317,6 @@ addClassHeuristicRootsFor: aClass to: roots
 	(self classHeuristicsFor: aClass) do: [ :each |
 		self addRootFor: each findings: each value to: roots ]! !
 
-!SmalltalkMentorReview methodsFor: 'tree' stamp: 'HAW 8/Sep/2026, 11:44:40 pm (UTC)'!
-addMethodHeuristicRootsFor: aClass to: roots
-
-	self methodHeuristicClasses do: [ :each |
-		self addRootFor: each overMethodsOf: aClass to: roots ]! !
-
 !SmalltalkMentorReview methodsFor: 'tree' stamp: 'HAW 9/Sep/2026, 2:24:31 am (UTC)'!
 addRootFor: aHeuristic findings: findings to: roots
 
@@ -3333,24 +3327,6 @@ addRootFor: aHeuristic findings: findings to: roots
 		payload: aHeuristic description
 		children: (self findingNodesFor: findings)
 		model: self)! !
-
-!SmalltalkMentorReview methodsFor: 'tree' stamp: 'HAW 8/Sep/2026, 11:44:47 pm (UTC)'!
-addRootFor: aHeuristicClass overMethodsOf: aClass to: roots
-
-	| methodHeuristics findings |
-
-	methodHeuristics := aClass compiledMethodsOnBothSides
-		collect: [ :each | aHeuristicClass for: each ].
-	methodHeuristics ifEmpty: [ ^self ].
-	findings := OrderedCollection new.
-	methodHeuristics do: [ :each | findings addAll: each value ].
-	self addRootFor: methodHeuristics first findings: findings to: roots! !
-
-!SmalltalkMentorReview methodsFor: 'tree' stamp: 'HAW 9/Sep/2026, 2:40:38 pm (UTC)'!
-allHeuristicsPassedNodeFor: aClass
-
-	^self allHeuristicsPassedNodeListing:
-		(self classHeuristicsFor: aClass), (self methodHeuristicsListedFor: aClass)! !
 
 !SmalltalkMentorReview methodsFor: 'tree' stamp: 'HAW 8/Sep/2026, 11:44:52 pm (UTC)'!
 allHeuristicsPassedNodeListing: heuristics
@@ -3378,7 +3354,7 @@ buildRootNodes
 
 	self subclassResponsibility! !
 
-!SmalltalkMentorReview methodsFor: 'tree' stamp: 'HAW 9/Sep/2026, 2:43:20 am (UTC)'!
+!SmalltalkMentorReview methodsFor: 'tree' stamp: 'HAW 9/Sep/2026, 6:39:30 pm (UTC)'!
 categoryNodeFor: aCategoryName in: aClassOrMetaclass
 
 	| selectors methodNodes |
@@ -3389,7 +3365,7 @@ categoryNodeFor: aCategoryName in: aClassOrMetaclass
 	^SmalltalkMentorNode
 		label: aCategoryName asString
 		kind: #category
-		payload: nil
+		payload: aClassOrMetaclass -> aCategoryName
 		children: methodNodes
 		model: self! !
 
@@ -3398,6 +3374,20 @@ categoryNodesFor: aClassOrMetaclass
 
 	^aClassOrMetaclass nonEmptyMethodCategories asSortedCollection
 		collect: [ :each | self categoryNodeFor: each in: aClassOrMetaclass ]! !
+
+!SmalltalkMentorReview methodsFor: 'tree' stamp: 'HAW 9/Sep/2026, 6:39:37 pm (UTC)'!
+detailSelectorsByKind
+
+	^Dictionary new
+		at: #method put: #showMethodReview:;
+		at: #methodRoot put: #showMethodEditorFor:;
+		at: #violatedHeuristic put: #showViolatedHeuristic:;
+		at: #finding put: #showFinding:;
+		at: #heuristicRoot put: #showText:;
+		at: #allPassed put: #showText:;
+		at: #category put: #showCategorySummary:;
+		at: #side put: #showSideSummary:;
+		yourself! !
 
 !SmalltalkMentorReview methodsFor: 'tree' stamp: 'HAW 8/Sep/2026, 11:44:45 pm (UTC)'!
 findingNodesFor: findings
@@ -3410,16 +3400,15 @@ findingNodesFor: findings
 			children: #()
 			model: self ]! !
 
-!SmalltalkMentorReview methodsFor: 'tree' stamp: 'HAW 9/Sep/2026, 2:24:28 am (UTC)'!
+!SmalltalkMentorReview methodsFor: 'tree' stamp: 'HAW 9/Sep/2026, 6:41:14 pm (UTC)'!
 heuristicRootNodesFor: aClass
 
 	| roots |
 
 	roots := OrderedCollection new.
 	self addClassHeuristicRootsFor: aClass to: roots.
-	self addMethodHeuristicRootsFor: aClass to: roots.
 	^roots ifEmpty: [
-		OrderedCollection with: (self allHeuristicsPassedNodeFor: aClass) ]! !
+		self allHeuristicsPassedNodesFor: (self classHeuristicsFor: aClass) ]! !
 
 !SmalltalkMentorReview methodsFor: 'tree' stamp: 'HAW 9/Sep/2026, 6:23:17 pm (UTC)'!
 llmReviewNodeFor: aClassSelectorAssociation
@@ -3431,23 +3420,14 @@ llmReviewNodeFor: aClassSelectorAssociation
 		children: #()
 		model: self! !
 
-!SmalltalkMentorReview methodsFor: 'tree' stamp: 'HAW 8/Sep/2026, 11:44:48 pm (UTC)'!
-methodHeuristicsListedFor: aClass
-
-	| methods |
-
-	methods := aClass compiledMethodsOnBothSides.
-	methods ifEmpty: [ ^#() ].
-	^self methodHeuristicsFor: methods first! !
-
-!SmalltalkMentorReview methodsFor: 'tree' stamp: 'HAW 9/Sep/2026, 2:24:49 am (UTC)'!
+!SmalltalkMentorReview methodsFor: 'tree' stamp: 'HAW 9/Sep/2026, 6:39:04 pm (UTC)'!
 methodNodeFor: aSelector in: aClassOrMetaclass
 
 	^SmalltalkMentorNode
 		label: aSelector asString
-		kind: #method
+		kind: #methodRoot
 		payload: aClassOrMetaclass -> aSelector
-		children: #()
+		childrenBlock: [ self methodReviewNodesFor: aClassOrMetaclass -> aSelector ]
 		model: self! !
 
 !SmalltalkMentorReview methodsFor: 'tree' stamp: 'HAW 9/Sep/2026, 6:25:50 pm (UTC)'!
@@ -3460,27 +3440,25 @@ methodReviewNodesFor: aClassSelectorAssociation
 	nodes add: (self llmReviewNodeFor: aClassSelectorAssociation).
 	^nodes! !
 
-!SmalltalkMentorReview methodsFor: 'tree' stamp: 'HAW 9/Sep/2026, 2:43:14 am (UTC)'!
+!SmalltalkMentorReview methodsFor: 'tree' stamp: 'HAW 9/Sep/2026, 6:39:28 pm (UTC)'!
 methodsSideNodeFor: aClassOrMetaclass label: aLabel
 
 	^SmalltalkMentorNode
 		label: aLabel, ' (', aClassOrMetaclass selectors size printString, ')'
 		kind: #side
-		payload: nil
+		payload: aClassOrMetaclass
 		children: (self categoryNodesFor: aClassOrMetaclass)
 		model: self! !
 
-!SmalltalkMentorReview methodsFor: 'tree' stamp: 'HAW 9/Sep/2026, 6:24:57 pm (UTC)'!
+!SmalltalkMentorReview methodsFor: 'tree' stamp: 'HAW 9/Sep/2026, 6:39:33 pm (UTC)'!
 nodeSelected: aNode
 
-	aNode kind = #method ifTrue: [ ^self showMethodReview: aNode payload ].
-	aNode kind = #methodRoot ifTrue: [ ^self showMethodEditorFor: aNode payload ].
-	aNode kind = #violatedHeuristic ifTrue: [
-		^self showViolatedHeuristic: aNode payload ].
-	aNode kind = #finding ifTrue: [ ^self showFinding: aNode payload ].
-	aNode kind = #heuristicRoot ifTrue: [ ^self showText: aNode payload ].
-	aNode kind = #allPassed ifTrue: [ ^self showText: aNode payload ].
-	self clearDetail! !
+	| detailSelector |
+
+	detailSelector := self detailSelectorsByKind
+		at: aNode kind
+		ifAbsent: [ ^self clearDetail ].
+	self perform: detailSelector with: aNode payload! !
 
 !SmalltalkMentorReview methodsFor: 'tree' stamp: 'HAW 9/Sep/2026, 2:01:44 am (UTC)'!
 rootNodes
@@ -3623,12 +3601,13 @@ showText: aString
 
 	self renderDetail: (TextModelMorph withText: aString asText)! !
 
-!SmalltalkMentorReview methodsFor: 'detail' stamp: 'HAW 9/Sep/2026, 6:26:42 pm (UTC)'!
+!SmalltalkMentorReview methodsFor: 'detail' stamp: 'HAW 9/Sep/2026, 6:41:19 pm (UTC)'!
 showViolatedHeuristic: aMethodHeuristic
 
 	| column methodEditor |
 
-	methodEditor := self methodEditorFor: aMethodHeuristic classSelectorAssociation.
+	methodEditor := self
+		methodEditorFor: aMethodHeuristic classSelectorAssociation.
 	column := LayoutMorph newColumn.
 	column
 		addMorph: (self newDescriptionPaneFor: aMethodHeuristic)
@@ -3798,6 +3777,85 @@ windowLabel
 
 	self subclassResponsibility! !
 
+!SmalltalkMentorReview methodsFor: 'summaries' stamp: 'HAW 9/Sep/2026, 6:41:24 pm (UTC)'!
+categorySummariesOf: aClassOrMetaclass
+
+	| summaries |
+
+	summaries := aClassOrMetaclass nonEmptyMethodCategories asSortedCollection
+		collect: [ :each |
+			each -> (self methodsWithErrorsIn: aClassOrMetaclass category: each) ].
+	^summaries reject: [ :each | each value isEmpty ]! !
+
+!SmalltalkMentorReview methodsFor: 'summaries' stamp: 'HAW 9/Sep/2026, 6:41:11 pm (UTC)'!
+categorySummaryOf: aClassOrMetaclass category: aCategoryName
+
+	| methodsWithErrors |
+
+	methodsWithErrors := self
+		methodsWithErrorsIn: aClassOrMetaclass
+		category: aCategoryName.
+	methodsWithErrors ifEmpty: [
+		^'All methods in ', aCategoryName asString, ' pass the heuristics.' ].
+	^String streamContents: [ :stream |
+		self write: methodsWithErrors under: aCategoryName on: stream ]! !
+
+!SmalltalkMentorReview methodsFor: 'summaries' stamp: 'HAW 9/Sep/2026, 6:41:16 pm (UTC)'!
+methodsWithErrorsIn: aClassOrMetaclass category: aCategoryName
+
+	| selectors |
+
+	selectors := aClassOrMetaclass organization listAtCategoryNamed: aCategoryName.
+	^(selectors asSortedCollection collect: [ :each |
+		each -> (self violatedHeuristicNamesOf: aClassOrMetaclass -> each) ])
+		reject: [ :each | each value isEmpty ]! !
+
+!SmalltalkMentorReview methodsFor: 'summaries' stamp: 'HAW 9/Sep/2026, 6:39:40 pm (UTC)'!
+showCategorySummary: aClassCategoryAssociation
+
+	self showText: (self
+		categorySummaryOf: aClassCategoryAssociation key
+		category: aClassCategoryAssociation value)! !
+
+!SmalltalkMentorReview methodsFor: 'summaries' stamp: 'HAW 9/Sep/2026, 6:39:42 pm (UTC)'!
+showSideSummary: aClassOrMetaclass
+
+	self showText: (self sideSummaryOf: aClassOrMetaclass)! !
+
+!SmalltalkMentorReview methodsFor: 'summaries' stamp: 'HAW 9/Sep/2026, 6:41:21 pm (UTC)'!
+sideSummaryOf: aClassOrMetaclass
+
+	| summaries |
+
+	summaries := self categorySummariesOf: aClassOrMetaclass.
+	summaries ifEmpty: [ ^'All methods pass the heuristics.' ].
+	^String streamContents: [ :stream |
+		summaries
+			do: [ :each | self write: each value under: each key on: stream ]
+			separatedBy: [ stream newLine ] ]! !
+
+!SmalltalkMentorReview methodsFor: 'summaries' stamp: 'HAW 9/Sep/2026, 6:39:45 pm (UTC)'!
+violatedHeuristicNamesOf: aClassSelectorAssociation
+
+	^((self methodHeuristicsFor: aClassSelectorAssociation compiledMethod)
+		select: [ :each | each isViolated ])
+		collect: [ :each | each name ]! !
+
+!SmalltalkMentorReview methodsFor: 'summaries' stamp: 'HAW 9/Sep/2026, 6:42:14 pm (UTC)'!
+write: aMethodWithErrors on: aStream
+
+	aStream tab; nextPutAll: aMethodWithErrors key asString; nextPutAll: ' ('.
+	aMethodWithErrors value
+		do: [ :each | aStream nextPutAll: each ]
+		separatedBy: [ aStream nextPutAll: ', ' ].
+	aStream nextPut: $); newLine! !
+
+!SmalltalkMentorReview methodsFor: 'summaries' stamp: 'HAW 9/Sep/2026, 6:39:56 pm (UTC)'!
+write: methodsWithErrors under: aCategoryName on: aStream
+
+	aStream nextPutAll: aCategoryName asString; newLine.
+	methodsWithErrors do: [ :each | self write: each on: aStream ]! !
+
 !SmalltalkMentorClassCategoryReview methodsFor: 'initialization' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 initializeSystemCategory: aString mentor: aMentor
 
@@ -3891,24 +3949,14 @@ initializeClassOrMeta: aClassOrMeta category: aCategory mentor: aMentor
 	mentor := aMentor.
 	methodReviewCache := Dictionary new! !
 
-!SmalltalkMentorMethodCategoryReview methodsFor: 'tree' stamp: 'HAW 9/Sep/2026, 6:26:33 pm (UTC)'!
+!SmalltalkMentorMethodCategoryReview methodsFor: 'tree' stamp: 'HAW 9/Sep/2026, 6:39:08 pm (UTC)'!
 buildRootNodes
 
 	| methodNodes |
 
 	methodNodes := self selectorsToReview
-		collect: [ :each | self rootNodeFor: each ].
+		collect: [ :each | self methodNodeFor: each in: targetClass ].
 	^methodNodes asOrderedCollection! !
-
-!SmalltalkMentorMethodCategoryReview methodsFor: 'tree' stamp: 'HAW 9/Sep/2026, 6:25:10 pm (UTC)'!
-rootNodeFor: aSelector
-
-	^SmalltalkMentorNode
-		label: aSelector asString
-		kind: #methodRoot
-		payload: targetClass -> aSelector
-		childrenBlock: [ self methodReviewNodesFor: targetClass -> aSelector ]
-		model: self! !
 
 !SmalltalkMentorMethodCategoryReview methodsFor: 'tree' stamp: 'HAW 9/Sep/2026, 3:08:03 am (UTC)'!
 selectorsToReview
