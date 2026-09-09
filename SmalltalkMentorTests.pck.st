@@ -1,6 +1,6 @@
-'From Cuis7.9 [latest update: #8158] on 9 September 2026 at 3:47:53 pm'!
-'Description Show violated heuristics per method in every review and summarize categories and sides'!
-!provides: 'SmalltalkMentorTests' 1 27!
+'From Cuis7.9 [latest update: #8158] on 9 September 2026 at 4:15:45 pm'!
+'Description Highlight the source that fails a heuristic, starting with ==, = nil and long keyword lines'!
+!provides: 'SmalltalkMentorTests' 1 28!
 !requires: 'SmalltalkMentor' nil nil nil!
 SystemOrganization addCategory: #SmalltalkMentorTests!
 
@@ -112,8 +112,8 @@ testClassMustBeReferenced
 	self assert:
 		((ClassIsReferencedHeuristic for: SmalltalkMentorFinding) value) isEmpty! !
 
-!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 9/Sep/2026, 6:40:08 pm (UTC)'!
-testClassReviewListsEachMethodWithItsViolatedHeuristicsThenTheLLMReview
+!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 9/Sep/2026, 6:56:07 pm (UTC)'!
+testClassReviewListsEachMethodWithItsFailedHeuristicsThenTheLLMReview
 
 	| classToVerify instanceMethodsNode methodNode children |
 
@@ -125,7 +125,7 @@ testClassReviewListsEachMethodWithItsViolatedHeuristicsThenTheLLMReview
 	self assert: methodNode kind equals: #methodRoot.
 	self assert: methodNode asString equals: 'sameAs:'.
 	children := methodNode contents.
-	self assert: children first kind equals: #violatedHeuristic.
+	self assert: children first kind equals: #failedHeuristic.
 	self assert: (children first asString includesSubString: 'Prefer = over ==').
 	self assert: children last kind equals: #method! !
 
@@ -222,8 +222,8 @@ testMethodCategoryMustNotBeEmpty
 	self assert: (findings anySatisfy: [ :finding |
 		finding title includesSubString: 'unused protocol' ])! !
 
-!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 9/Sep/2026, 6:23:56 pm (UTC)'!
-testMethodCategoryReviewListsEachMethodWithItsViolatedHeuristicsThenTheLLMReview
+!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 9/Sep/2026, 6:56:03 pm (UTC)'!
+testMethodCategoryReviewListsEachMethodWithItsFailedHeuristicsThenTheLLMReview
 
 	| classToVerify roots methodNode children |
 
@@ -239,7 +239,7 @@ testMethodCategoryReviewListsEachMethodWithItsViolatedHeuristicsThenTheLLMReview
 	self assert: methodNode kind equals: #methodRoot.
 	children := methodNode contents.
 	self assert: children size equals: 2.
-	self assert: children first kind equals: #violatedHeuristic.
+	self assert: children first kind equals: #failedHeuristic.
 	self assert: (children first asString includesSubString: 'Prefer = over ==').
 	self assert: children last kind equals: #method! !
 
@@ -280,7 +280,7 @@ testMethodReviewListsAllHeuristicsPassedWhenNoneFails
 	self assert: roots first kind equals: #allPassed.
 	self assert: (roots first payload includesSubString: 'No extra parenthesis')! !
 
-!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 9/Sep/2026, 4:56:44 pm (UTC)'!
+!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 9/Sep/2026, 6:54:38 pm (UTC)'!
 testMethodReviewListsOnlyFailingHeuristicsThenTheLLMReview
 
 	| classToVerify roots |
@@ -292,7 +292,7 @@ testMethodReviewListsOnlyFailingHeuristicsThenTheLLMReview
 		selector: #sameAs:
 		mentor: SmalltalkMentor new) buildRootNodes.
 	self assert: roots size equals: 2.
-	self assert: roots first kind equals: #violatedHeuristic.
+	self assert: roots first kind equals: #failedHeuristic.
 	self assert: (roots first asString includesSubString: 'Prefer = over ==').
 	self deny: roots first hasContents.
 	self assert: roots last kind equals: #method! !
@@ -1026,6 +1026,15 @@ detailOfExplicitClassReferenceIn: aClassOrMetaclass
 		classified: 'fixture'.
 	^(SelfOverExplicitClassReferenceHeuristic for: method) finding detail! !
 
+!SmalltalkMentorMethodHeuristicTest methodsFor: 'support' stamp: 'HAW 9/Sep/2026, 6:58:11 pm (UTC)'!
+failureSourcesOf: aHeuristicClass in: aSource
+
+	| method ranges |
+
+	method := self fixture compiledMethodFor: aSource classified: 'fixture'.
+	ranges := (aHeuristicClass for: method) failureRanges.
+	^(ranges collect: [ :each | aSource copyFrom: each first to: each last ]) asArray! !
+
 !SmalltalkMentorMethodHeuristicTest methodsFor: 'support' stamp: 'HAW 8/Sep/2026, 11:22:17 pm (UTC)'!
 fixture
 
@@ -1093,6 +1102,13 @@ testComparisonWithTrueIsFlagged
 	self assert: RedundantIfTrueConditionHeuristic flags: 'current ^self isActive = true ifTrue: [ value ] ifFalse: [ 0 ]'.
 	self deny: RedundantIfTrueConditionHeuristic flags: 'current ^self isActive ifTrue: [ value ] ifFalse: [ 0 ]'! !
 
+!SmalltalkMentorMethodHeuristicTest methodsFor: 'tests' stamp: 'HAW 9/Sep/2026, 6:58:16 pm (UTC)'!
+testComparisonsWithNilAreHighlighted
+
+	self
+		assert: (self failureSourcesOf: ComparisonWithNilHeuristic in: 'isUnset ^value = nil or: [ nil ~~ other ]')
+		equals: #('value = nil' 'nil ~~ other')! !
+
 !SmalltalkMentorMethodHeuristicTest methodsFor: 'tests' stamp: 'HAW 8/Sep/2026, 11:43:53 pm (UTC)'!
 testEqualNilIsFlagged
 
@@ -1153,6 +1169,16 @@ testIdentityComparisonIsFlagged
 	self deny: EqualityOverIdentityHeuristic flags: 'name ^value ifNil: [ 0 ]'.
 	self deny: EqualityOverIdentityHeuristic flags: 'comparisons ^#(== ~~)'! !
 
+!SmalltalkMentorMethodHeuristicTest methodsFor: 'tests' stamp: 'HAW 9/Sep/2026, 6:58:13 pm (UTC)'!
+testIdentityComparisonsAreHighlighted
+
+	self
+		assert: (self failureSourcesOf: EqualityOverIdentityHeuristic in: 'sameAs: anObject ^self == anObject')
+		equals: #('self == anObject').
+	self
+		assert: (self failureSourcesOf: EqualityOverIdentityHeuristic in: 'equalTo: anObject ^self = anObject')
+		equals: #()! !
+
 !SmalltalkMentorMethodHeuristicTest methodsFor: 'tests' stamp: 'HAW 8/Sep/2026, 11:23:08 pm (UTC)'!
 testIfFalseIfTrueIsFlagged
 
@@ -1177,6 +1203,16 @@ testIsNilIfTrueIsFlagged
 
 	self assert: ConditionalOnNilTestHeuristic flags: 'name ^value isNil ifTrue: [ ''none'' ] ifFalse: [ value ]'.
 	self deny: ConditionalOnNilTestHeuristic flags: 'name ^value ifNil: [ ''none'' ]'! !
+
+!SmalltalkMentorMethodHeuristicTest methodsFor: 'tests' stamp: 'HAW 9/Sep/2026, 6:58:19 pm (UTC)'!
+testLongKeywordLinesAreHighlighted
+
+	| longLine |
+
+	longLine := '	self assert: value equals: other description: ''short'' resumable: true onFailure: [ value ] ok: 1'.
+	self
+		assert: (self failureSourcesOf: KeywordMessageSendFormatHeuristic in: 'check', String newLineString, longLine, String newLineString, '	^value')
+		equals: { longLine }! !
 
 !SmalltalkMentorMethodHeuristicTest methodsFor: 'tests' stamp: 'HAW 9/Sep/2026, 2:23:08 am (UTC)'!
 testLongKeywordSendOnOneLineIsFlagged
