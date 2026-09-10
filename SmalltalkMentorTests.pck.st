@@ -1,6 +1,6 @@
-'From Cuis7.9 [latest update: #8158] on 9 September 2026 at 5:58:48 pm'!
-'Description Keep the selection when expanding or collapsing a review tree node'!
-!provides: 'SmalltalkMentorTests' 1 31!
+'From Cuis7.9 [latest update: #8158] on 10 September 2026 at 2:02:25 pm'!
+'Description Re-run the heuristics when a method changes, add tree shortcuts and pause highlighting while editing'!
+!provides: 'SmalltalkMentorTests' 1 32!
 !requires: 'SmalltalkMentor' nil nil nil!
 SystemOrganization addCategory: #SmalltalkMentorTests!
 
@@ -143,6 +143,21 @@ testClassReviewListsOnlyFailingHeuristics
 	self assert: (heuristicRoots anySatisfy: [ :eachRoot |
 		eachRoot asString includesSubString: 'Instance variables' ])! !
 
+!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 10/Sep/2026, 4:31:02 pm (UTC)'!
+testClassReviewRefreshesTheMethodNodeWhenItsMethodChanges
+
+	| classToVerify classReview methodNode |
+
+	classToVerify := self newFixture.
+	classToVerify compile: 'sameAs: anObject ^self == anObject' classified: 'comparing'.
+	classReview := SmalltalkMentorClassReview on: classToVerify mentor: SmalltalkMentor new.
+	methodNode := (classReview rootNodes detect: [ :each | each kind = #side ])
+		contents first contents first.
+	self assert: methodNode contents first kind equals: #failedHeuristic.
+	classToVerify compile: 'sameAs: anObject ^self = anObject' classified: 'comparing'.
+	classReview noteChangeOf: classToVerify -> #sameAs:.
+	self assert: methodNode contents first kind equals: #allPassed! !
+
 !SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 9/Sep/2026, 1:50:04 pm (UTC)'!
 testClassSideSelectorKeepsPrefixWhenUnprefixedNameIsReserved
 
@@ -169,6 +184,20 @@ testClassVariableMustBeReadAndWritten
 	self assert: (findings anySatisfy: [ :finding |
 		finding editKind = #variable
 			and: [ finding editTarget value = 'UnusedClassVariable' ] ])! !
+
+!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 10/Sep/2026, 4:55:11 pm (UTC)'!
+testHighlightingIsDisabledWhileTheSourceBeingEditedDiffersFromTheMethod
+
+	| classToVerify browser source |
+
+	classToVerify := self newFixture.
+	classToVerify compile: 'sameAs: anObject ^self == anObject' classified: 'comparing'.
+	source := (classToVerify >> #sameAs:) sourceCode asString.
+	browser := SmalltalkMentorHighlightingBrowser
+		on: classToVerify -> #sameAs:
+		highlighting: { 18 to: 32 }.
+	self assert: (browser failureRangesIn: source asText) equals: { 18 to: 32 }.
+	self assert: (browser failureRangesIn: (source, ' ') asText) isEmpty! !
 
 !SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 9/Sep/2026, 1:50:04 pm (UTC)'!
 testInitializeWithNonAssignmentIsFlagged
@@ -297,6 +326,22 @@ testMethodReviewListsOnlyFailingHeuristicsThenTheLLMReview
 	self deny: roots first hasContents.
 	self assert: roots last kind equals: #method! !
 
+!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 10/Sep/2026, 4:31:05 pm (UTC)'!
+testMethodReviewRebuildsItsListWhenTheMethodChanges
+
+	| classToVerify methodReview |
+
+	classToVerify := self newFixture.
+	classToVerify compile: 'sameAs: anObject ^self == anObject' classified: 'comparing'.
+	methodReview := SmalltalkMentorMethodReview
+		on: classToVerify
+		selector: #sameAs:
+		mentor: SmalltalkMentor new.
+	self assert: methodReview rootNodes first kind equals: #failedHeuristic.
+	classToVerify compile: 'sameAs: anObject ^self = anObject' classified: 'comparing'.
+	methodReview noteChangeOf: classToVerify -> #sameAs:.
+	self assert: methodReview rootNodes first kind equals: #allPassed! !
+
 !SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 9/Sep/2026, 1:50:04 pm (UTC)'!
 testMultipleInitializeMessagesAreFlagged
 
@@ -366,6 +411,21 @@ testOverridesDoNotRepeatTheClassName
 	findings := (RepeatedClassWordHeuristic for: classToVerify) value.
 	self deny: (findings anySatisfy: [ :finding |
 		finding title includesSubString: 'fixtureLabel' ])! !
+
+!SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 10/Sep/2026, 4:31:23 pm (UTC)'!
+testReviewsIgnoreChangesInOtherClasses
+
+	| classToVerify classReview methodNode |
+
+	classToVerify := self newFixture.
+	classToVerify compile: 'sameAs: anObject ^self == anObject' classified: 'comparing'.
+	classReview := SmalltalkMentorClassReview on: classToVerify mentor: SmalltalkMentor new.
+	methodNode := (classReview rootNodes detect: [ :each | each kind = #side ])
+		contents first contents first.
+	self assert: methodNode contents first kind equals: #failedHeuristic.
+	classToVerify compile: 'sameAs: anObject ^self = anObject' classified: 'comparing'.
+	classReview noteChangeOf: Object -> #yourself.
+	self assert: methodNode contents first kind equals: #failedHeuristic! !
 
 !SmalltalkMentorFixedHeuristicTest methodsFor: 'tests' stamp: 'HAW 9/Sep/2026, 1:50:04 pm (UTC)'!
 testSentMessageMustHaveImplementer

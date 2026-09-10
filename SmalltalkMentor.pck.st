@@ -1,6 +1,6 @@
-'From Cuis7.9 [latest update: #8158] on 9 September 2026 at 5:58:51 pm'!
-'Description Keep the selection when expanding or collapsing a review tree node'!
-!provides: 'SmalltalkMentor' 1 63!
+'From Cuis7.9 [latest update: #8158] on 10 September 2026 at 2:02:28 pm'!
+'Description Re-run the heuristics when a method changes, add tree shortcuts and pause highlighting while editing'!
+!provides: 'SmalltalkMentor' 1 64!
 !requires: 'JSON' 1 29 nil!
 !requires: 'OSProcess' 1 36 nil!
 SystemOrganization addCategory: #SmalltalkMentor!
@@ -28,7 +28,7 @@ SmalltalkMentorNoCopyTextModel class
 
 !classDefinition: #SmalltalkMentorHighlightingBrowser category: #SmalltalkMentor!
 Browser subclass: #SmalltalkMentorHighlightingBrowser
-	instanceVariableNames: 'failureRanges'
+	instanceVariableNames: 'failureRanges highlightedSource'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'SmalltalkMentor'!
@@ -608,7 +608,7 @@ SmalltalkMentorNoCopyEditor class
 
 !classDefinition: #SmalltalkMentorNode category: #SmalltalkMentor!
 ListItemWrapper subclass: #SmalltalkMentorNode
-	instanceVariableNames: 'label childNodes kind'
+	instanceVariableNames: 'label childNodes kind childrenSource'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'SmalltalkMentor'!
@@ -673,15 +673,18 @@ withText: aText styleClass: aClassOrMetaclass
 
 	^(self withText: aText) initializeStyleClass: aClassOrMetaclass! !
 
-!SmalltalkMentorHighlightingBrowser methodsFor: 'initialization' stamp: 'HAW 9/Sep/2026, 6:58:42 pm (UTC)'!
-initializeHighlighting: ranges
+!SmalltalkMentorHighlightingBrowser methodsFor: 'initialization' stamp: 'HAW 10/Sep/2026, 4:54:54 pm (UTC)'!
+initializeHighlighting: ranges in: aSourceCode
 
-	failureRanges := ranges! !
+	failureRanges := ranges.
+	highlightedSource := aSourceCode! !
 
-!SmalltalkMentorHighlightingBrowser methodsFor: 'accessing' stamp: 'HAW 9/Sep/2026, 6:58:44 pm (UTC)'!
-failureRanges
+!SmalltalkMentorHighlightingBrowser methodsFor: 'accessing' stamp: 'HAW 10/Sep/2026, 4:54:56 pm (UTC)'!
+failureRangesIn: aText
 
-	^failureRanges! !
+	^aText asString = highlightedSource
+		ifTrue: [ failureRanges ]
+		ifFalse: [ #() ]! !
 
 !SmalltalkMentorHighlightingBrowser methodsFor: 'styling' stamp: 'HAW 9/Sep/2026, 7:00:30 pm (UTC)'!
 textStylerClassFor: textGetter
@@ -690,26 +693,47 @@ textStylerClassFor: textGetter
 		^super textStylerClassFor: textGetter ].
 	^SmalltalkMentorFailureTextStyler! !
 
-!SmalltalkMentorHighlightingBrowser class methodsFor: 'instance creation' stamp: 'HAW 9/Sep/2026, 6:58:39 pm (UTC)'!
+!SmalltalkMentorHighlightingBrowser class methodsFor: 'instance creation' stamp: 'HAW 10/Sep/2026, 4:54:52 pm (UTC)'!
 on: aClassSelectorAssociation highlighting: failureRanges
 
 	| browser |
 
-	browser := self new initializeHighlighting: failureRanges.
+	browser := self new
+		initializeHighlighting: failureRanges
+		in: aClassSelectorAssociation compiledMethod sourceCode asString.
 	browser
 		setClass: aClassSelectorAssociation key
 		selector: aClassSelectorAssociation value.
 	^browser! !
 
-!SmalltalkMentorTreeMorph methodsFor: 'events' stamp: 'HAW 9/Sep/2026, 8:08:37 pm (UTC)'!
+!SmalltalkMentorTreeMorph methodsFor: 'events' stamp: 'HAW 10/Sep/2026, 3:02:58 pm (UTC)'!
+isShortcut: aKeyboardEvent
+
+	^aKeyboardEvent wasHandled not and: [ aKeyboardEvent commandAltKeyPressed ]! !
+
+!SmalltalkMentorTreeMorph methodsFor: 'events' stamp: 'HAW 10/Sep/2026, 3:03:00 pm (UTC)'!
 isToggleOf: anItemMorph at: localEventPosition
 
 	| positionInItem |
 
 	anItemMorph ifNil: [ ^false ].
 	scroller isLocked ifTrue: [ ^false ].
-	positionInItem := anItemMorph internalize: (scroller internalize: localEventPosition).
+	positionInItem := anItemMorph
+		internalize: (scroller internalize: localEventPosition).
 	^anItemMorph inToggleArea: positionInItem! !
+
+!SmalltalkMentorTreeMorph methodsFor: 'events' stamp: 'HAW 10/Sep/2026, 4:23:19 pm (UTC)'!
+keyStroke: aKeyboardEvent
+
+	(self isShortcut: aKeyboardEvent)
+		ifTrue: [
+			self shortcutActions
+				at: aKeyboardEvent keyCharacter asLowercase
+				ifPresent: [ :action |
+					self performOnSelectedNode: action.
+					^aKeyboardEvent wasHandled: true ]].
+	super keyStroke: aKeyboardEvent.
+	! !
 
 !SmalltalkMentorTreeMorph methodsFor: 'events' stamp: 'HAW 9/Sep/2026, 8:06:45 pm (UTC)'!
 mouseButton1Down: aMouseButtonEvent localPosition: localEventPosition
@@ -721,7 +745,7 @@ mouseButton1Down: aMouseButtonEvent localPosition: localEventPosition
 		^self toggleExpandedState: itemMorph event: aMouseButtonEvent ].
 	^super mouseButton1Down: aMouseButtonEvent localPosition: localEventPosition! !
 
-!SmalltalkMentorTreeMorph methodsFor: 'events' stamp: 'HAW 9/Sep/2026, 3:07:57 am (UTC)'!
+!SmalltalkMentorTreeMorph methodsFor: 'events' stamp: 'HAW 10/Sep/2026, 3:02:08 pm (UTC)'!
 mouseButton2Down: aMouseButtonEvent localPosition: localEventPosition
 
 	| itemMorph node menu |
@@ -735,16 +759,68 @@ mouseButton2Down: aMouseButtonEvent localPosition: localEventPosition
 	node := itemMorph complexContents.
 	menu := MenuMorph new.
 	menu
-		add: 'Run again'
+		add: 'Run again (r)'
 		target: model
 		action: #runAgainNode:
 		argumentList: { node }.
 	menu
-		add: 'Browse'
+		add: 'Browse (b)'
 		target: model
 		action: #browseNode:
 		argumentList: { node }.
 	menu popUpInWorld! !
+
+!SmalltalkMentorTreeMorph methodsFor: 'events' stamp: 'HAW 10/Sep/2026, 3:02:05 pm (UTC)'!
+performOnSelectedNode: anActionSelector
+
+	selectedMorph ifNotNil: [
+		model perform: anActionSelector with: selectedMorph complexContents ]! !
+
+!SmalltalkMentorTreeMorph methodsFor: 'events' stamp: 'HAW 10/Sep/2026, 3:02:02 pm (UTC)'!
+shortcutActions
+
+	^Dictionary new
+		at: $r put: #runAgainNode:;
+		at: $b put: #browseNode:;
+		yourself! !
+
+!SmalltalkMentorTreeMorph methodsFor: 'selection' stamp: 'HAW 10/Sep/2026, 4:33:41 pm (UTC)'!
+ancestorsOf: anItemMorph
+
+	| ancestors level |
+
+	ancestors := OrderedCollection new.
+	level := anItemMorph indentLevel.
+	(self rowsAbove: anItemMorph) reverseDo: [ :each |
+		each indentLevel < level ifTrue: [
+			ancestors addFirst: each.
+			level := each indentLevel ] ].
+	^ancestors! !
+
+!SmalltalkMentorTreeMorph methodsFor: 'selection' stamp: 'HAW 10/Sep/2026, 4:32:32 pm (UTC)'!
+openPath: labels
+
+	scroller submorphs ifEmpty: [ ^self ].
+	scroller submorphs first openPath: labels adaptor: #asString compare: #=! !
+
+!SmalltalkMentorTreeMorph methodsFor: 'selection' stamp: 'HAW 10/Sep/2026, 4:32:29 pm (UTC)'!
+reopenPath: labels
+
+	labels size to: 1 by: -1 do: [ :size |
+		self openPath: (labels first: size).
+		selectedMorph ifNotNil: [ ^self ] ]! !
+
+!SmalltalkMentorTreeMorph methodsFor: 'selection' stamp: 'HAW 10/Sep/2026, 4:33:44 pm (UTC)'!
+rowsAbove: anItemMorph
+
+	^scroller submorphs first: (scroller submorphs indexOf: anItemMorph) - 1! !
+
+!SmalltalkMentorTreeMorph methodsFor: 'selection' stamp: 'HAW 10/Sep/2026, 4:34:58 pm (UTC)'!
+selectedPath
+
+	selectedMorph ifNil: [ ^#() ].
+	^(self ancestorsOf: selectedMorph), { selectedMorph }
+		collect: [ :each | each complexContents asString ]! !
 
 !SmalltalkMentorConversationTextMorph methodsFor: 'model access' stamp: 'HAW 9/Sep/2026, 2:01:44 am (UTC)'!
 canDiscardEdits
@@ -755,6 +831,24 @@ canDiscardEdits
 windowColor
 
 	^Theme current browser! !
+
+!SmalltalkMentorReviewWindow methodsFor: 'closing' stamp: 'HAW 10/Sep/2026, 4:34:23 pm (UTC)'!
+delete
+
+	| closingReview |
+
+	closingReview := model.
+	super delete.
+	owner ifNil: [ closingReview stopObservingChanges ]! !
+
+!SmalltalkMentorReviewWindow class methodsFor: 'instance creation' stamp: 'HAW 10/Sep/2026, 4:34:06 pm (UTC)'!
+for: aReview
+
+	| window |
+
+	window := self new.
+	window model: aReview.
+	^window! !
 
 !LLMProvider methodsFor: 'accessing' stamp: 'HAW 9/Sep/2026, 2:01:41 am (UTC)'!
 effort
@@ -3860,13 +3954,14 @@ newProviderRow
 		addMorph: effortButton proportionalWidth: 0.4.
 	^providerRow! !
 
-!SmalltalkMentorReview methodsFor: 'ui' stamp: 'HAW 9/Sep/2026, 2:43:24 am (UTC)'!
+!SmalltalkMentorReview methodsFor: 'ui' stamp: 'HAW 10/Sep/2026, 4:30:06 pm (UTC)'!
 openWindow
 
-	window := SmalltalkMentorReviewWindow new.
+	window := SmalltalkMentorReviewWindow for: self.
 	window setLabel: 'Smalltalk Mentor - ', self windowLabel.
 	window layoutMorph addMorph: self newMainRow proportionalHeight: 1.0.
-	window openInWorld! !
+	window openInWorld.
+	self startObservingChanges! !
 
 !SmalltalkMentorReview methodsFor: 'ui' stamp: 'HAW 9/Sep/2026, 2:01:44 am (UTC)'!
 start
@@ -3957,6 +4052,76 @@ write: methodsWithErrors under: aCategoryName on: aStream
 	aStream nextPutAll: aCategoryName asString; newLine.
 	methodsWithErrors do: [ :each | self write: each on: aStream ]! !
 
+!SmalltalkMentorReview methodsFor: 'system changes' stamp: 'HAW 10/Sep/2026, 4:33:48 pm (UTC)'!
+forgetMethodNodesOf: aClassSelectorAssociation
+
+	self rootNodes do: [ :each |
+		each refreshMethodNodesOf: aClassSelectorAssociation ]! !
+
+!SmalltalkMentorReview methodsFor: 'system changes' stamp: 'HAW 10/Sep/2026, 4:30:16 pm (UTC)'!
+methodAdded: aMethod selector: aSelector inProtocol: aCategory class: aClassOrMetaclass
+
+	self noteAdditionOrRemovalOf: aClassOrMetaclass -> aSelector! !
+
+!SmalltalkMentorReview methodsFor: 'system changes' stamp: 'HAW 10/Sep/2026, 4:30:14 pm (UTC)'!
+methodChangedFrom: anOldMethod to: aNewMethod selector: aSelector inClass: aClassOrMetaclass
+
+	self noteChangeOf: aClassOrMetaclass -> aSelector! !
+
+!SmalltalkMentorReview methodsFor: 'system changes' stamp: 'HAW 10/Sep/2026, 4:30:19 pm (UTC)'!
+methodRemoved: aMethod selector: aSelector inProtocol: aCategory class: aClassOrMetaclass
+
+	self noteAdditionOrRemovalOf: aClassOrMetaclass -> aSelector! !
+
+!SmalltalkMentorReview methodsFor: 'system changes' stamp: 'HAW 10/Sep/2026, 4:30:24 pm (UTC)'!
+noteAdditionOrRemovalOf: aClassSelectorAssociation
+
+	(self reviews: aClassSelectorAssociation) ifFalse: [ ^self ].
+	treeRoots := nil.
+	self refreshTree! !
+
+!SmalltalkMentorReview methodsFor: 'system changes' stamp: 'HAW 10/Sep/2026, 4:30:21 pm (UTC)'!
+noteChangeOf: aClassSelectorAssociation
+
+	(self reviews: aClassSelectorAssociation) ifFalse: [ ^self ].
+	self forgetMethodNodesOf: aClassSelectorAssociation.
+	self refreshTree! !
+
+!SmalltalkMentorReview methodsFor: 'system changes' stamp: 'HAW 10/Sep/2026, 4:32:36 pm (UTC)'!
+refreshTree
+
+	treeMorph ifNil: [ ^self ].
+	UISupervisor whenUIinSafeState: [ | path |
+		path := treeMorph selectedPath.
+		self changed: #rootNodes.
+		treeMorph reopenPath: path ]! !
+
+!SmalltalkMentorReview methodsFor: 'system changes' stamp: 'HAW 10/Sep/2026, 4:30:31 pm (UTC)'!
+reviews: aClassSelectorAssociation
+
+	^self subclassResponsibility! !
+
+!SmalltalkMentorReview methodsFor: 'system changes' stamp: 'HAW 10/Sep/2026, 4:33:51 pm (UTC)'!
+startObservingChanges
+
+	SystemChangeNotifier uniqueInstance
+		when: #methodChanged
+		send: #methodChangedFrom:to:selector:inClass:
+		to: self.
+	SystemChangeNotifier uniqueInstance
+		when: #methodAddedInProtocolTimeStamp
+		send: #methodAdded:selector:inProtocol:class:
+		to: self.
+	SystemChangeNotifier uniqueInstance
+		when: #methodRemoved
+		send: #methodRemoved:selector:inProtocol:class:
+		to: self! !
+
+!SmalltalkMentorReview methodsFor: 'system changes' stamp: 'HAW 10/Sep/2026, 4:30:11 pm (UTC)'!
+stopObservingChanges
+
+	SystemChangeNotifier uniqueInstance removeActionsWithReceiver: self! !
+
 !SmalltalkMentorClassCategoryReview methodsFor: 'initialization' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 initializeSystemCategory: aString mentor: aMentor
 
@@ -4000,6 +4165,11 @@ browseTarget
 	browser setSelectedSystemCategory: systemCategory.
 	^BrowserWindow open: browser label: 'System Browser: ', systemCategory asString! !
 
+!SmalltalkMentorClassCategoryReview methodsFor: 'system changes' stamp: 'HAW 10/Sep/2026, 4:30:46 pm (UTC)'!
+reviews: aClassSelectorAssociation
+
+	^self classesInCategory includes: aClassSelectorAssociation key theNonMetaClass! !
+
 !SmalltalkMentorClassCategoryReview class methodsFor: 'instance creation' stamp: 'HAW 9/Sep/2026, 2:15:56 am (UTC)'!
 on: aSystemCategory mentor: aMentor
 
@@ -4031,6 +4201,11 @@ initializeClass: aClass mentor: aMentor
 browseTarget
 
 	^targetClass openClassBrowser! !
+
+!SmalltalkMentorClassReview methodsFor: 'system changes' stamp: 'HAW 10/Sep/2026, 4:30:36 pm (UTC)'!
+reviews: aClassSelectorAssociation
+
+	^aClassSelectorAssociation key theNonMetaClass = targetClass! !
 
 !SmalltalkMentorClassReview class methodsFor: 'instance creation' stamp: 'HAW 9/Sep/2026, 2:54:13 pm (UTC)'!
 on: aClass mentor: aMentor
@@ -4079,6 +4254,11 @@ browseTarget
 
 	^targetClass openClassBrowser! !
 
+!SmalltalkMentorMethodCategoryReview methodsFor: 'system changes' stamp: 'HAW 10/Sep/2026, 4:30:43 pm (UTC)'!
+reviews: aClassSelectorAssociation
+
+	^aClassSelectorAssociation key = targetClass! !
+
 !SmalltalkMentorMethodCategoryReview class methodsFor: 'instance creation' stamp: 'HAW 9/Sep/2026, 2:43:40 am (UTC)'!
 on: aCategory of: aClassOrMetaclass mentor: aMentor
 
@@ -4115,6 +4295,16 @@ browseTarget
 
 	^(targetClass -> selector) openMethodBrowser! !
 
+!SmalltalkMentorMethodReview methodsFor: 'system changes' stamp: 'HAW 10/Sep/2026, 4:30:41 pm (UTC)'!
+forgetMethodNodesOf: aClassSelectorAssociation
+
+	treeRoots := nil! !
+
+!SmalltalkMentorMethodReview methodsFor: 'system changes' stamp: 'HAW 10/Sep/2026, 4:30:38 pm (UTC)'!
+reviews: aClassSelectorAssociation
+
+	^aClassSelectorAssociation = (targetClass -> selector)! !
+
 !SmalltalkMentorMethodReview class methodsFor: 'instance creation' stamp: 'HAW 8/Sep/2026, 11:50:02 pm (UTC)'!
 on: aClassOrMetaclass selector: aSelector mentor: aMentor
 
@@ -4145,13 +4335,20 @@ clipboardTextPut: aText
 
 	^aText! !
 
-!SmalltalkMentorNode methodsFor: 'initialization' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
-initializeLabel: aLabel kind: aKind payload: aPayload children: aChildrenCollection model: aModel
+!SmalltalkMentorNode methodsFor: 'initialization' stamp: 'HAW 10/Sep/2026, 4:29:31 pm (UTC)'!
+initializeLabel: aLabel kind: aKind payload: aPayload children: aChildrenCollectionOrBlock model: aModel
 
 	self setItem: aPayload model: aModel.
 	label := aLabel.
 	kind := aKind.
-	childNodes := aChildrenCollection! !
+	childrenSource := aChildrenCollectionOrBlock! !
+
+!SmalltalkMentorNode methodsFor: 'accessing' stamp: 'HAW 10/Sep/2026, 4:29:36 pm (UTC)'!
+computeChildren
+
+	^(childrenSource isKindOf: BlockClosure)
+		ifTrue: [ childrenSource value ]
+		ifFalse: [ childrenSource ]! !
 
 !SmalltalkMentorNode methodsFor: 'accessing' stamp: 'HAW 18/Aug/2026, 6:56:14 pm (UTC)'!
 kind
@@ -4168,22 +4365,34 @@ asString
 
 	^label! !
 
-!SmalltalkMentorNode methodsFor: 'tree wrapper' stamp: 'HAW 9/Sep/2026, 2:01:45 am (UTC)'!
+!SmalltalkMentorNode methodsFor: 'tree wrapper' stamp: 'HAW 10/Sep/2026, 4:29:33 pm (UTC)'!
 contents
 
-	(childNodes isKindOf: BlockClosure) ifTrue: [ childNodes := childNodes value ].
-	^childNodes ifNil: [ #() ]! !
+	^childNodes ifNil: [ childNodes := self computeChildren ]! !
 
-!SmalltalkMentorNode methodsFor: 'tree wrapper' stamp: 'HAW 9/Sep/2026, 2:01:45 am (UTC)'!
+!SmalltalkMentorNode methodsFor: 'tree wrapper' stamp: 'HAW 10/Sep/2026, 4:29:38 pm (UTC)'!
 hasContents
 
-	(childNodes isKindOf: BlockClosure) ifTrue: [ ^true ].
-	^(childNodes ifNil: [ #() ]) notEmpty! !
+	(childrenSource isKindOf: BlockClosure) ifTrue: [ ^true ].
+	^childrenSource notEmpty! !
 
 !SmalltalkMentorNode methodsFor: 'tree wrapper' stamp: 'HAW 9/Sep/2026, 2:01:45 am (UTC)'!
 sendSettingMessageTo: aModel
 
 	aModel nodeSelected: self! !
+
+!SmalltalkMentorNode methodsFor: 'refreshing' stamp: 'HAW 10/Sep/2026, 4:29:42 pm (UTC)'!
+refreshChildren
+
+	childNodes := nil! !
+
+!SmalltalkMentorNode methodsFor: 'refreshing' stamp: 'HAW 10/Sep/2026, 4:29:44 pm (UTC)'!
+refreshMethodNodesOf: aClassSelectorAssociation
+
+	(kind = #methodRoot and: [ item = aClassSelectorAssociation ]) ifTrue: [
+		^self refreshChildren ].
+	(childNodes ifNil: [ #() ]) do: [ :each |
+		each refreshMethodNodesOf: aClassSelectorAssociation ]! !
 
 !SmalltalkMentorNode class methodsFor: 'instance creation' stamp: 'HAW 9/Sep/2026, 2:45:40 am (UTC)'!
 label: aLabel kind: aKind payload: aPayload children: aChildrenCollection model: aModel
@@ -4210,11 +4419,11 @@ highlightColor
 
 	^Color yellow alpha: 0.35! !
 
-!SmalltalkMentorFailureTextStyler methodsFor: 'styling' stamp: 'HAW 9/Sep/2026, 7:00:28 pm (UTC)'!
+!SmalltalkMentorFailureTextStyler methodsFor: 'styling' stamp: 'HAW 10/Sep/2026, 4:55:09 pm (UTC)'!
 privateStyle
 
 	super privateStyle.
-	textModel textProvider failureRanges do: [ :each |
+	(textModel textProvider failureRangesIn: formattedText) do: [ :each |
 		formattedText
 			addAttribute: (TextBackgroundColor color: self highlightColor)
 			from: each first
